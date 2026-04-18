@@ -17,9 +17,11 @@ enum MenuBarIconRenderer {
     enum BaseSize {
         static let referenceBarHeight: CGFloat = 22
         // Slot widths at reference bar height
-        static let singleWidth: CGFloat     = 56
-        static let sideBySideWidth: CGFloat = 86
-        static let stackedWidth: CGFloat    = 44
+        static let singleWidth: CGFloat           = 56
+        static let singleWidthNoIcon: CGFloat     = 40
+        static let sideBySideWidth: CGFloat       = 86
+        static let sideBySideWidthNoIcon: CGFloat = 70
+        static let stackedWidth: CGFloat          = 44
         // Font sizes at reference bar height
         static let singleFontPt: CGFloat    = 12
         static let stackedFontPt: CGFloat   = 10
@@ -30,9 +32,11 @@ enum MenuBarIconRenderer {
     static var barScale: CGFloat {
         max(1.0, NSStatusBar.system.thickness / BaseSize.referenceBarHeight)
     }
-    static var widthSingle: CGFloat     { BaseSize.singleWidth * barScale }
-    static var widthSideBySide: CGFloat { BaseSize.sideBySideWidth * barScale }
-    static var widthStacked: CGFloat    { BaseSize.stackedWidth * barScale }
+    static var widthSingle: CGFloat            { BaseSize.singleWidth * barScale }
+    static var widthSingleNoIcon: CGFloat      { BaseSize.singleWidthNoIcon * barScale }
+    static var widthSideBySide: CGFloat        { BaseSize.sideBySideWidth * barScale }
+    static var widthSideBySideNoIcon: CGFloat  { BaseSize.sideBySideWidthNoIcon * barScale }
+    static var widthStacked: CGFloat           { BaseSize.stackedWidth * barScale }
 
     static var barHeight: CGFloat { NSStatusBar.system.thickness }
 
@@ -53,6 +57,7 @@ enum MenuBarIconRenderer {
         layout: MenuBarLayout,
         v1: Double?, v2: Double?, unit: TempUnit,
         iconName: String, tint: NSColor?,
+        showIcon: Bool = true,
         throttleDot: NSColor?,
         pulsePhase: CGFloat = 1.0,
         width: CGFloat
@@ -64,6 +69,7 @@ enum MenuBarIconRenderer {
                 drawIconPlusText(
                     text: v1.map(unit.format) ?? "",
                     iconName: iconName, tint: tint,
+                    showIcon: showIcon,
                     throttleDot: throttleDot,
                     pulsePhase: pulsePhase,
                     size: size
@@ -75,6 +81,7 @@ enum MenuBarIconRenderer {
                 drawIconPlusText(
                     text: parts.joined(separator: "  "),
                     iconName: iconName, tint: tint,
+                    showIcon: showIcon,
                     throttleDot: throttleDot,
                     pulsePhase: pulsePhase,
                     size: size
@@ -96,22 +103,31 @@ enum MenuBarIconRenderer {
 
     private static func drawIconPlusText(
         text: String, iconName: String, tint: NSColor?,
+        showIcon: Bool = true,
         throttleDot: NSColor?,
         pulsePhase: CGFloat = 1.0,
         size: NSSize
     ) {
         let scale = barScale
         let iconConfig = NSImage.SymbolConfiguration(pointSize: BaseSize.iconPt * scale, weight: .regular)
-        guard let baseIcon = NSImage(systemSymbolName: iconName, accessibilityDescription: nil)?
-                .withSymbolConfiguration(iconConfig) else { return }
-        let iconSize = baseIcon.size
+        let baseIcon: NSImage? = showIcon
+            ? NSImage(systemSymbolName: iconName, accessibilityDescription: nil)?
+                .withSymbolConfiguration(iconConfig)
+            : nil
+        // If the user asked for the icon but SF Symbol lookup failed, abort —
+        // matches the old guard's behaviour. When showIcon is false, baseIcon
+        // is intentionally nil and we proceed text-only.
+        if showIcon && baseIcon == nil { return }
+        let iconSize: NSSize = baseIcon?.size ?? .zero
         let font: NSFont = .monospacedDigitSystemFont(ofSize: BaseSize.singleFontPt * scale, weight: .regular)
         let textColor: NSColor = tint ?? .labelColor
         let textAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
         let textSize = (text as NSString).size(withAttributes: textAttrs)
 
         let gap: CGFloat = 3
-        let totalWidth = iconSize.width + (text.isEmpty ? 0 : gap + textSize.width)
+        let iconBlockWidth: CGFloat = showIcon ? iconSize.width : 0
+        let joinGap: CGFloat = (showIcon && !text.isEmpty) ? gap : 0
+        let totalWidth = iconBlockWidth + joinGap + textSize.width
         let startX = (size.width - totalWidth) / 2
 
         // Icon
@@ -121,24 +137,27 @@ enum MenuBarIconRenderer {
             width: iconSize.width,
             height: iconSize.height
         )
-        if let tint {
-            tint.set()
-            let tinted = baseIcon.copy() as! NSImage
-            tinted.isTemplate = false
-            tinted.lockFocus()
-            tint.set()
-            let r = NSRect(origin: .zero, size: iconSize)
-            r.fill(using: .sourceAtop)
-            tinted.unlockFocus()
-            tinted.draw(in: iconRect)
-        } else {
-            baseIcon.draw(in: iconRect)
+        if showIcon, let baseIcon {
+            if let tint {
+                tint.set()
+                let tinted = baseIcon.copy() as! NSImage
+                tinted.isTemplate = false
+                tinted.lockFocus()
+                tint.set()
+                let r = NSRect(origin: .zero, size: iconSize)
+                r.fill(using: .sourceAtop)
+                tinted.unlockFocus()
+                tinted.draw(in: iconRect)
+            } else {
+                baseIcon.draw(in: iconRect)
+            }
         }
 
         // Text
+        var textRect: NSRect = .zero
         if !text.isEmpty {
-            let textRect = NSRect(
-                x: startX + iconSize.width + gap,
+            textRect = NSRect(
+                x: startX + iconBlockWidth + joinGap,
                 y: (size.height - textSize.height) / 2,
                 width: textSize.width,
                 height: textSize.height
@@ -147,12 +166,26 @@ enum MenuBarIconRenderer {
         }
 
         // Throttle dot — pulsePhase 0→1 maps to alpha pulseMinAlpha→1.0
-        // via a raised-sine so the dot breathes smoothly.
+        // via a raised-sine so the dot breathes smoothly. Anchored to the
+        // icon when visible; otherwise pinned to the trailing edge of the
+        // text so throttling stays legible when the icon is hidden.
         if let dotColor = throttleDot {
             let dotDiameter: CGFloat = max(4, BaseSize.iconPt * scale * 0.38)
+            let anchorMaxX: CGFloat
+            let anchorMinY: CGFloat
+            if showIcon {
+                anchorMaxX = iconRect.maxX
+                anchorMinY = iconRect.minY
+            } else if !text.isEmpty {
+                anchorMaxX = textRect.maxX + dotDiameter * 0.4
+                anchorMinY = textRect.minY
+            } else {
+                anchorMaxX = size.width / 2 + dotDiameter / 2
+                anchorMinY = (size.height - dotDiameter) / 2
+            }
             let dotRect = NSRect(
-                x: iconRect.maxX - dotDiameter * 0.9,
-                y: iconRect.minY - dotDiameter * 0.15,
+                x: anchorMaxX - dotDiameter * 0.9,
+                y: anchorMinY - dotDiameter * 0.15,
                 width: dotDiameter,
                 height: dotDiameter
             )

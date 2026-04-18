@@ -34,6 +34,7 @@ final class MenuBarController {
     // when nothing is being throttled.
     private var pulseTimer: Timer?
     private var pulseStart: Date?
+    private var defaultsObserver: NSObjectProtocol?
     /// Seconds for one full fade-in/out cycle. 1.6s ≈ resting human pulse,
     /// slow enough to read as deliberate rather than nervous.
     private static let pulsePeriod: TimeInterval = 1.6
@@ -67,6 +68,16 @@ final class MenuBarController {
         appearanceObserver = NSApp.observe(\.effectiveAppearance, options: [.new]) { [weak self] _, _ in
             Task { @MainActor [weak self] in self?.syncButton() }
         }
+        // UserDefaults.didChangeNotification fires on every @AppStorage write,
+        // so toggling "Show icon" (or any other menu-bar pref) re-renders the
+        // status item immediately. Cheap: syncButton() bails on unchanged state.
+        defaultsObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: UserDefaults.standard,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.syncButton() }
+        }
         // Defer observation to next run loop so status item finishes its own
         // layout first.
         DispatchQueue.main.async { [weak self] in self?.observeStore() }
@@ -75,6 +86,10 @@ final class MenuBarController {
     func teardown() {
         appearanceObserver?.invalidate()
         appearanceObserver = nil
+        if let o = defaultsObserver {
+            NotificationCenter.default.removeObserver(o)
+            defaultsObserver = nil
+        }
         stopPulse()
         if let m = keyMonitor { NSEvent.removeMonitor(m); keyMonitor = nil }
         if popover.isShown { popover.performClose(nil) }
@@ -144,6 +159,10 @@ final class MenuBarController {
         let slot2Cat = defaults.string(forKey: "menuBarSlot2Category") ?? SlotCategory.none.rawValue
         let slot2Val = defaults.string(forKey: "menuBarSlot2Value")    ?? ""
         let layout   = MenuBarLayout(rawValue: defaults.string(forKey: "menuBarLayout") ?? "") ?? .single
+        // Default when the key has never been written is `true`, matching the
+        // @AppStorage default in MenuBarPrefsView. object(forKey:) lets us
+        // distinguish "never set" from "explicitly false".
+        let showIcon = (defaults.object(forKey: "showMenuBarIcon") as? Bool) ?? true
 
         let state = store.hottestSensor?.thresholdState(using: store.thresholds) ?? .unknown
         let iconName: String
@@ -164,9 +183,15 @@ final class MenuBarController {
 
         let targetLength: CGFloat
         switch layout {
-        case .single:     targetLength = MenuBarIconRenderer.widthSingle
-        case .sideBySide: targetLength = MenuBarIconRenderer.widthSideBySide
-        case .stacked:    targetLength = MenuBarIconRenderer.widthStacked
+        case .single:
+            targetLength = showIcon ? MenuBarIconRenderer.widthSingle
+                                    : MenuBarIconRenderer.widthSingleNoIcon
+        case .sideBySide:
+            targetLength = showIcon ? MenuBarIconRenderer.widthSideBySide
+                                    : MenuBarIconRenderer.widthSideBySideNoIcon
+        case .stacked:
+            // Stacked layout is text-only by design — showIcon doesn't apply.
+            targetLength = MenuBarIconRenderer.widthStacked
         }
 
         // Throttle indicator dot: red if cap is breached, orange if only rules.
@@ -192,6 +217,7 @@ final class MenuBarController {
             layout: layout,
             v1: v1, v2: v2, unit: unit,
             iconName: iconName, tint: tint,
+            showIcon: showIcon,
             throttleDot: throttleDot,
             pulsePhase: phase,
             width: targetLength
