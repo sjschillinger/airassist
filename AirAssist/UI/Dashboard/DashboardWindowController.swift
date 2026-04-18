@@ -29,7 +29,13 @@ final class DashboardWindowController: NSWindowController {
     required init?(coder: NSCoder) { fatalError("not used") }
 
     func show() {
-        if window?.isVisible == false { window?.center() }
+        // Only center on the very first appearance. After that, the
+        // autosaved frame (keyed by `AirAssist.Dashboard`) restores
+        // the user's last size and position.
+        if window?.isVisible == false,
+           UserDefaults.standard.string(forKey: "NSWindow Frame AirAssist.Dashboard") == nil {
+            window?.center()
+        }
         showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
     }

@@ -97,7 +97,7 @@ struct HistoryView: View {
                 .foregroundStyle(.secondary)
             Text("No history yet")
                 .font(.headline)
-            Text("Samples are logged every 30 seconds. Leave AirAssist running to build up a history.")
+            Text("Samples are logged every 30 seconds. Leave Air Assist running to build up a history.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

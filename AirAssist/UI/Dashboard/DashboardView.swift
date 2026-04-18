@@ -347,16 +347,61 @@ struct DashboardView: View {
 
     // MARK: - Sensor grid
 
+    @ViewBuilder
     private var sensorGrid: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(sortedSensors) { sensor in
-                    SensorCardView(sensor: sensor,
-                                   thresholds: store.thresholds,
-                                   unit: unit)
+        if sortedSensors.isEmpty {
+            sensorGridEmpty
+        } else {
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(sortedSensors) { sensor in
+                        SensorCardView(sensor: sensor,
+                                       thresholds: store.thresholds,
+                                       unit: unit)
+                    }
+                }
+                .padding(16)
+            }
+        }
+    }
+
+    /// Shown when the grid has nothing to render — either the sensor
+    /// service hasn't produced anything yet (booting), it's been long
+    /// enough that we're confident something's wrong (unavailable),
+    /// or the user has disabled every sensor in Preferences.
+    @ViewBuilder
+    private var sensorGridEmpty: some View {
+        let allDisabled = !store.sensors.isEmpty && store.enabledSensors.isEmpty
+        VStack(spacing: 12) {
+            Spacer()
+            if allDisabled {
+                Image(systemName: "eye.slash")
+                    .font(.system(size: 36)).foregroundStyle(.secondary)
+                Text("All sensors hidden")
+                    .font(.headline)
+                Text("Re-enable sensors in Preferences → Sensors to see them here.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center).frame(maxWidth: 320)
+            } else {
+                switch store.sensorService.readState {
+                case .booting:
+                    ProgressView().controlSize(.large)
+                    Text("Reading sensors…")
+                        .font(.headline).foregroundStyle(.secondary)
+                case .unavailable:
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 36)).foregroundStyle(.orange)
+                    Text("Sensors unavailable")
+                        .font(.headline)
+                    Text("macOS returned no thermal sensors. Quit and re-launch Air Assist. If this persists on a signed release build, file a bug with your Mac model (`sysctl hw.model`) and macOS version.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center).frame(maxWidth: 380)
+                case .ok:
+                    EmptyView()   // unreachable when sortedSensors is empty
                 }
             }
-            .padding(16)
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

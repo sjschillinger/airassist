@@ -86,25 +86,48 @@ A `SafetyCoordinator` watches the throttling loop. If AirAssist crashes
 or is force-quit, any paused process receives `SIGCONT` at the OS level
 when its parent exits, so nothing stays frozen.
 
-## Privacy
+## Privacy & network activity
 
-AirAssist reads thermal and CPU data locally and keeps it on your Mac.
-It does not phone home, does not include analytics, and does not talk to
-any server except the Sparkle appcast for update checks.
+Air Assist reads thermal and CPU data locally and keeps it on your
+Mac. No analytics, no telemetry, no accounts.
+
+The app makes **one** kind of outgoing request: a periodic HTTPS fetch
+of the Sparkle appcast (`SUFeedURL` in `Info.plist`) to check for
+updates. You can disable update checks entirely in Preferences → General
+if you'd rather update manually. No other network I/O happens anywhere
+in the codebase — feel free to confirm with `lsof -p $(pgrep AirAssist)`
+or a tool like Little Snitch.
+
+## Sandboxing
+
+Air Assist is **not** sandboxed. It uses the
+`com.apple.security.temporary-exception.iokit-user-client-class`
+entitlement to access `IOHIDEventSystemUserClient`, which is how it
+reads the SoC's thermal sensors. That entitlement is incompatible with
+the App Store sandbox, so Air Assist will not ship on the Mac App
+Store — it's distributed only as a signed, notarized Developer ID
+build (and as source, for anyone who wants to audit or build it
+themselves).
+
+Throttling uses only POSIX signals on processes owned by your user
+account. No kernel extension, no `SMAppService`-installed helper, no
+elevated privileges at any point. If you're the kind of person who
+reads entitlements files before installing something, check
+`project.yml` — there is nothing else hiding in there.
 
 ## Contributing
 
-Bug reports and PRs welcome. Please run the tests before opening a PR:
+Bug reports and PRs are welcome. Please read
+[CONTRIBUTING.md](CONTRIBUTING.md) for the build, test, and coding
+guidelines. Security issues go through
+[SECURITY.md](SECURITY.md), not public issues.
 
-```bash
-xcodebuild -project AirAssist.xcodeproj -scheme AirAssist \
-           -destination 'platform=macOS' test
-```
-
-If you're submitting code, install the repo's pre-commit hook first:
+The short version:
 
 ```bash
 ./scripts/install-hooks.sh
+xcodebuild -project AirAssist.xcodeproj -scheme AirAssist \
+           -destination 'platform=macOS' test
 ```
 
 ## License

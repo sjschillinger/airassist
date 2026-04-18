@@ -63,11 +63,33 @@ struct MenuBarPopoverView: View {
     private var sensorList: some View {
         let groups = store.sensorsByCategory
         if groups.isEmpty {
-            Text("Reading sensors…")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            switch store.sensorService.readState {
+            case .booting:
+                VStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Reading sensors…")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+            case .unavailable:
+                VStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                    Text("Sensors unavailable")
+                        .font(.caption).bold()
+                    Text("macOS didn't return any thermal sensors. Re-launch Air Assist, and if it persists, check Preferences → Sensors for details.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+            case .ok:
+                EmptyView()   // won't hit — groups wouldn't be empty
+            }
         } else {
             SensorListView(groups: groups,
                            thresholds: store.thresholds,

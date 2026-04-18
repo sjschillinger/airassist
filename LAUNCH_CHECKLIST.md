@@ -46,11 +46,8 @@ Last updated: 2026-04-18
 
 ## 🧹 Ship-blocking polish
 
-- [x] **#6 Natural sort for sensor names** — committed 618ca3f
-- [ ] **#7 Category order in popover**
-  - Currently alphabetical-ish (CPU, GPU, SoC, Battery, Storage, Other)
-  - On M-series with 14 CPU Die entries, SoC is off-screen
-  - Proposed order: SoC → CPU → GPU → Battery → Storage → Other
+- [x] **#6 Natural sort for sensor names** — 618ca3f
+- [x] **#7 Category order in popover** — reordered enum (SoC first)
 - [ ] **#8 Condense 14× "CPU Die N" rows**
   - Default collapsed to hottest die + expand affordance
   - Or aggregate "CPU Cluster (hottest of N)" synthetic row
@@ -63,18 +60,12 @@ Last updated: 2026-04-18
 - [ ] **#11 First-launch experience**
   - Either onboarding sheet, or sensible defaults that make first 5s useful
   - At minimum: pre-select best 2 sensors, default governor to "armed"
-- [ ] **#12 Product name casing audit**
-  - `CFBundleName: Air Assist`, `CFBundleIdentifier: com.airAssist.app`
-  - Grep UI strings for "AirAssist" vs "Air Assist" inconsistency
-- [ ] **#13 Empty states**
-  - All sensors disabled → dashboard blank rectangle?
-  - No throttled PIDs → live-throttle list empty state
-  - Walk every screen in a freshly-installed app
+- [x] **#12 Product name casing audit** — fixed HistoryView user-visible string
+- [x] **#13 Empty states** — popover + dashboard sensor grid + "all disabled"
 - [ ] **#14 Accessibility Inspector pass**
   - Run Xcode Accessibility Inspector on dashboard + popover + prefs
   - Every control must have a label; verify VoiceOver flow end-to-end
-- [ ] **#15 Preferences window remembers size/position**
-  - Check `PreferencesWindowController` for `windowFrameAutosaveName`
+- [x] **#15 Preferences + Dashboard window remember size/position** — fixed `center()` override
 
 ---
 
@@ -92,9 +83,7 @@ Last updated: 2026-04-18
 - [ ] **#19 PID reuse / process-exit mid-throttle**
   - Detect stale PIDs (kqueue EVFILT_PROC on NOTE_EXIT, or poll)
   - Don't send SIGSTOP to recycled PIDs
-- [ ] **#20 Thermal sensor read failure path**
-  - If IOHIDEventSystemClient returns empty, show "Sensors unavailable" state
-  - Not a blank grid
+- [x] **#20 Thermal sensor read failure path** — `ReadState` enum + UI in popover & dashboard
 
 ---
 
@@ -108,22 +97,12 @@ Last updated: 2026-04-18
   - Current: 17 tests (mostly formatting/config)
   - Add: ThermalGovernor duty math, ThrottleRuleEngine rule firing,
     ProcessThrottler cycle math, SafetyCoordinator recovery
-- [ ] **#23 CHANGELOG.md + v0.1.0 release notes**
-  - Sparkle appcasts reference release notes; need a conventions doc
-- [ ] **#24 GitHub issue + PR templates**
-  - `.github/ISSUE_TEMPLATE/bug_report.md`
-  - `.github/ISSUE_TEMPLATE/feature_request.md`
-  - `.github/pull_request_template.md`
-  - Bug template must ask for `sysctl hw.model` + macOS version
-- [ ] **#25 SECURITY.md**
-  - Contact method for responsible disclosure
-  - Tool that SIGSTOPs processes will draw security research attention
-- [ ] **#26 CODE_OF_CONDUCT.md** (Contributor Covenant boilerplate)
-- [ ] **#27 CONTRIBUTING.md**
-  - Expand current README one-liner: test commands, project regen,
-    commit-message style, branch strategy
-- [ ] **#28 Strip `DEVELOPMENT_TEAM` from `project.yml` before publish**
-  - Verify not leaking personal team ID
+- [x] **#23 CHANGELOG.md + v0.1.0 release notes** — Keep-a-Changelog format
+- [x] **#24 GitHub issue + PR templates** — bug, feature, config, PR
+- [x] **#25 SECURITY.md** — private disclosure flow + scope
+- [x] **#26 CODE_OF_CONDUCT.md** — links to Contributor Covenant 2.1
+- [x] **#27 CONTRIBUTING.md** — build/test/style/scope
+- [x] **#28 Strip `DEVELOPMENT_TEAM`** — verified not present in `project.yml`
 
 ---
 
@@ -139,9 +118,7 @@ Last updated: 2026-04-18
 - [ ] **#31 Competitor comparison blurb**
   - Pre-write the "how is this different" answer for HN/Reddit
   - Lean into: "less, but free, OSS, no root"
-- [ ] **#32 Sandboxing decision — document explicitly**
-  - README: "AirAssist is not sandboxed because IOHIDEventSystemClient
-    requires a temporary-exception entitlement"
+- [x] **#32 Sandboxing decision — documented in README** — new Privacy + Sandboxing sections
 - [ ] **#33 Notarization dry-run with entitlement**
   - Submit test build with `com.apple.security.temporary-exception.iokit-user-client-class`
   - Don't discover on launch day that Apple rejects it
@@ -163,3 +140,5 @@ Last updated: 2026-04-18
 - ✅ Phase 1 scaffolding (commit `cbb0d7c`): `.gitignore`, References/
   untracked, pre-commit hook, publish.sh, CI workflows, LICENSE, README.
 - ✅ Natural sensor sort (commit `618ca3f`).
+- ✅ Stay Awake + launch checklist (commit `4338654`).
+- ✅ Quick-win batch (12 items: #7, #12, #13, #15, #20, #23–#28, #32).
