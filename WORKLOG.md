@@ -72,3 +72,27 @@ can detect it, any process named `AirAssist`.
 ## Progress
 
 (updated as we go)
+
+---
+
+## Phase 2 complete — 2026-04-17
+
+Delivered:
+- `ProcessInspector` — libproc-based enumeration, delta CPU%, bundle-id resolution.
+- `ProcessThrottler` — SIGSTOP/SIGCONT duty cycler, 100ms period, safe teardown.
+- `ThermalGovernor` — 1Hz hysteresis loop over temp cap + total-CPU cap.
+- `ThrottleRuleEngine` — applies user-defined per-app rules each tick.
+- Persisted `ThrottleRulesConfig` / `GovernorConfig` via UserDefaults.
+- New Preferences tabs: **App Rules** and **Governor**.
+- Dashboard panel showing live throttled processes.
+- Safe exit: `ThermalStore.stop()` SIGCONTs everything before termination.
+
+Smoke tests:
+- Raw SIGSTOP/SIGCONT works on `yes` (98% → 0% → 98%).
+- End-to-end with Release build + pre-seeded rule at 30% duty: `yes` settled
+  at ~30-33% CPU (matches configured duty).
+- Release binary RSS ~46MB at startup.
+
+Commits:
+- `10a6427` baseline (phase 1 + prior menu-bar work)
+- `660a2a9` per-app throttling + governor
