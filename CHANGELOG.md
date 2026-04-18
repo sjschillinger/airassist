@@ -35,6 +35,22 @@ Dates are in ISO 8601 (YYYY-MM-DD).
   a pre-commit hook blocking stray references to third-party products.
 
 ### Changed
+- **License: MIT → AGPL-3.0.** Non-commercial use remains free; any
+  fork or derivative must stay AGPL and share source. A separate
+  commercial license is available from the maintainer. Copyright
+  asserted as "Copyright (C) 2026 James Schillinger. All rights
+  reserved." Mirrors the dual-license stance used by projects like
+  WorldMonitor.
+- README: added prominent "USE AT YOUR OWN RISK" warning covering
+  SIGSTOP/SIGCONT behaviour, a "Not affiliated with Apple Inc."
+  disclaimer, and a license-terms table.
+- README sandboxing section corrected — distribution is ad-hoc signed
+  via Homebrew cask for 0.1.x, not Developer ID / notarized. Developer
+  ID + notarization is on the roadmap for 1.0.
+- First-launch disclosure: one-time modal on first run explaining what
+  the governor can do, that it's off by default, and that the software
+  is provided AS IS under AGPL-3.0. Idempotent, versioned so the
+  disclosure can be re-shown if capabilities expand.
 - README clarifies the sandboxing decision and the single outgoing
   network request (Sparkle appcast).
 - Install instructions lead with `brew install --cask` and cover the

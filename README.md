@@ -14,6 +14,21 @@ your shell has.
 > silicon, file an issue with the output of `sysctl hw.model` and what
 > you saw.
 
+> [!WARNING]
+> **Use at your own risk.** Air Assist pauses and resumes running
+> processes via POSIX signals (`SIGSTOP` / `SIGCONT`). That's a safe,
+> documented Unix mechanism, but pausing the wrong process at the wrong
+> time can still cause an application to stall, drop a connection, or
+> in rare cases lose unsaved work. Review the throttle rules before
+> enabling the governor, don't run Air Assist against processes you
+> can't afford to pause, and keep backups. The software is provided
+> AS IS, without warranty of any kind — see [LICENSE](LICENSE).
+
+> **Not affiliated with Apple Inc.** "MacBook Air", "Mac", "macOS",
+> and "Apple Silicon" are trademarks of Apple Inc. Air Assist is an
+> independent open-source project and has no endorsement or
+> affiliation with Apple.
+
 ## Features
 
 - **Live thermal dashboard** — every HID thermal sensor the Air exposes,
@@ -126,9 +141,11 @@ Air Assist is **not** sandboxed. It uses the
 entitlement to access `IOHIDEventSystemUserClient`, which is how it
 reads the SoC's thermal sensors. That entitlement is incompatible with
 the App Store sandbox, so Air Assist will not ship on the Mac App
-Store — it's distributed only as a signed, notarized Developer ID
-build (and as source, for anyone who wants to audit or build it
-themselves).
+Store. For 0.1.x it's distributed as an **ad-hoc signed** build via
+Homebrew cask (and as source, for anyone who wants to audit or build
+it themselves). A Developer ID + notarization pass is on the roadmap
+for 1.0; see [docs/releasing.md](docs/releasing.md) for the current
+pipeline.
 
 Throttling uses only POSIX signals on processes owned by your user
 account. No kernel extension, no `SMAppService`-installed helper, no
@@ -153,4 +170,15 @@ xcodebuild -project AirAssist.xcodeproj -scheme AirAssist \
 
 ## License
 
-[MIT](LICENSE).
+**AGPL-3.0** for non-commercial use.
+
+| Use case | Allowed? |
+|----------|----------|
+| Personal / research / educational | Yes |
+| Self-hosted / self-built (non-commercial) | Yes, with attribution |
+| Fork and modify (non-commercial) | Yes — derivatives must stay AGPL-3.0 and share source |
+| Commercial use / paid redistribution / rebranding | Requires a separate commercial license — contact the maintainer |
+
+See [LICENSE](LICENSE) for the full terms.
+
+Copyright (C) 2026 James Schillinger. All rights reserved.

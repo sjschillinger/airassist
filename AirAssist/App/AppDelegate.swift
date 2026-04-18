@@ -26,6 +26,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         store = ThermalStore()
         store.start()
         menuBarController = MenuBarController(store: store)
+
+        // One-time legal/safety disclosure. Runs after the menu bar is up so
+        // the alert isn't the first thing the user sees on a cold launch; the
+        // icon appears, then the modal.
+        FirstRunDisclosure.presentIfNeeded()
     }
 
     @MainActor
