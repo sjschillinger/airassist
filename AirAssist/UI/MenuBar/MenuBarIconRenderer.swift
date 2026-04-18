@@ -109,14 +109,32 @@ enum MenuBarIconRenderer {
         size: NSSize
     ) {
         let scale = barScale
-        let iconConfig = NSImage.SymbolConfiguration(pointSize: BaseSize.iconPt * scale, weight: .regular)
-        let baseIcon: NSImage? = showIcon
-            ? NSImage(systemSymbolName: iconName, accessibilityDescription: nil)?
+        // Prefer the custom AirAssist glyph asset (template-rendered, so macOS
+        // auto-flips black/white with menu-bar appearance). Fall back to the
+        // SF Symbol name for robustness if the asset ever goes missing.
+        let targetPt = BaseSize.iconPt * scale
+        let baseIcon: NSImage? = {
+            guard showIcon else { return nil }
+            if let glyph = NSImage(named: "MenuBarGlyph") {
+                // Template imagesets return isTemplate = true via asset metadata;
+                // belt-and-braces for external callers.
+                glyph.isTemplate = true
+                // Size to match SF Symbol rendering at the same point size.
+                let resized = NSImage(size: NSSize(width: targetPt, height: targetPt))
+                resized.isTemplate = true
+                resized.lockFocus()
+                glyph.draw(in: NSRect(x: 0, y: 0, width: targetPt, height: targetPt),
+                           from: .zero, operation: .sourceOver, fraction: 1.0)
+                resized.unlockFocus()
+                return resized
+            }
+            let iconConfig = NSImage.SymbolConfiguration(pointSize: targetPt, weight: .regular)
+            return NSImage(systemSymbolName: iconName, accessibilityDescription: nil)?
                 .withSymbolConfiguration(iconConfig)
-            : nil
-        // If the user asked for the icon but SF Symbol lookup failed, abort —
-        // matches the old guard's behaviour. When showIcon is false, baseIcon
-        // is intentionally nil and we proceed text-only.
+        }()
+        // If the user asked for the icon but both asset and SF Symbol failed,
+        // abort — matches the old guard's behaviour. When showIcon is false,
+        // baseIcon is intentionally nil and we proceed text-only.
         if showIcon && baseIcon == nil { return }
         let iconSize: NSSize = baseIcon?.size ?? .zero
         let font: NSFont = .monospacedDigitSystemFont(ofSize: BaseSize.singleFontPt * scale, weight: .regular)

@@ -1,0 +1,9 @@
+{
+  "images" : [
+    { "idiom" : "mac", "scale" : "1x", "filename" : "glyph.png" },
+    { "idiom" : "mac", "scale" : "2x", "filename" : "glyph@2x.png" },
+    { "idiom" : "mac", "scale" : "3x", "filename" : "glyph@3x.png" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 },
+  "properties" : { "template-rendering-intent" : "template" }
+}

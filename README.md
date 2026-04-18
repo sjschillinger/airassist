@@ -118,9 +118,25 @@ Unix technique for rate-limiting a process without a kernel extension;
 it only works on processes your user owns, which is deliberate. AirAssist
 will never ask for root and will never touch system daemons.
 
-A `SafetyCoordinator` watches the throttling loop. If AirAssist crashes
-or is force-quit, any paused process receives `SIGCONT` at the OS level
-when its parent exits, so nothing stays frozen.
+A `SafetyCoordinator` watches the throttling loop. It does three things:
+
+- **Graceful quit** (⌘Q, Activity Monitor → Quit, OS shutdown): signal
+  handlers for SIGTERM/SIGINT/SIGHUP/SIGQUIT send `SIGCONT` to every
+  paused PID before the app exits.
+- **Hard crash / SIGKILL**: on every throttle-set change, Air Assist
+  writes the list of paused PIDs to a dead-man's-switch file at
+  `~/Library/Application Support/AirAssist/inflight.json`. On the
+  **next launch**, `recoverOnLaunch()` reads that file, sends `SIGCONT`
+  to every PID in it, and deletes the file. macOS has no in-kernel
+  mechanism to auto-resume children when a parent dies, so in the gap
+  between a hard crash and the next launch, a paused process will
+  stay paused — relaunching Air Assist clears it.
+- **Stuck-cycle watchdog**: a 4Hz in-process timer force-sends
+  `SIGCONT` to any PID that has been continuously stopped longer than
+  500ms, protecting against a runaway duty-cycle bug.
+
+If Air Assist is force-killed while processes are paused and you don't
+want to relaunch, `kill -CONT <pid>` releases them manually.
 
 ## Privacy & network activity
 

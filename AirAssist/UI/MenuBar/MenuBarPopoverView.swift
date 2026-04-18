@@ -1,4 +1,5 @@
 import SwiftUI
+import Darwin
 
 struct MenuBarPopoverView: View {
     let store: ThermalStore
@@ -98,31 +99,60 @@ struct MenuBarPopoverView: View {
         }
     }
 
+    /// One row per *unique process name*, with a (×N) suffix when multiple PIDs
+    /// share a name. Dead PIDs are filtered via `kill(pid, 0)` — SafetyCoordinator
+    /// only drains stale entries on a full rule-off, so a process that exited
+    /// mid-throttle can linger in `liveThrottledPIDs` until then; hiding it here
+    /// keeps the popover honest without touching the safety-critical state.
+    private struct ThrottleRow: Identifiable {
+        let id: String        // the name, used as ForEach identity
+        let name: String
+        let duty: Double      // lowest (most aggressive) duty in the group
+        let count: Int
+    }
+
+    private var throttleRows: [ThrottleRow] {
+        let live = store.liveThrottledPIDs.filter { kill($0.pid, 0) == 0 }
+        let grouped = Dictionary(grouping: live, by: { $0.name })
+        return grouped.map { name, items in
+            ThrottleRow(
+                id: name,
+                name: name,
+                duty: items.map(\.duty).min() ?? 1.0,
+                count: items.count
+            )
+        }
+        .sorted { $0.duty < $1.duty }
+    }
+
     @ViewBuilder
     private var throttleSection: some View {
+        let rows = throttleRows
+        let totalLive = rows.reduce(0) { $0 + $1.count }
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Image(systemName: governorIcon).foregroundStyle(governorColor)
                 Text(governorSummary).font(.caption).bold()
                 Spacer()
-                if !store.liveThrottledPIDs.isEmpty {
-                    Text("\(store.liveThrottledPIDs.count) active")
+                if totalLive > 0 {
+                    Text("\(totalLive) active")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
             }
-            if !store.liveThrottledPIDs.isEmpty {
-                ForEach(store.liveThrottledPIDs.prefix(3).sorted { $0.duty < $1.duty }, id: \.pid) { item in
+            if !rows.isEmpty {
+                ForEach(rows.prefix(3)) { row in
                     HStack {
-                        Text("•  \(item.name)").lineLimit(1)
+                        Text(row.count > 1 ? "•  \(row.name) (×\(row.count))" : "•  \(row.name)")
+                            .lineLimit(1)
                         Spacer()
-                        Text("\(Int((item.duty * 100).rounded()))%").monospacedDigit()
+                        Text("\(Int((row.duty * 100).rounded()))%").monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
                     .font(.caption2)
                 }
-                if store.liveThrottledPIDs.count > 3 {
-                    Text("+ \(store.liveThrottledPIDs.count - 3) more")
+                if rows.count > 3 {
+                    Text("+ \(rows.count - 3) more")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
             }
