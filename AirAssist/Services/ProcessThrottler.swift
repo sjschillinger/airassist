@@ -43,6 +43,12 @@ final class ProcessThrottler {
     /// Minimum / maximum duty accepted. 1.0 means "ignore / untrottle".
     nonisolated static let minDuty: Double = 0.05
     nonisolated static let maxDuty: Double = 1.0
+    /// Soft floor applied when a throttle target is the foreground app.
+    /// Throttling the app the user is actively interacting with produces
+    /// audible stutter / input lag, so we clamp effective duty up to this
+    /// value while it's frontmost. 0.85 ≈ 85% runtime, which is barely
+    /// perceptible but still shaves load on a hot process.
+    nonisolated static let foregroundDutyFloor: Double = 0.85
 
     /// Per-PID state. `task` is the cycler; `sources` maps each requester to
     /// its requested duty. The effective duty sent to the cycler each cycle
@@ -72,6 +78,20 @@ final class ProcessThrottler {
     /// Layered on top of the excluded-name list because ancestors are often
     /// generic process names (zsh, Terminal) that could slip past a name check.
     var protectAncestors: Bool = true
+
+    /// PID of the app currently frontmost. Updated by `FrontmostAppObserver`.
+    /// When set, the cycler uses `foregroundDutyFloor` as a lower bound on
+    /// the effective duty for that PID — we never hammer the app the user
+    /// is actively interacting with.
+    var foregroundPID: pid_t? {
+        didSet { if oldValue != foregroundPID { publishInflight() } }
+    }
+
+    /// Update the tracked foreground PID. Called by `ThermalStore` whenever
+    /// `FrontmostAppObserver` fires.
+    func setForegroundPID(_ pid: pid_t?) {
+        foregroundPID = pid
+    }
 
     // MARK: - Public API
 
@@ -206,8 +226,15 @@ final class ProcessThrottler {
 
         while !Task.isCancelled {
             // Snapshot current duty (may have been updated by setDuty).
+            // If this pid is the frontmost app, soften duty up to the
+            // foreground floor so the user's active window isn't being
+            // SIGSTOP'd mid-keystroke.
             let duty: Double = await MainActor.run {
-                active[pid]?.effectiveDuty ?? Self.maxDuty
+                guard let base = active[pid]?.effectiveDuty else { return Self.maxDuty }
+                if pid == foregroundPID {
+                    return max(base, Self.foregroundDutyFloor)
+                }
+                return base
             }
             if duty >= Self.maxDuty { return }
 

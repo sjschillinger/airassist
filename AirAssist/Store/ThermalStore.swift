@@ -12,6 +12,7 @@ final class ThermalStore {
     let processInspector = ProcessInspector()
     let processThrottler = ProcessThrottler()
     let safety = SafetyCoordinator()
+    private var frontmostObserver: FrontmostAppObserver!
     let snapshots: ProcessSnapshotPublisher
     private(set) var governor: ThermalGovernor!
     private(set) var ruleEngine: ThrottleRuleEngine!
@@ -124,10 +125,16 @@ final class ThermalStore {
         self.governor.isRuleCoveredPID = { [weak self] pid in
             self?.ruleEngine.managedPIDs.contains(pid) ?? false
         }
+        // Foreground-app protection: the throttler uses this to clamp
+        // effective duty up to `foregroundDutyFloor` for the active window.
+        self.frontmostObserver = FrontmostAppObserver { [weak self] pid in
+            self?.processThrottler.setForegroundPID(pid)
+        }
     }
 
     func start() {
         safety.startWatchdog()
+        frontmostObserver.start()
         sensorService.start()
         logger.pruneOldEntries()
         logTask = Task { @MainActor [weak self] in
@@ -156,6 +163,7 @@ final class ThermalStore {
         logTask = nil
         controlLoopTask?.cancel()
         controlLoopTask = nil
+        frontmostObserver.stop()
         sensorService.stop()
         governor.stop()
         ruleEngine.stop()
