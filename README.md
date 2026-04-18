@@ -70,8 +70,9 @@ xattr -dr com.apple.quarantine /Applications/AirAssist.app
 (Homebrew-installed copies skip this — `curl` doesn't set the
 quarantine attribute.)
 
-Updates are delivered via [Sparkle](https://sparkle-project.org/);
-AirAssist will check for new versions weekly.
+Updates: for 0.1.x, run `brew upgrade --cask airassist` (or
+`brew upgrade`) to pick up new releases. An in-app updater via
+Sparkle is on the roadmap but not wired up yet.
 
 ## Build from source
 
@@ -109,14 +110,14 @@ when its parent exits, so nothing stays frozen.
 ## Privacy & network activity
 
 Air Assist reads thermal and CPU data locally and keeps it on your
-Mac. No analytics, no telemetry, no accounts.
+Mac. No analytics, no telemetry, no accounts, and — as of 0.1.x —
+**no outgoing network requests at all**. Updates come via Homebrew
+(`brew upgrade`), not from inside the app.
 
-The app makes **one** kind of outgoing request: a periodic HTTPS fetch
-of the Sparkle appcast (`SUFeedURL` in `Info.plist`) to check for
-updates. You can disable update checks entirely in Preferences → General
-if you'd rather update manually. No other network I/O happens anywhere
-in the codebase — feel free to confirm with `lsof -p $(pgrep AirAssist)`
-or a tool like Little Snitch.
+If and when an in-app Sparkle updater is added in a future release,
+this section will be updated and the update check will be opt-out in
+Preferences. Confirm the current behaviour for yourself with
+`lsof -p $(pgrep AirAssist)` or Little Snitch.
 
 ## Sandboxing
 

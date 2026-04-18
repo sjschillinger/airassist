@@ -39,6 +39,23 @@ Dates are in ISO 8601 (YYYY-MM-DD).
   network request (Sparkle appcast).
 - Install instructions lead with `brew install --cask` and cover the
   one-time `xattr -dr com.apple.quarantine` step for manual downloads.
+- Bundle identifier: `com.airAssist.app` → `com.sjschillinger.airassist`
+  (clean reverse-DNS, pre-launch). UserDefaults key for threshold
+  settings renamed accordingly; pre-1.0 users will see defaults on
+  first launch after upgrading.
+- README/CHANGELOG no longer promise a Sparkle in-app updater for
+  0.1.x — updates come via `brew upgrade`. In-app Sparkle stays on
+  the roadmap.
+- First launch hides obvious sensor noise by default (`CPU Die 5..N`
+  and the `Other` category) so the popover is readable on M-series
+  Pro/Max parts. All sensors remain re-enableable in
+  Preferences → Sensors. Governor default stays `off` — throttling
+  requires explicit opt-in.
+- Publish allowlist extended to include community health files
+  (CONTRIBUTING, SECURITY, CoC, CHANGELOG, issue/PR templates, docs/).
+- CONTRIBUTING clarifies that `project.yml` is the source of truth and
+  the generated `.xcodeproj` must be kept in sync via
+  `xcodegen generate`.
 
 ### Fixed
 - Popover no longer renders a blank rectangle when all sensors are

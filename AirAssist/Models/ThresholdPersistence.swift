@@ -1,7 +1,7 @@
 import Foundation
 
 enum ThresholdPersistence {
-    private static let key = "com.airAssist.thresholds"
+    private static let key = "com.sjschillinger.airassist.thresholds"
 
     static func load() -> ThresholdSettings {
         guard let data = UserDefaults.standard.data(forKey: key),

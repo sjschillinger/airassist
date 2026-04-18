@@ -59,6 +59,7 @@ final class SensorService {
 
     private func reconcile(readings: [SensorReading]) {
         var index = Dictionary(uniqueKeysWithValues: sensors.map { ($0.id, $0) })
+        let discoveredBefore = !sensors.isEmpty
 
         for reading in readings {
             if let existing = index[reading.id] {
@@ -76,6 +77,12 @@ final class SensorService {
                 sensors.append(sensor)
                 index[sensor.id] = sensor
             }
+        }
+
+        // First-launch seed runs once, after the very first successful
+        // sensor discovery. No-op on every subsequent boot.
+        if !discoveredBefore, !sensors.isEmpty {
+            FirstLaunchSeeder.seedIfNeeded(sensors: sensors)
         }
     }
 }

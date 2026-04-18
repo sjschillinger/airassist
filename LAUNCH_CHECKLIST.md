@@ -30,23 +30,21 @@ Last updated: 2026-04-18
   - [ ] Still-pending if we stay free-tier: create the separate
     `homebrew-airassist` public repo from `scripts/homebrew-tap-template/`.
 
-- [ ] **#2 Sparkle framework not actually linked**
-  - `SUFeedURL`/`SUPublicEDKey` are declared but Sparkle is absent from `project.yml`
-  - Decision: link Sparkle + host appcast, OR strip placeholder keys until ready
-  - If linking: generate Ed25519 keypair, add to build, host appcast.xml
+- [x] **#2 Sparkle framework not actually linked**
+  - Resolution: checklist was wrong — no `SUFeedURL` / `SUPublicEDKey`
+    keys existed in Info.plist or project.yml. Nothing to strip.
+    README + CHANGELOG updated to stop promising Sparkle for 0.1.x.
+    Sparkle is a future feature; updates happen via `brew upgrade`.
 
-- [ ] **#3 Final bundle identifier**
-  - Currently `com.airAssist.app` — pick final reverse-DNS before notarization
-  - Candidates: `com.github.sjschillinger.airassist`, `app.airassist`, domain-tied
+- [x] **#3 Final bundle identifier** — `com.sjschillinger.airassist`.
+  Applied in project.yml, Info.plist, Constants.swift, UserDefaults
+  key, Homebrew cask zap paths.
 
-- [ ] **#4 Hard-coded `airassist.app` domain in Info.plist**
-  - `SUFeedURL = https://airassist.app/appcast.xml` — do we own it?
-  - Alternatives: GitHub Pages appcast (`sjschillinger.github.io/airassist/appcast.xml`),
-    GitHub Releases direct
+- [x] **#4 Hard-coded `airassist.app` domain** — never actually written
+  into Info.plist (see #2). Moot.
 
-- [ ] **#5 Privacy statement vs. auto-update**
-  - README says "does not phone home" but Sparkle will fetch appcast
-  - Resolve: add 1-line "network activity" section to README
+- [x] **#5 Privacy statement vs. auto-update** — resolved by #2.
+  README now states 0.1.x makes **zero** outgoing network requests.
 
 ---
 
@@ -57,15 +55,20 @@ Last updated: 2026-04-18
 - [ ] **#8 Condense 14× "CPU Die N" rows**
   - Default collapsed to hottest die + expand affordance
   - Or aggregate "CPU Cluster (hottest of N)" synthetic row
-- [ ] **#9 App icon quality check**
-  - Inspect current `.appiconset` PNGs against Big Sur/Sonoma design lang
-  - If placeholder, commission real icon before launch
+- [~] **#9 App icon quality check** — bespoke, not placeholder, but
+  dated. Thermometer + air-flow metaphor on a blue→red gradient. Uses
+  glossy top highlight (Big Sur+ moved to matte). Ship-acceptable for
+  0.1.0; consider a modernization pass (matte finish, subtle depth,
+  drop the glossy highlight) or a paid designer before 1.0.
 - [ ] **#10 Menu bar icon legibility (light + dark menu bar)**
   - Screenshot on light wallpaper + dark wallpaper
   - Pulse minAlpha 0.35 may wash out on light bars
-- [ ] **#11 First-launch experience**
-  - Either onboarding sheet, or sensible defaults that make first 5s useful
-  - At minimum: pre-select best 2 sensors, default governor to "armed"
+- [x] **#11 First-launch experience** — `FirstLaunchSeeder` runs once
+  after initial sensor discovery. Hides `CPU Die 5..N` + the `Other`
+  category (PMIC/rails) by default; keeps SoC, GPU, Battery, Storage,
+  CPU Die 1..4 visible. Governor stays **off** by default — throttling
+  user processes without explicit opt-in would be a surprising
+  default for an OSS utility.
 - [x] **#12 Product name casing audit** — fixed HistoryView user-visible string
 - [x] **#13 Empty states** — popover + dashboard sensor grid + "all disabled"
 - [ ] **#14 Accessibility Inspector pass**
@@ -95,10 +98,11 @@ Last updated: 2026-04-18
 
 ## 📦 Release hygiene
 
-- [ ] **#21 Project file source of truth**
-  - Both `project.yml` + `.xcodeproj` tracked
-  - Pick one: if XcodeGen wins, remove `.xcodeproj` from publish allowlist,
-    add generate step to README. If pbxproj wins, delete `project.yml`.
+- [x] **#21 Project file source of truth** — `project.yml` wins.
+  `.xcodeproj` stays checked in so `git clone && open AirAssist.xcodeproj`
+  works without XcodeGen, but CONTRIBUTING now explicitly documents
+  that the pbxproj is generated output and must be kept in sync via
+  `xcodegen generate`.
 - [ ] **#22 Real test coverage for core safety paths**
   - Current: 17 tests (mostly formatting/config)
   - Add: ThermalGovernor duty math, ThrottleRuleEngine rule firing,
@@ -114,10 +118,22 @@ Last updated: 2026-04-18
 
 ## 💡 Non-obvious concerns
 
-- [ ] **#29 Name / trademark check**
-  - "Air Assist" is an HVAC term + laser-cutter feature
-  - USPTO TESS search before public launch; have fallback name ready
-  - Candidates if blocked: "Thermal Assist", "Mac Assist", "Aerial", "Breeze"
+- [🚨] **#29 Name / trademark check — REAL COLLISIONS FOUND**
+  - **`airassist.app`** is a live AI-classroom product (our own
+    Info.plist previously pointed `SUFeedURL` at this domain — now
+    removed, but the name collision remains).
+  - **theairassist.com** — another AI support product.
+  - **Relativity "aiR Assist"** — legal-tech AI feature inside
+    RelativityOne.
+  - Laser-cutter hardware: xTool, Cloudray, ACCELaser all ship "Air
+    Assist" products (expected).
+  - **Strong recommendation: rename before public launch.** Candidates
+    from original list: "Thermal Assist", "Mac Assist", "Aerial",
+    "Breeze". My lean: **Breeze** (single word, fanless metaphor, no
+    known Mac-utility collision on first-pass search — needs its own
+    TESS check). Ping me and I'll do the search.
+  - Bundle ID prefix (`com.sjschillinger.*`) is already rename-safe;
+    only the last segment changes.
 - [ ] **#30 Fanless-only positioning — have the HN answer ready**
   - README is honest; write 1-liner: "yes, works on Pros; not optimized yet;
     roadmap in NON_AIR_ROADMAP.md (dev repo)"
@@ -205,3 +221,5 @@ ship broken. Then the 4 remaining 🚨 blockers (#2, #3, #4, #29).
 - ✅ Free-tier distribution pipeline (ad-hoc signed Homebrew cask):
   rewrote `release.yml`, added `scripts/homebrew-tap-template/`,
   wrote `docs/releasing.md`, updated README install section.
+- ✅ Blocker batch (8 items): #2, #3, #4, #5, #11, #21, #29 search, #9
+  inspection, publish allowlist extension.

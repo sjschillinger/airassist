@@ -27,6 +27,22 @@ Air Assist uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to
 generate the `.xcodeproj` from `project.yml`, so the pbxproj stays
 diff-friendly.
 
+**`project.yml` is the source of truth.** The generated
+`AirAssist.xcodeproj` is checked in so new contributors can
+`git clone && open AirAssist.xcodeproj` without installing XcodeGen,
+but never hand-edit the pbxproj. Workflow when you change build
+settings, add a file, or bump the bundle ID:
+
+```bash
+# edit project.yml
+xcodegen generate
+git add project.yml AirAssist.xcodeproj
+git commit
+```
+
+PRs that drift the pbxproj away from what `xcodegen generate`
+produces will be asked to regenerate and recommit.
+
 ```bash
 git clone https://github.com/TODO_USER/airassist.git
 cd airassist

@@ -2,7 +2,7 @@ import Foundation
 
 enum AppStrings {
     static let appName = "Air Assist"
-    static let bundleID = "com.airAssist.app"
+    static let bundleID = "com.sjschillinger.airassist"
 
     enum MenuBar {
         static let defaultIcon = "thermometer.medium"

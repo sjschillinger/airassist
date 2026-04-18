@@ -39,8 +39,17 @@ ALLOWLIST=(
   "project.yml"
   ".gitignore"
   ".github/workflows"
+  ".github/ISSUE_TEMPLATE"
+  ".github/pull_request_template.md"
   "LICENSE"
   "README.md"
+  "CHANGELOG.md"
+  "CONTRIBUTING.md"
+  "CODE_OF_CONDUCT.md"
+  "SECURITY.md"
+  "docs"
+  "scripts/install-hooks.sh"
+  "scripts/hooks"
 )
 
 # Forbidden strings — scanned on the *output* tree as a last line of

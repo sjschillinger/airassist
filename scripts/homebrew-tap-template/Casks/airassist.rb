@@ -28,9 +28,9 @@ cask "airassist" do
   # everything below in addition to the .app.
   zap trash: [
     "~/Library/Application Support/AirAssist",
-    "~/Library/Caches/com.airAssist.app",
-    "~/Library/Preferences/com.airAssist.app.plist",
-    "~/Library/Saved Application State/com.airAssist.app.savedState",
+    "~/Library/Caches/com.sjschillinger.airassist",
+    "~/Library/Preferences/com.sjschillinger.airassist.plist",
+    "~/Library/Saved Application State/com.sjschillinger.airassist.savedState",
     "~/Library/Logs/AirAssist",
   ]
 end

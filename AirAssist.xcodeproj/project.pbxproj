@@ -31,6 +31,7 @@
 		6C0C86897E24C74BE1885FEE /* ProcessSnapshotPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BFBE657DCEA969D7AC725E8 /* ProcessSnapshotPublisher.swift */; };
 		704A38ED1043918BE5782CD2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B8A97982FB78D94D328FDB /* IOKit.framework */; };
 		72FE15AFF7FE2FD18EBD5B04 /* ThresholdPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */; };
+		8B1F31EC477E96E3DD53D9EB /* FirstLaunchSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */; };
 		8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573E0D36375389574C26D88F /* ThrottlingPrefsView.swift */; };
 		8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */; };
 		8EDE88F52ED18CCF2EFC8CBD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C1EA66578373DFC8BB8830 /* AppDelegate.swift */; };
@@ -112,6 +113,7 @@
 		D0BD89C1534037D26554015A /* SensorsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorsPrefsView.swift; sourceTree = "<group>"; };
 		D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinator.swift; sourceTree = "<group>"; };
 		E195513AB2DA802AD3B203E3 /* MenuBarQuickMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarQuickMenu.swift; sourceTree = "<group>"; };
+		E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchSeeder.swift; sourceTree = "<group>"; };
 		F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryLogger.swift; sourceTree = "<group>"; };
 		F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardContainerView.swift; sourceTree = "<group>"; };
 		F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -254,6 +256,7 @@
 		803F2BB8CDD42057DA27761A /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */,
 				BF7E79F9D9CEB95EE90B4F21 /* FrontmostAppObserver.swift */,
 				F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */,
 				0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */,
@@ -398,6 +401,7 @@
 				EB79F540BA6F71D092CAA211 /* DashboardContainerView.swift in Sources */,
 				96364AA71968BC08B8C14C16 /* DashboardView.swift in Sources */,
 				3C53C4BE5E248A344EB5EFBF /* DashboardWindowController.swift in Sources */,
+				8B1F31EC477E96E3DD53D9EB /* FirstLaunchSeeder.swift in Sources */,
 				0F4EDC318F405B7E520BF6C5 /* FrontmostAppObserver.swift in Sources */,
 				1FBEFE6AFC18FA9F73206F50 /* GeneralPrefsView.swift in Sources */,
 				ACFABCECFECDF629B1105134 /* GovernorConfig.swift in Sources */,
@@ -523,7 +527,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.airAssist.AirAssistTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist.tests;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 6.0;
@@ -543,7 +547,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.airAssist.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist;
 				PRODUCT_NAME = AirAssist;
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = AirAssist/IOKitBridge.h;
@@ -563,7 +567,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.airAssist.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist;
 				PRODUCT_NAME = AirAssist;
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = AirAssist/IOKitBridge.h;
@@ -583,7 +587,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.airAssist.AirAssistTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist.tests;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 6.0;
