@@ -1,20 +1,43 @@
 import AppKit
 import SwiftUI
 
-
+/// Coordinator for the menu bar: owns the NSStatusItem, routes clicks to
+/// popover or quick-menu, and keeps the button image synchronised with
+/// `ThermalStore` state.
+///
+/// Rendering lives in `MenuBarIconRenderer`; the right-click action sheet
+/// lives in `MenuBarQuickMenu`. This file deliberately stays small — any
+/// logic that isn't "own the NSStatusItem, observe the store, open
+/// popover/menu/preferences" belongs in one of those two collaborators.
+///
+/// IMPORTANT: never use `NSStatusItem.variableLength`. Status items are
+/// hosted in ControlCenter's process via scene hosting on macOS 15+/26,
+/// and every content change triggers a cross-process `_viewSizeDidChange`
+/// → `[NSStatusItem setLength:]` call; any invalid transient size throws
+/// an uncaught NSException inside ControlCenter and crashes the menu bar
+/// agent. Fixed widths sidestep that.
+///
+/// Likewise, never replace `NSStatusBarButton.cell` — the menu bar uses
+/// transparent styling configured invisibly by the system on that cell.
 @MainActor
 final class MenuBarController {
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private let store: ThermalStore
+    private var quickMenu: MenuBarQuickMenu!
     private var keyMonitor: Any?
     private var appearanceObserver: NSKeyValueObservation?
 
     init(store: ThermalStore) {
         self.store = store
+        self.quickMenu = MenuBarQuickMenu(
+            store: store,
+            openDashboard:   { [weak self] in self?.openDashboard() },
+            openPreferences: { [weak self] in self?.openPreferences() }
+        )
         setupStatusItem()
         setupPopover()
-        // Cmd+, and Cmd+D fire only when our app is key (e.g. popover is open).
+        // Cmd+, and Cmd+D fire only when our app is key (e.g. popover open).
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard event.modifierFlags.contains(.command) else { return event }
             switch event.charactersIgnoringModifiers {
@@ -28,14 +51,14 @@ final class MenuBarController {
                 return event
             }
         }
-        // Re-render immediately when the user toggles Appearance / Increase Contrast
-        // so tinted (red/orange) states update right away instead of waiting for
-        // the next 2s poll. (Template images auto-adapt — this is for the baked-
-        // in-color path only, but it's cheap to just re-run syncButton either way.)
+        // Re-render immediately when the user toggles Appearance / Increase
+        // Contrast so tinted (red/orange) states update right away instead of
+        // waiting for the next 2s poll.
         appearanceObserver = NSApp.observe(\.effectiveAppearance, options: [.new]) { [weak self] _, _ in
             Task { @MainActor [weak self] in self?.syncButton() }
         }
-        // Defer observation to next run loop so status item finishes its own layout first
+        // Defer observation to next run loop so status item finishes its own
+        // layout first.
         DispatchQueue.main.async { [weak self] in self?.observeStore() }
     }
 
@@ -50,50 +73,15 @@ final class MenuBarController {
         }
     }
 
-    // MARK: - Status item (pure AppKit — no NSHostingView to avoid layout recursion on macOS 26)
-
-    // Base widths & font sizes, calibrated for the standard 22pt menu bar.
-    // On displays with a taller bar (macOS HiDPI scaling / larger menu bar
-    // accessibility), both the slot width and font size scale proportionally
-    // so content fills the bar at the same visual density. NEVER use
-    // NSStatusItem.variableLength — status items are hosted in ControlCenter's
-    // process via scene hosting on macOS 15+/26, and every content change
-    // triggers a cross-process _viewSizeDidChange → [NSStatusItem setLength:]
-    // call; any invalid transient size throws an uncaught NSException inside
-    // ControlCenter and crashes the menu bar agent. Fixed widths skip that.
-    private enum BaseSize {
-        static let referenceBarHeight: CGFloat = 22
-        // Slot widths at reference bar height
-        static let singleWidth: CGFloat     = 56
-        static let sideBySideWidth: CGFloat = 86
-        static let stackedWidth: CGFloat    = 44
-        // Font sizes at reference bar height
-        static let singleFontPt: CGFloat    = 12
-        static let stackedFontPt: CGFloat   = 10
-        static let iconPt: CGFloat          = 13
-    }
-
-    /// Scale factor derived from the *current* menu bar thickness vs. the
-    /// 22pt reference. On a standard bar this is 1.0; on a scaled-up bar it
-    /// grows proportionally (e.g. 1.45 if the bar is 32pt).
-    private static var barScale: CGFloat {
-        max(1.0, NSStatusBar.system.thickness / BaseSize.referenceBarHeight)
-    }
-    private static var widthSingle: CGFloat     { BaseSize.singleWidth * barScale }
-    private static var widthSideBySide: CGFloat { BaseSize.sideBySideWidth * barScale }
-    private static var widthStacked: CGFloat    { BaseSize.stackedWidth * barScale }
+    // MARK: - Status item
 
     private func setupStatusItem() {
-        statusItem = NSStatusBar.system.statusItem(withLength: Self.widthSingle)
+        statusItem = NSStatusBar.system.statusItem(withLength: MenuBarIconRenderer.widthSingle)
         guard let button = statusItem?.button else { return }
-        // NEVER replace button.cell — NSStatusBarButton's cell has transparent/menu-bar
-        // styling configured invisibly by the system; replacing it breaks appearance.
         button.image = NSImage(systemSymbolName: "thermometer.medium",
                                accessibilityDescription: AppStrings.appName)
         button.image?.isTemplate = true
         button.imagePosition = .imageLeft
-        // Respond to both left- and right-click on the button so we can
-        // show the popover on left-click and a quick-action menu on right.
         button.action = #selector(statusItemClicked(_:))
         button.target = self
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -129,14 +117,12 @@ final class MenuBarController {
 
         let targetLength: CGFloat
         switch layout {
-        case .single:     targetLength = Self.widthSingle
-        case .sideBySide: targetLength = Self.widthSideBySide
-        case .stacked:    targetLength = Self.widthStacked
+        case .single:     targetLength = MenuBarIconRenderer.widthSingle
+        case .sideBySide: targetLength = MenuBarIconRenderer.widthSideBySide
+        case .stacked:    targetLength = MenuBarIconRenderer.widthStacked
         }
 
-        // Throttle indicator — small dot overlaid on the icon when the
-        // governor or rule engine is actively throttling anything. Red
-        // if a cap is breached; orange if rules are the only reason.
+        // Throttle indicator dot: red if cap is breached, orange if only rules.
         let throttleDot: NSColor? = {
             if store.isPauseActive { return nil }
             if store.governor.isTempThrottling { return .systemRed }
@@ -145,14 +131,7 @@ final class MenuBarController {
             return nil
         }()
 
-        // Render the entire content (icon + text, or two-line text) into a
-        // single NSImage sized exactly to the status item. NSButtonCell
-        // vertically centers images by default, so this gives pixel-accurate
-        // centering across all three layouts — no paragraph-style hacks, no
-        // attributedTitle top-alignment quirks. It also removes per-poll
-        // mutation of imagePosition / attributedTitle, further reducing
-        // cross-process size churn with ControlCenter.
-        let rendered = Self.renderMenuBarImage(
+        let rendered = MenuBarIconRenderer.render(
             layout: layout,
             v1: v1, v2: v2, unit: unit,
             iconName: iconName, tint: tint,
@@ -165,7 +144,7 @@ final class MenuBarController {
             ctx.allowsImplicitAnimation = false
             if item.length != targetLength { item.length = targetLength }
             if button.imagePosition != .imageOnly { button.imagePosition = .imageOnly }
-            if button.contentTintColor != nil { button.contentTintColor = nil } // we bake tint in
+            if button.contentTintColor != nil { button.contentTintColor = nil }
             if button.attributedTitle.length != 0 {
                 button.attributedTitle = NSAttributedString(string: "")
             }
@@ -173,165 +152,13 @@ final class MenuBarController {
         }
     }
 
-    // MARK: - Off-screen rendering (keeps everything vertically centered)
-
-    private static let barHeight: CGFloat = NSStatusBar.system.thickness  // 22 on modern macOS
-
-    private static func renderMenuBarImage(
-        layout: MenuBarLayout,
-        v1: Double?, v2: Double?, unit: TempUnit,
-        iconName: String, tint: NSColor?,
-        throttleDot: NSColor?,
-        width: CGFloat
-    ) -> NSImage {
-        let size = NSSize(width: width, height: barHeight)
-        let img = NSImage(size: size, flipped: false) { _ in
-            switch layout {
-            case .single:
-                drawIconPlusText(
-                    text: v1.map(unit.format) ?? "",
-                    iconName: iconName, tint: tint,
-                    throttleDot: throttleDot,
-                    size: size
-                )
-            case .sideBySide:
-                var parts: [String] = []
-                if let v1 { parts.append(unit.format(v1)) }
-                if let v2 { parts.append(unit.format(v2)) }
-                drawIconPlusText(
-                    text: parts.joined(separator: "  "),
-                    iconName: iconName, tint: tint,
-                    throttleDot: throttleDot,
-                    size: size
-                )
-            case .stacked:
-                drawStackedText(
-                    top:    v1.map(unit.format) ?? "–",
-                    bottom: v2.map(unit.format) ?? "–",
-                    size: size
-                )
-            }
-            return true
-        }
-        // Baking a colored dot forces the image out of template mode, so
-        // auto-tinting only applies when there is neither a tint nor a dot.
-        img.isTemplate = (tint == nil && throttleDot == nil)
-        return img
-    }
-
-    private static func drawIconPlusText(
-        text: String, iconName: String, tint: NSColor?,
-        throttleDot: NSColor?,
-        size: NSSize
-    ) {
-        let scale = barScale
-        let iconConfig = NSImage.SymbolConfiguration(pointSize: BaseSize.iconPt * scale, weight: .regular)
-        guard let baseIcon = NSImage(systemSymbolName: iconName, accessibilityDescription: nil)?
-                .withSymbolConfiguration(iconConfig) else { return }
-        let iconSize = baseIcon.size
-        let font: NSFont = .monospacedDigitSystemFont(ofSize: BaseSize.singleFontPt * scale, weight: .regular)
-        let textColor: NSColor = tint ?? .labelColor
-        let textAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
-        let textSize = (text as NSString).size(withAttributes: textAttrs)
-
-        let gap: CGFloat = 3
-        let totalWidth = iconSize.width + (text.isEmpty ? 0 : gap + textSize.width)
-        let startX = (size.width - totalWidth) / 2
-
-        // Icon
-        let iconRect = NSRect(
-            x: startX,
-            y: (size.height - iconSize.height) / 2,
-            width: iconSize.width,
-            height: iconSize.height
-        )
-        if let tint {
-            tint.set()
-            let tinted = baseIcon.copy() as! NSImage
-            tinted.isTemplate = false
-            tinted.lockFocus()
-            tint.set()
-            let r = NSRect(origin: .zero, size: iconSize)
-            r.fill(using: .sourceAtop)
-            tinted.unlockFocus()
-            tinted.draw(in: iconRect)
-        } else {
-            // Template: AppKit will tint this image based on appearance when drawn in menu bar.
-            baseIcon.draw(in: iconRect)
-        }
-
-        // Text
-        if !text.isEmpty {
-            let textRect = NSRect(
-                x: startX + iconSize.width + gap,
-                y: (size.height - textSize.height) / 2,
-                width: textSize.width,
-                height: textSize.height
-            )
-            (text as NSString).draw(in: textRect, withAttributes: textAttrs)
-        }
-
-        // Throttle indicator dot — tiny filled circle at the icon's
-        // bottom-right corner, with a thin translucent halo for contrast
-        // against both light and dark menu bars.
-        if let dotColor = throttleDot {
-            let dotDiameter: CGFloat = max(4, BaseSize.iconPt * scale * 0.38)
-            let dotRect = NSRect(
-                x: iconRect.maxX - dotDiameter * 0.9,
-                y: iconRect.minY - dotDiameter * 0.15,
-                width: dotDiameter,
-                height: dotDiameter
-            )
-            // Halo
-            NSColor.windowBackgroundColor.withAlphaComponent(0.6).set()
-            NSBezierPath(ovalIn: dotRect.insetBy(dx: -0.8, dy: -0.8)).fill()
-            dotColor.set()
-            NSBezierPath(ovalIn: dotRect).fill()
-        }
-    }
-
-    private static func drawStackedText(top: String, bottom: String, size: NSSize) {
-        let font: NSFont = .monospacedDigitSystemFont(ofSize: BaseSize.stackedFontPt * barScale, weight: .semibold)
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: NSColor.labelColor,
-        ]
-        let topSize    = (top    as NSString).size(withAttributes: attrs)
-        let bottomSize = (bottom as NSString).size(withAttributes: attrs)
-        let lineHeight = max(topSize.height, bottomSize.height)
-        let totalHeight = lineHeight * 2
-        let blockY = (size.height - totalHeight) / 2
-
-        let topRect = NSRect(
-            x: (size.width - topSize.width) / 2,
-            y: blockY + lineHeight,
-            width: topSize.width,
-            height: lineHeight
-        )
-        let bottomRect = NSRect(
-            x: (size.width - bottomSize.width) / 2,
-            y: blockY,
-            width: bottomSize.width,
-            height: lineHeight
-        )
-        (top    as NSString).draw(in: topRect,    withAttributes: attrs)
-        (bottom as NSString).draw(in: bottomRect, withAttributes: attrs)
-    }
-
-    private func monoAttrs(size: CGFloat) -> [NSAttributedString.Key: Any] {
-        [.font: NSFont.monospacedDigitSystemFont(ofSize: size, weight: .regular)]
-    }
-
-    // MARK: - Observation (re-registers itself on each change)
+    // MARK: - Observation
 
     private func observeStore() {
         withObservationTracking { [weak self] in
             guard let self else { return }
-            // Track both the sensor list and each individual currentValue so that
-            // all slot modes (highest, average, individual) update on every poll
             _ = store.sensors.count
             store.enabledSensors.forEach { _ = $0.currentValue }
-            // Also track throttle state so the icon's dot overlay follows it.
             _ = store.governor.isTempThrottling
             _ = store.governor.isCPUThrottling
             _ = store.liveThrottledPIDs.count
@@ -344,7 +171,7 @@ final class MenuBarController {
         }
     }
 
-    // MARK: - Popover (content created lazily on first open to avoid startup layout recursion)
+    // MARK: - Popover
 
     private func setupPopover() {
         popover.behavior = .transient
@@ -385,82 +212,10 @@ final class MenuBarController {
         }
     }
 
-    /// Right-click / control-click quick menu. Mirrors the core popover
-    /// actions so power users don't have to open the full popover for a
-    /// one-shot "pause for an hour" or "open dashboard."
     private func showQuickMenu() {
-        guard let item = statusItem, let button = item.button else { return }
+        guard let item = statusItem else { return }
         if popover.isShown { popover.performClose(nil) }
-
-        let menu = NSMenu()
-
-        // Dashboard / Preferences.
-        let dashItem = NSMenuItem(title: "Open Dashboard",
-                                  action: #selector(qmDashboard),
-                                  keyEquivalent: "d")
-        dashItem.target = self
-        dashItem.keyEquivalentModifierMask = [.command]
-        menu.addItem(dashItem)
-
-        let prefItem = NSMenuItem(title: "Preferences…",
-                                  action: #selector(qmPreferences),
-                                  keyEquivalent: ",")
-        prefItem.target = self
-        prefItem.keyEquivalentModifierMask = [.command]
-        menu.addItem(prefItem)
-
-        menu.addItem(.separator())
-
-        // Pause / resume submenu.
-        if store.isPauseActive {
-            let resume = NSMenuItem(title: "Resume throttling",
-                                    action: #selector(qmResume),
-                                    keyEquivalent: "")
-            resume.target = self
-            menu.addItem(resume)
-        } else {
-            let pauseParent = NSMenuItem(title: "Pause throttling",
-                                         action: nil, keyEquivalent: "")
-            let pauseSub = NSMenu()
-            pauseSub.addItem(makePauseItem("15 minutes",   seconds: 15 * 60))
-            pauseSub.addItem(makePauseItem("1 hour",       seconds: 60 * 60))
-            pauseSub.addItem(makePauseItem("4 hours",      seconds: 4 * 60 * 60))
-            pauseSub.addItem(makePauseItem("Until quit",   seconds: nil))
-            pauseParent.submenu = pauseSub
-            menu.addItem(pauseParent)
-        }
-
-        menu.addItem(.separator())
-        let quit = NSMenuItem(title: "Quit Air Assist",
-                              action: #selector(qmQuit),
-                              keyEquivalent: "q")
-        quit.target = self
-        quit.keyEquivalentModifierMask = [.command]
-        menu.addItem(quit)
-
-        // Detach the menu after it closes so right-click stays available.
-        item.menu = menu
-        button.performClick(nil)
-        item.menu = nil
-    }
-
-    private func makePauseItem(_ title: String, seconds: TimeInterval?) -> NSMenuItem {
-        let item = NSMenuItem(title: title,
-                              action: #selector(qmPause(_:)),
-                              keyEquivalent: "")
-        item.target = self
-        // Encode the duration as the menu item's tag (in seconds; -1 = nil).
-        item.tag = seconds.map { Int($0) } ?? -1
-        return item
-    }
-
-    @objc private func qmDashboard()    { openDashboard() }
-    @objc private func qmPreferences()  { openPreferences() }
-    @objc private func qmResume()       { store.resumeThrottling() }
-    @objc private func qmQuit()         { NSApp.terminate(nil) }
-    @objc private func qmPause(_ sender: NSMenuItem) {
-        let duration: TimeInterval? = sender.tag == -1 ? nil : TimeInterval(sender.tag)
-        store.pauseThrottling(for: duration)
+        quickMenu.present(on: item)
     }
 
     func openDashboard() {
