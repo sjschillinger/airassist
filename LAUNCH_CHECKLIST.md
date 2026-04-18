@@ -141,6 +141,60 @@ Last updated: 2026-04-18
 
 ---
 
+## Active gameplan (as of 2026-04-18)
+
+Infrastructure is done. Free-tier release pipeline is live (ad-hoc
+signed zip → draft release → Homebrew cask). Everything below is what
+stands between us and tagging 0.1.0.
+
+### Must-fix before tagging 0.1.0
+1. **#16 / #17 Live safety tests** — `yes > /dev/null &` + `ps -o pid,stat,comm`
+   to confirm `T` state, then `kill -9` AirAssist mid-throttle and confirm
+   the target resumes. Non-negotiable.
+2. **#3 Bundle identifier** — pick final reverse-DNS, not `com.airAssist.app`.
+3. **#2 Sparkle decision** — link it properly OR strip the placeholder
+   `SUFeedURL` / `SUPublicEDKey` from Info.plist. Can't ship with
+   declared-but-absent Sparkle.
+4. **#4 Appcast URL** — if Sparkle stays: GitHub Pages appcast, or drop
+   auto-update for 0.1.0.
+5. **#29 Name / trademark** — 10-min USPTO TESS search; have fallback
+   name ready.
+
+### Should-fix (ship quality)
+6. **#9 App icon** — confirm it's not a placeholder.
+7. **#10 Menu bar icon** — screenshot on light + dark wallpaper.
+8. **#11 First-launch** — sensible defaults so first 5s are useful
+   (pre-select best 2 sensors, default governor to "armed").
+9. **#14 Accessibility Inspector pass** — dashboard, popover, prefs.
+10. **#21 Project file source-of-truth** — pick `project.yml` OR
+    `.xcodeproj`, delete the other.
+11. **Publish allowlist fix** — extend `scripts/publish.sh` allowlist to
+    include `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`,
+    `CHANGELOG.md`, `.github/ISSUE_TEMPLATE/`,
+    `.github/pull_request_template.md`.
+
+### Nice-to-have (can slip to 0.1.1)
+- #8 condense CPU Die rows
+- #18 sleep/wake handling
+- #19 PID reuse / process-exit mid-throttle
+- #22 real test coverage for safety-critical paths
+
+### Launch day
+- Create public `homebrew-airassist` repo from
+  `scripts/homebrew-tap-template/`.
+- Replace `TODO_USER` placeholders everywhere (README, cask formula,
+  release.yml release-body, publish.sh if needed).
+- Tag `v0.1.0`, wait for draft release, verify the zip installs + runs,
+  click Publish, bump cask `sha256`.
+- Post answers to #30 (fanless-only positioning) + #31 (competitor
+  blurb) — either in README or reserved in a scratch file for HN/Reddit.
+
+### Recommended next session
+Start with #16 / #17 — the things that would be most embarrassing to
+ship broken. Then the 4 remaining 🚨 blockers (#2, #3, #4, #29).
+
+---
+
 ## Completed
 
 - ✅ Phase 1 scaffolding (commit `cbb0d7c`): `.gitignore`, References/
