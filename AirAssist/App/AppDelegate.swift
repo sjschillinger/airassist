@@ -16,6 +16,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // SAFETY: before we do *anything* else, recover from a previous
+        // session that may have left processes SIGSTOPed. Then install
+        // signal handlers so SIGTERM/SIGINT/SIGHUP/SIGQUIT always SIGCONT
+        // our in-flight PIDs before exit.
+        SafetyCoordinator.recoverOnLaunch()
+        SafetyCoordinator.installSignalHandlers()
+
         store = ThermalStore()
         store.start()
         menuBarController = MenuBarController(store: store)

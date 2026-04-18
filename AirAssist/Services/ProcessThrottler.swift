@@ -21,10 +21,10 @@ import Darwin
 final class ProcessThrottler {
 
     /// Cycler period. 100ms ≈ 10 Hz — snappy enough to feel live but cheap.
-    static let cyclePeriodMs: Int = 100
+    nonisolated static let cyclePeriodMs: Int = 100
     /// Minimum / maximum duty accepted. 1.0 means "ignore / untrottle".
-    static let minDuty: Double = 0.05
-    static let maxDuty: Double = 1.0
+    nonisolated static let minDuty: Double = 0.05
+    nonisolated static let maxDuty: Double = 1.0
 
     /// Per-PID state. `task` is the cycler; `duty` is its current target.
     private struct Entry {
@@ -35,6 +35,16 @@ final class ProcessThrottler {
 
     private var active: [pid_t: Entry] = [:]
     private let currentUID: uid_t = getuid()
+
+    /// Optional safety layer. Set by `ThermalStore` on startup. When present,
+    /// the throttler reports in-flight PIDs to the dead-man's-switch file
+    /// and the watchdog after every mutation.
+    var safety: SafetyCoordinator?
+
+    /// Refuse throttling of our own PID or any ancestor in our parent chain.
+    /// Layered on top of the excluded-name list because ancestors are often
+    /// generic process names (zsh, Terminal) that could slip past a name check.
+    var protectAncestors: Bool = true
 
     // MARK: - Public API
 
@@ -51,6 +61,11 @@ final class ProcessThrottler {
         // Safety: never touch processes we don't own.
         var uid: uid_t = 0
         if !ownedByCurrentUser(pid: pid, uidOut: &uid) {
+            release(pid: pid)
+            return
+        }
+        // Safety: never throttle self or any ancestor (shell, launcher, etc.)
+        if protectAncestors && SafetyCoordinator.isAncestorOrSelf(pid: pid) {
             release(pid: pid)
             return
         }
@@ -75,6 +90,7 @@ final class ProcessThrottler {
             await self.runCycle(pid: pid)
         }
         active[pid] = Entry(duty: duty, name: name, task: task)
+        publishInflight()
     }
 
     /// Release a single pid — SIGCONT and cancel its cycler.
@@ -82,16 +98,27 @@ final class ProcessThrottler {
         guard let entry = active.removeValue(forKey: pid) else { return }
         entry.task.cancel()
         _ = kill(pid, SIGCONT)
+        safety?.noteContinued(pid: pid)
+        publishInflight()
     }
 
     /// Release everything. Call on teardown / when the rule engine disables.
     func releaseAll() {
-        for (pid, entry) in active {
+        for (_, entry) in active {
             entry.task.cancel()
+        }
+        for (pid, _) in active {
             _ = kill(pid, SIGCONT)
-            _ = pid // silence unused warning in minimal builds
         }
         active.removeAll()
+        safety?.resetStopTimestamps()
+        publishInflight()
+    }
+
+    /// Push the current set of throttled PIDs to the safety layer so the
+    /// dead-man's-switch file and signal-handler array stay in sync.
+    private func publishInflight() {
+        safety?.noteInflightChange(pids: Array(active.keys))
     }
 
     /// PIDs currently under active throttling, with their current duty.
@@ -121,6 +148,7 @@ final class ProcessThrottler {
 
             // RUN phase: ensure SIGCONT, sleep run-slice.
             if !signal(SIGCONT, to: pid) { return }
+            await MainActor.run { self.safety?.noteContinued(pid: pid) }
             if runNs > 0 {
                 try? await Task.sleep(nanoseconds: runNs)
             }
@@ -129,11 +157,13 @@ final class ProcessThrottler {
             // STOP phase: SIGSTOP, sleep stop-slice.
             if stopNs > 0 {
                 if !signal(SIGSTOP, to: pid) { return }
+                await MainActor.run { self.safety?.noteStopped(pid: pid) }
                 try? await Task.sleep(nanoseconds: stopNs)
             }
         }
         // On cancellation, always resume the process.
         _ = kill(pid, SIGCONT)
+        await MainActor.run { self.safety?.noteContinued(pid: pid) }
     }
 
     /// Sends `sig` to `pid`. Returns false if the process is gone (ESRCH) or

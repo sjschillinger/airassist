@@ -43,8 +43,19 @@ enum ThrottleRulesPersistence {
 
     static func load() -> ThrottleRulesConfig {
         guard let data = UserDefaults.standard.data(forKey: key),
-              let cfg  = try? JSONDecoder().decode(ThrottleRulesConfig.self, from: data)
+              var cfg  = try? JSONDecoder().decode(ThrottleRulesConfig.self, from: data)
         else { return ThrottleRulesConfig() }
+        // Defensive: clamp duty for every rule to the throttler's accepted
+        // range so a corrupted plist can't produce duty=0 (hard pause) or
+        // duty>1 (meaningless but would bypass the release path).
+        for i in cfg.rules.indices {
+            if cfg.rules[i].duty < ProcessThrottler.minDuty {
+                cfg.rules[i].duty = ProcessThrottler.minDuty
+            }
+            if cfg.rules[i].duty > ProcessThrottler.maxDuty {
+                cfg.rules[i].duty = ProcessThrottler.maxDuty
+            }
+        }
         return cfg
     }
 

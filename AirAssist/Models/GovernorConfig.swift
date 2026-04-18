@@ -106,11 +106,34 @@ enum GovernorConfigPersistence {
         guard let data = UserDefaults.standard.data(forKey: key),
               var cfg  = try? JSONDecoder().decode(GovernorConfig.self, from: data)
         else { return GovernorConfig() }
-        // Migration: old builds allowed temps up to 110°C. UI now caps
-        // at 100°C — anything higher is dangerous and already governed
-        // by macOS itself. Clamp so the slider can represent the value.
-        if cfg.maxTempC > 100 { cfg.maxTempC = 100 }
+        sanitize(&cfg)
         return cfg
+    }
+
+    /// Defensive clamps applied on every load. A corrupted or hand-edited
+    /// plist must never be able to push the governor into dangerous or
+    /// nonsense territory — clamp to the same ranges the UI enforces.
+    private static func sanitize(_ cfg: inout GovernorConfig) {
+        // Temperature ceiling: 40–100°C. Above 100 overlaps with Apple's own
+        // kernel/SMC thermal management; below 40 is unreachable in practice.
+        if cfg.maxTempC < 40  { cfg.maxTempC = 40 }
+        if cfg.maxTempC > 100 { cfg.maxTempC = 100 }
+        // CPU cap: 50 (half a core) – 1600 (16 cores). Keeps the slider sane
+        // on both low and high end hardware.
+        if cfg.maxCPUPercent < 50   { cfg.maxCPUPercent = 50 }
+        if cfg.maxCPUPercent > 1600 { cfg.maxCPUPercent = 1600 }
+        // Hysteresis: must be positive and smaller than the cap itself.
+        if cfg.tempHysteresisC < 1 { cfg.tempHysteresisC = 1 }
+        if cfg.tempHysteresisC > 30 { cfg.tempHysteresisC = 30 }
+        if cfg.cpuHysteresisPercent < 5   { cfg.cpuHysteresisPercent = 5 }
+        if cfg.cpuHysteresisPercent > 400 { cfg.cpuHysteresisPercent = 400 }
+        // Target count: 1–10. Zero would break the engine; >10 would starve
+        // the system.
+        if cfg.maxTargets < 1  { cfg.maxTargets = 1 }
+        if cfg.maxTargets > 10 { cfg.maxTargets = 10 }
+        // Targeting threshold: 5%–100% of a core.
+        if cfg.minCPUForTargeting < 5   { cfg.minCPUForTargeting = 5 }
+        if cfg.minCPUForTargeting > 100 { cfg.minCPUForTargeting = 100 }
     }
 
     static func save(_ cfg: GovernorConfig) {

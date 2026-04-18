@@ -11,6 +11,7 @@ final class ThermalStore {
     // MARK: - CPU / Governor subsystem
     let processInspector = ProcessInspector()
     let processThrottler = ProcessThrottler()
+    let safety = SafetyCoordinator()
     private(set) var governor: ThermalGovernor!
     private(set) var ruleEngine: ThrottleRuleEngine!
 
@@ -96,6 +97,7 @@ final class ThermalStore {
     init() {
         self.governorConfig = GovernorConfigPersistence.load()
         self.throttleRules  = ThrottleRulesPersistence.load()
+        self.processThrottler.safety = safety
         // Capture self weakly in the hottest-temp closure.
         self.governor = ThermalGovernor(
             inspector: processInspector,
@@ -113,6 +115,7 @@ final class ThermalStore {
     }
 
     func start() {
+        safety.startWatchdog()
         sensorService.start()
         logger.pruneOldEntries()
         logTask = Task { @MainActor [weak self] in
@@ -133,6 +136,7 @@ final class ThermalStore {
         governor.stop()
         ruleEngine.stop()
         processThrottler.releaseAll()
+        safety.stopWatchdog()
     }
 
     /// Resolves a temperature from the two-part slot encoding stored in UserDefaults.
