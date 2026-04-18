@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    name: Build & Test
+    runs-on: macos-14
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      # If the project uses XcodeGen to generate the .xcodeproj, regenerate
+      # here. Harmless when the project is already checked in.
+      - name: Install XcodeGen (if project.yml present)
+        if: hashFiles('project.yml') != ''
+        run: brew install xcodegen
+
+      - name: Generate Xcode project (if project.yml present)
+        if: hashFiles('project.yml') != ''
+        run: xcodegen generate
+
+      - name: Build & test
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project AirAssist.xcodeproj \
+            -scheme AirAssist \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            clean test | xcbeautify || xcodebuild \
+            -project AirAssist.xcodeproj \
+            -scheme AirAssist \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            clean test

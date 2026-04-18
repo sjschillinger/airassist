@@ -18,8 +18,9 @@ enum ThrottleSource: Hashable {
     case manual
 }
 
-/// Throttles running processes via SIGSTOP/SIGCONT duty cycling — AppTamer's
-/// public-API approach. For each throttled PID, a background task cycles:
+/// Throttles running processes via SIGSTOP/SIGCONT duty cycling — a standard
+/// Unix technique for rate-limiting a process without kernel extensions.
+/// For each throttled PID, a background task cycles:
 ///
 ///     SIGSTOP for (1-duty)·period   → process is paused
 ///     SIGCONT for  duty   ·period   → process runs

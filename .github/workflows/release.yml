@@ -1,0 +1,76 @@
+name: Release
+
+# Skeleton release workflow. Fires on a pushed tag like "v1.0.0".
+#
+# TODO before first real release:
+#   1. Add repository secrets:
+#        APPLE_DEVELOPER_ID_APPLICATION_CERT   base64 .p12
+#        APPLE_DEVELOPER_ID_APPLICATION_CERT_PWD
+#        APPLE_API_KEY_ID, APPLE_API_ISSUER_ID, APPLE_API_PRIVATE_KEY
+#        SPARKLE_ED_PRIVATE_KEY  (for appcast signing)
+#   2. Fill in the signing / notarization / appcast steps marked below.
+#   3. Decide the distribution host (GitHub Releases, airassist.app, both).
+#
+# Until those are in place the workflow only builds an unsigned archive so
+# you can verify the pipeline reaches this point.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    name: Build release archive
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install XcodeGen (if project.yml present)
+        if: hashFiles('project.yml') != ''
+        run: brew install xcodegen
+
+      - name: Generate Xcode project (if project.yml present)
+        if: hashFiles('project.yml') != ''
+        run: xcodegen generate
+
+      - name: Archive (unsigned for now)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project AirAssist.xcodeproj \
+            -scheme AirAssist \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -archivePath build/AirAssist.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            archive
+
+      # TODO: Sign with Developer ID Application cert.
+      # - name: Import signing cert
+      #   uses: apple-actions/import-codesign-certs@v2
+      #   with:
+      #     p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_CERT }}
+      #     p12-password:    ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_CERT_PWD }}
+
+      # TODO: Export signed .app, zip it, notarize, staple.
+      # - name: Export & notarize
+      #   run: |
+      #     xcodebuild -exportArchive ...
+      #     xcrun notarytool submit ... --wait
+      #     xcrun stapler staple ...
+
+      # TODO: Sign appcast with Sparkle's sign_update, attach .zip + appcast to release.
+
+      - name: Upload archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AirAssist-${{ github.ref_name }}-archive
+          path: build/AirAssist.xcarchive
+          retention-days: 14

@@ -231,9 +231,8 @@ the table — but the work is real. Queue behind Tiers 1 and 2.
   experience. If it doesn't, worst-case is a root process pinned to
   SIGSTOP surviving our crash, which needs a reboot to recover.
 - **Sparkle + privileged helper** is a known friction point. Budget a
-  day just for update-path testing. See how TG Pro / Macs Fan Control
-  ship updates for reference — both solve this, both took time to
-  get right.
+  day just for update-path testing. Other signed/notarized menu-bar
+  utilities solve this, but the integration takes time to get right.
 
 ---
 

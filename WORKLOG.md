@@ -1,15 +1,15 @@
 # AirAssist — Autonomous Build Worklog
 
 Started: 2026-04-17 ~20:37
-Baseline commit: `10a6427` (TG Pro parity)
+Baseline commit: `10a6427` (thermal monitor parity with existing macOS utilities)
 
 ## Goal (from `air_assist_next_phase_brief.md`)
 
 Expand AirAssist from a thermal monitor into a thermal + CPU-usage management
 tool. Three independently-toggleable capability buckets:
 
-1. **Temperature monitoring & control** — already done (TG Pro parity)
-2. **Per-app CPU limiting** (AppTamer-style) — NEW
+1. **Temperature monitoring & control** — already done (thermal monitor parity)
+2. **Per-app CPU limiting** — NEW
 3. **System-wide caps** on max temp and/or max CPU usage — NEW
 
 ## Architecture decisions
@@ -18,8 +18,9 @@ tool. Three independently-toggleable capability buckets:
 
 Public macOS APIs on modern Apple Silicon (macOS 15+/26) don't permit direct
 CPU frequency control, Turbo Boost disable, or MSR access without deprecated
-kernel extensions. AppTamer itself uses SIGSTOP/SIGCONT cycling; this is what
-we'll use too.
+kernel extensions. SIGSTOP/SIGCONT duty cycling is the standard Unix technique
+for rate-limiting a user process without kernel support, and it works cleanly
+on modern macOS for same-UID processes; this is what we'll use.
 
 - **How it works**: send `SIGSTOP` to pause the target process for
   `(1 - duty) × period` milliseconds, then `SIGCONT` to resume for
