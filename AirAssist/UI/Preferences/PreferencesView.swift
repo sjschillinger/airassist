@@ -7,7 +7,7 @@ struct PreferencesView: View {
         TabView {
             GeneralPrefsView(store: store)
                 .tabItem { Label(AppStrings.Preferences.general,    systemImage: "gearshape") }
-            DisplayPrefsView(store: store)
+            MenuBarPrefsView(store: store)
                 .tabItem { Label(AppStrings.Preferences.menuBar,    systemImage: "menubar.rectangle") }
             SensorsPrefsView(store: store)
                 .tabItem { Label(AppStrings.Preferences.sensors,    systemImage: "thermometer.medium") }

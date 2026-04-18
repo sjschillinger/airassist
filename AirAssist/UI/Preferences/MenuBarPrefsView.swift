@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct DisplayPrefsView: View {
+struct MenuBarPrefsView: View {
     let store: ThermalStore
 
     @AppStorage("tempUnit")             private var tempUnitRaw: Int    = TempUnit.celsius.rawValue
