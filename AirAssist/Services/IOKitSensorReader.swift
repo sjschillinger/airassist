@@ -41,7 +41,10 @@ enum IOKitSensorReader {
         box.client = client
         // Fetch services once — each holds a long-lived IOKit user-client connection.
         // We reuse the same service refs on every poll to avoid XPC teardown spam.
-        box.services = IOHIDEventSystemClientCopyServices(client)
+        // SDK 15 exposes IOHIDEventSystemClientCopyServices with a typed ref;
+        // force-cast is safe because our CFTypeRef was produced by the
+        // matching Create call.
+        box.services = IOHIDEventSystemClientCopyServices(client as! IOHIDEventSystemClient)
     }
 
     static func readAllSensors() -> [SensorReading] {
@@ -53,8 +56,11 @@ enum IOKitSensorReader {
         for i in 0..<count {
             guard let rawPtr = CFArrayGetValueAtIndex(services, i) else { continue }
             let service: AnyObject = unsafeBitCast(rawPtr, to: AnyObject.self)
+            // In SDK 15+ the public typed ref is IOHIDServiceClient; the
+            // `as!` is safe because the array came from IOHIDEventSystemClient.
+            let typedService = service as! IOHIDServiceClient
 
-            guard let nameRef = IOHIDServiceClientCopyProperty(service, "Product" as CFString),
+            guard let nameRef = IOHIDServiceClientCopyProperty(typedService, "Product" as CFString),
                   let name = nameRef as? String else { continue }
 
             guard let event = IOHIDServiceClientCopyEvent(service, kTempEventType, 0, 0) else { continue }
@@ -62,7 +68,7 @@ enum IOKitSensorReader {
 
             guard tempC > 0 else { continue }
 
-            let registryID = IOHIDServiceClientGetRegistryID(service)
+            let registryID = AirAssist_IOHIDServiceClientGetRegistryID(service)
             let id = String(format: "%016llx", registryID)
             readings.append(SensorReading(id: id, name: name, value: tempC))
         }

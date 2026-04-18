@@ -39,6 +39,23 @@ settings:
       DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
 
 targets:
+  AirAssistTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistTests
+    dependencies:
+      - target: AirAssist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.airAssist.AirAssistTests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AirAssist.app/Contents/MacOS/AirAssist"
+
   AirAssist:
     type: application
     platform: macOS
