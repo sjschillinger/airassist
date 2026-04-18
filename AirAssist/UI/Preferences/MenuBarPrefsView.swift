@@ -80,7 +80,7 @@ private struct SlotPicker: View {
         case SlotCategory.individual.rawValue:
             return sensors
                 .filter(\.isEnabled)
-                .sorted { $0.displayName < $1.displayName }
+                .sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
                 .map { ($0.displayName, $0.id) }
         default:
             return []

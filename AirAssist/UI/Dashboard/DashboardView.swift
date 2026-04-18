@@ -31,11 +31,13 @@ struct DashboardView: View {
         case .category:
             return base.sorted {
                 $0.category.rawValue == $1.category.rawValue
-                    ? $0.displayName < $1.displayName
+                    ? $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending
                     : $0.category.rawValue < $1.category.rawValue
             }
-        case .nameAsc:   return base.sorted { $0.displayName < $1.displayName }
-        case .nameDesc:  return base.sorted { $0.displayName > $1.displayName }
+        case .nameAsc:
+            return base.sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
+        case .nameDesc:
+            return base.sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedDescending }
         case .tempDesc:  return base.sorted { ($0.currentValue ?? -1) > ($1.currentValue ?? -1) }
         case .tempAsc:   return base.sorted { ($0.currentValue ?? 999) < ($1.currentValue ?? 999) }
         }

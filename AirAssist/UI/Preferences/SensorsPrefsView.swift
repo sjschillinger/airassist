@@ -16,7 +16,9 @@ struct SensorsPrefsView: View {
                 $0.rawName.localizedCaseInsensitiveContains(searchText)
               }
         return SensorCategory.allCases.compactMap { cat in
-            let group = filtered.filter { $0.category == cat }
+            let group = filtered
+                .filter { $0.category == cat }
+                .sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
             return group.isEmpty ? nil : (cat, group)
         }
     }

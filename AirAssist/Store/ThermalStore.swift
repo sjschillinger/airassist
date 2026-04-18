@@ -89,7 +89,10 @@ final class ThermalStore {
     var sensorsByCategory: [(category: SensorCategory, sensors: [Sensor])] {
         let enabled = enabledSensors
         return SensorCategory.allCases.compactMap { cat in
-            let group = enabled.filter { $0.category == cat }
+            let group = enabled
+                .filter { $0.category == cat }
+                // Natural (human) sort so "CPU Die 2" comes before "CPU Die 10".
+                .sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
             return group.isEmpty ? nil : (cat, group)
         }
     }
