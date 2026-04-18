@@ -8,6 +8,16 @@ final class ThermalStore {
     private let logger = HistoryLogger()
     private var logTask: Task<Void, Never>?
 
+    // MARK: - Stay Awake
+    let stayAwake = StayAwakeService()
+
+    /// User-facing API: change the stay-awake mode. Persists the choice
+    /// so the selection survives a quit.
+    func setStayAwakeMode(_ mode: StayAwakeService.Mode) {
+        stayAwake.setMode(mode)
+        StayAwakePersistence.save(mode)
+    }
+
     // MARK: - CPU / Governor subsystem
     let processInspector = ProcessInspector()
     let processThrottler = ProcessThrottler()
@@ -133,6 +143,10 @@ final class ThermalStore {
         self.frontmostObserver = FrontmostAppObserver { [weak self] pid in
             self?.processThrottler.setForegroundPID(pid)
         }
+        // Stay-awake intentionally does NOT auto-restore on launch —
+        // users would be surprised if closing the lid once made every
+        // future session pin the Mac awake. The persisted value is the
+        // default mode the menu/prefs pre-select, nothing more.
     }
 
     func start() {
@@ -172,6 +186,7 @@ final class ThermalStore {
         ruleEngine.stop()
         processThrottler.releaseAll()
         safety.stopWatchdog()
+        stayAwake.shutdown()
     }
 
     /// Resolves a temperature from the two-part slot encoding stored in UserDefaults.

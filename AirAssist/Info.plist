@@ -32,19 +32,6 @@
 	<string>NSApplication</string>
 	<key>NSSupportsSuddenTermination</key>
 	<false/>
-	<!-- Sparkle auto-update (https://sparkle-project.org).
-	     These keys are consumed when the Sparkle framework is linked; until
-	     then they're inert placeholders. SUPublicEDKey must be filled in
-	     with the Ed25519 public half of the signing keypair before shipping
-	     a signed appcast — otherwise Sparkle refuses to install updates. -->
-	<key>SUFeedURL</key>
-	<string>https://airassist.app/appcast.xml</string>
-	<key>SUEnableAutomaticChecks</key>
-	<true/>
-	<key>SUScheduledCheckInterval</key>
-	<integer>86400</integer>
-	<key>SUPublicEDKey</key>
-	<string></string>
 	<key>com.apple.security.temporary-exception.iokit-user-client-class</key>
 	<array>
 		<string>IOHIDEventSystemUserClient</string>

@@ -47,6 +47,7 @@
 		C731C152534FB6D04AA9863E /* ProcessThrottler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */; };
 		C99CE41C0148623FB418A91D /* HistoryLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */; };
 		CAB1687E2D8A71F55C3F50B5 /* ThermalEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */; };
+		CD2D85C4177BC7D73A473358 /* StayAwakeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */; };
 		DA468550C7C0B1564688DBF2 /* SensorCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD667C42F60AF2E26D510B5F /* SensorCardView.swift */; };
 		E421277A46C55704D12DEDB4 /* RunningProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EAF397631AE11D4B570EC4D /* RunningProcess.swift */; };
 		E9F23A842ABC54031BBAE6AB /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43403D677D51F2FAC26B14EA /* Constants.swift */; };
@@ -114,6 +115,7 @@
 		F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryLogger.swift; sourceTree = "<group>"; };
 		F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardContainerView.swift; sourceTree = "<group>"; };
 		F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinatorTests.swift; sourceTree = "<group>"; };
+		F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayAwakeService.swift; sourceTree = "<group>"; };
 		FAE7B1E9B83D8BC64EA57633 /* IOKitBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOKitBridge.h; sourceTree = "<group>"; };
 		FB12A736A62BA39A609E7C19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -261,6 +263,7 @@
 				CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */,
 				D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */,
 				05664AF6DD35210D50D4D873 /* SensorService.swift */,
+				F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */,
 				730102034F0141285957EA50 /* ThermalGovernor.swift */,
 				9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */,
 			);
@@ -421,6 +424,7 @@
 				0A04AF5B11A0831917ADD356 /* SensorListView.swift in Sources */,
 				07DEAE60DE866AE450B0D168 /* SensorService.swift in Sources */,
 				B0A47662747C2867086D592B /* SensorsPrefsView.swift in Sources */,
+				CD2D85C4177BC7D73A473358 /* StayAwakeService.swift in Sources */,
 				A421ADB89070A8D476A827E9 /* TemperatureFormatter.swift in Sources */,
 				CAB1687E2D8A71F55C3F50B5 /* ThermalEntry.swift in Sources */,
 				5EEC54693BD115E3BF931574 /* ThermalGovernor.swift in Sources */,

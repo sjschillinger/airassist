@@ -78,6 +78,16 @@ final class MenuBarQuickMenu: NSObject {
         }
 
         menu.addItem(.separator())
+
+        // Stay Awake submenu — caffeinate-style controls. The current
+        // mode gets a ✓, and the display-timeout variant picks its
+        // minutes from the user's prefs default (falls back to 10).
+        let stayAwakeParent = NSMenuItem(title: "Stay Awake",
+                                         action: nil, keyEquivalent: "")
+        stayAwakeParent.submenu = makeStayAwakeSubmenu(currentMode: store.stayAwake.currentMode)
+        menu.addItem(stayAwakeParent)
+
+        menu.addItem(.separator())
         let quit = NSMenuItem(title: "Quit Air Assist",
                               action: #selector(qmQuit),
                               keyEquivalent: "q")
@@ -89,6 +99,51 @@ final class MenuBarQuickMenu: NSObject {
         statusItem.menu = menu
         button.performClick(nil)
         statusItem.menu = nil
+    }
+
+    // MARK: - Stay Awake submenu
+
+    /// Build the Stay Awake submenu. The current mode gets a checkmark.
+    /// The display-timeout item uses the `stayAwake.displayTimeoutMinutes`
+    /// preference (default 10 min) so the user can pre-configure once
+    /// and then toggle from the menu without drilling into prefs.
+    private func makeStayAwakeSubmenu(currentMode: StayAwakeService.Mode) -> NSMenu {
+        let submenu = NSMenu()
+
+        let timeoutMinutes: Int = {
+            let m = UserDefaults.standard.integer(forKey: "stayAwake.displayTimeoutMinutes")
+            return m > 0 ? m : 10
+        }()
+
+        let options: [(title: String, mode: StayAwakeService.Mode)] = [
+            ("Off",                                                   .off),
+            ("Keep system awake (allow display sleep)",               .system),
+            ("Keep system & display awake",                           .display),
+            ("Display on \(timeoutMinutes) min, then system only",    .displayThenSystem(minutes: timeoutMinutes)),
+        ]
+
+        for (title, mode) in options {
+            let item = NSMenuItem(title: title,
+                                  action: #selector(qmStayAwake(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.representedObject = mode
+            if mode == currentMode { item.state = .on }
+            submenu.addItem(item)
+        }
+
+        // Live countdown row when a display-timeout is counting down.
+        if let remaining = store?.stayAwake.displayTimerRemaining, remaining > 0 {
+            submenu.addItem(.separator())
+            let mins = Int(remaining / 60)
+            let secs = Int(remaining.truncatingRemainder(dividingBy: 60))
+            let label = String(format: "Display sleeps in %d:%02d", mins, secs)
+            let countdown = NSMenuItem(title: label, action: nil, keyEquivalent: "")
+            countdown.isEnabled = false
+            submenu.addItem(countdown)
+        }
+
+        return submenu
     }
 
     private func makePauseItem(_ title: String, seconds: TimeInterval?) -> NSMenuItem {
@@ -108,6 +163,11 @@ final class MenuBarQuickMenu: NSObject {
         let duration: TimeInterval? = sender.tag == -1 ? nil : TimeInterval(sender.tag)
         store?.pauseThrottling(for: duration)
     }
+    @objc private func qmStayAwake(_ sender: NSMenuItem) {
+        guard let mode = sender.representedObject as? StayAwakeService.Mode else { return }
+        store?.setStayAwakeMode(mode)
+    }
+
     @objc private func qmThrottleFrontmost() {
         guard let frontmost = NSWorkspace.shared.frontmostApplication,
               frontmost.processIdentifier != getpid() else { return }
