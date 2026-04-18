@@ -20,6 +20,12 @@ final class ThrottleRuleEngine {
     /// PIDs the rule engine is currently managing.
     private var managedPIDs: Set<pid_t> = []
 
+    /// Externally-set pause. When true the engine releases everything
+    /// and skips its tick.
+    var isPaused: Bool = false {
+        didSet { if isPaused { releaseAll() } }
+    }
+
     private var tickTask: Task<Void, Never>?
 
     init(inspector: ProcessInspector,
@@ -61,6 +67,7 @@ final class ThrottleRuleEngine {
     }
 
     func tick() {
+        if isPaused { return }
         guard config.enabled else {
             releaseAll()
             return

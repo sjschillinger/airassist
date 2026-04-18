@@ -38,6 +38,8 @@ struct DashboardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            summaryBand
+            Divider()
             toolbar
             Divider()
             sensorGrid
@@ -46,7 +48,86 @@ struct DashboardView: View {
                 throttlePanel
             }
         }
-        .frame(minWidth: 520, minHeight: 380)
+        .frame(minWidth: 560, minHeight: 420)
+    }
+
+    // MARK: - Summary band (always visible)
+
+    private var summaryBand: some View {
+        HStack(spacing: 10) {
+            summaryChip(
+                icon: "thermometer.medium",
+                label: "Hottest",
+                value: hottestSummaryValue,
+                tint: hottestSummaryTint
+            )
+            summaryChip(
+                icon: "cpu",
+                label: "Total CPU",
+                value: "\(Int(store.governor.lastTotalCPUPercent))%",
+                tint: .blue
+            )
+            summaryChip(
+                icon: governorChipIcon,
+                label: "Governor",
+                value: governorChipLabel,
+                tint: governorChipTint
+            )
+            if !store.liveThrottledPIDs.isEmpty {
+                summaryChip(
+                    icon: "tortoise.fill",
+                    label: "Throttling",
+                    value: "\(store.liveThrottledPIDs.count)",
+                    tint: .orange
+                )
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    private func summaryChip(icon: String, label: String, value: String, tint: Color) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon).foregroundStyle(tint)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(label).font(.caption2).foregroundStyle(.secondary)
+                Text(value).font(.subheadline).bold().monospacedDigit()
+            }
+        }
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var hottestSummaryValue: String {
+        guard let h = store.hottestSensor, let v = h.currentValue else { return "—" }
+        return "\(h.displayName) \(Int(v))\(unit == .celsius ? "°C" : "°F")"
+    }
+    private var hottestSummaryTint: Color {
+        guard let h = store.hottestSensor else { return .secondary }
+        switch h.thresholdState(using: store.thresholds) {
+        case .hot:  return .red
+        case .warm: return .orange
+        case .cool: return .green
+        case .unknown: return .secondary
+        }
+    }
+
+    private var governorChipLabel: String {
+        if store.isPauseActive                        { return "Paused" }
+        if store.governorConfig.isOff                 { return "Off" }
+        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return "Active" }
+        return "Armed"
+    }
+    private var governorChipTint: Color {
+        if store.isPauseActive                        { return .yellow }
+        if store.governorConfig.isOff                 { return .secondary }
+        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return .orange }
+        return .green
+    }
+    private var governorChipIcon: String {
+        if store.isPauseActive { return "pause.circle.fill" }
+        return "gauge.with.dots.needle.67percent"
     }
 
     // MARK: - Toolbar

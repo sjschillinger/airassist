@@ -24,11 +24,9 @@ enum AppStrings {
     enum Preferences {
         static let title = "Air Assist — Preferences"
         static let general = "General"
-        static let display = "Display"
-        static let thresholds = "Thresholds"
+        static let menuBar = "Menu Bar"
         static let sensors = "Sensors"
-        static let cpuRules = "App Rules"
-        static let governor = "Governor"
+        static let throttling = "Throttling"
         static let launchAtLogin = "Launch at login"
         static let showDockIcon = "Show dock icon"
         static let updateInterval = "Update interval"

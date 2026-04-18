@@ -6,7 +6,6 @@ struct MenuBarPopoverView: View {
     var onPreferences: () -> Void  = {}
     var onQuit: () -> Void         = {}
 
-    // Unit preference — wired to AppStorage in Step 8; defaults to °C
     @AppStorage("tempUnit") private var tempUnitRaw: Int = TempUnit.celsius.rawValue
     private var unit: TempUnit { TempUnit(rawValue: tempUnitRaw) ?? .celsius }
 
@@ -16,9 +15,11 @@ struct MenuBarPopoverView: View {
             Divider()
             sensorList
             Divider()
+            throttleSection
+            Divider()
             actionButtons
         }
-        .frame(width: 260)
+        .frame(width: 280)
     }
 
     // MARK: - Sections
@@ -30,9 +31,32 @@ struct MenuBarPopoverView: View {
             Text(AppStrings.appName)
                 .font(.headline)
             Spacer()
+            pauseMenu
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    private var pauseMenu: some View {
+        Menu {
+            if store.isPauseActive {
+                Button("Resume now") { store.resumeThrottling() }
+            } else {
+                Section("Pause throttling for") {
+                    Button("15 minutes") { store.pauseThrottling(for: 15 * 60) }
+                    Button("1 hour")     { store.pauseThrottling(for: 60 * 60) }
+                    Button("4 hours")    { store.pauseThrottling(for: 4 * 60 * 60) }
+                    Button("Until quit") { store.pauseThrottling(for: nil) }
+                }
+            }
+        } label: {
+            Image(systemName: store.isPauseActive ? "pause.circle.fill" : "pause.circle")
+                .foregroundStyle(store.isPauseActive ? .yellow : .secondary)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help(store.isPauseActive ? "Throttling paused" : "Pause throttling")
     }
 
     @ViewBuilder
@@ -48,8 +72,78 @@ struct MenuBarPopoverView: View {
             SensorListView(groups: groups,
                            thresholds: store.thresholds,
                            unit: unit)
-                .frame(maxHeight: 280)
+                .frame(maxHeight: 260)
         }
+    }
+
+    @ViewBuilder
+    private var throttleSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: governorIcon).foregroundStyle(governorColor)
+                Text(governorSummary).font(.caption).bold()
+                Spacer()
+                if !store.liveThrottledPIDs.isEmpty {
+                    Text("\(store.liveThrottledPIDs.count) active")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            if !store.liveThrottledPIDs.isEmpty {
+                ForEach(store.liveThrottledPIDs.prefix(3).sorted { $0.duty < $1.duty }, id: \.pid) { item in
+                    HStack {
+                        Text("•  \(item.name)").lineLimit(1)
+                        Spacer()
+                        Text("\(Int((item.duty * 100).rounded()))%").monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.caption2)
+                }
+                if store.liveThrottledPIDs.count > 3 {
+                    Text("+ \(store.liveThrottledPIDs.count - 3) more")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    private var governorSummary: String {
+        if store.isPauseActive {
+            if let until = store.pausedUntil, until != .distantFuture {
+                return "Paused · resumes \(relative(to: until))"
+            }
+            return "Paused"
+        }
+        if store.governorConfig.isOff && !store.throttleRules.enabled {
+            return "Throttling: Off"
+        }
+        if store.governor.isTempThrottling || store.governor.isCPUThrottling {
+            return "Governor active"
+        }
+        if !store.liveThrottledPIDs.isEmpty {
+            return "Rules active"
+        }
+        return "Governor armed"
+    }
+    private var governorColor: Color {
+        if store.isPauseActive { return .yellow }
+        if store.governorConfig.isOff && !store.throttleRules.enabled { return .secondary }
+        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return .orange }
+        return .green
+    }
+    private var governorIcon: String {
+        if store.isPauseActive { return "pause.circle.fill" }
+        if store.governor.isTempThrottling { return "thermometer.high" }
+        if store.governor.isCPUThrottling { return "cpu" }
+        return "gauge.with.dots.needle.67percent"
+    }
+
+    private func relative(to date: Date) -> String {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .abbreviated
+        return f.localizedString(for: date, relativeTo: Date())
     }
 
     private var actionButtons: some View {

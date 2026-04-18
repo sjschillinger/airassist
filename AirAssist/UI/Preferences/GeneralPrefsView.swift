@@ -2,7 +2,7 @@ import SwiftUI
 import ServiceManagement
 
 struct GeneralPrefsView: View {
-    let store: ThermalStore
+    @Bindable var store: ThermalStore
 
     @AppStorage("showDockIcon")    private var showDockIcon: Bool   = false
     @AppStorage("updateInterval")  private var updateInterval: Double = 2.0
@@ -30,6 +30,33 @@ struct GeneralPrefsView: View {
                         .onChange(of: showDockIcon) { _, show in
                             NSApp.setActivationPolicy(show ? .regular : .accessory)
                         }
+                }
+            }
+
+            Section("Throttling") {
+                if store.isPauseActive {
+                    LabeledContent("Status") {
+                        HStack(spacing: 6) {
+                            Text("Paused").foregroundStyle(.yellow)
+                            if let until = store.pausedUntil, until != .distantFuture {
+                                Text("· resumes \(until, style: .relative) from now")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    Button("Resume now") { store.resumeThrottling() }
+                } else {
+                    LabeledContent("Pause for") {
+                        HStack(spacing: 6) {
+                            Button("15 min")         { store.pauseThrottling(for: 15 * 60) }
+                            Button("1 hour")         { store.pauseThrottling(for: 60 * 60) }
+                            Button("4 hours")        { store.pauseThrottling(for: 4 * 60 * 60) }
+                            Button("Until quit")     { store.pauseThrottling(for: nil) }
+                        }
+                        .controlSize(.small)
+                    }
+                    Text("Temporarily stop both the governor and per-app rules. Useful for gaming or rendering sessions.")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
 

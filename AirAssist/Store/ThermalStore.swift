@@ -32,6 +32,47 @@ final class ThermalStore {
         processThrottler.throttledPIDs
     }
 
+    /// If non-nil and in the future, throttling is paused until this date.
+    /// Setting this applies/removes the pause on both engines immediately.
+    /// A background task clears it automatically when the time elapses.
+    private(set) var pausedUntil: Date?
+    private var pauseExpiryTask: Task<Void, Never>?
+
+    var isPauseActive: Bool {
+        guard let p = pausedUntil else { return false }
+        return p > Date()
+    }
+
+    /// Pause both throttling engines for a duration (nil = until next launch).
+    func pauseThrottling(for duration: TimeInterval?) {
+        pauseExpiryTask?.cancel()
+        let expiry = duration.map { Date().addingTimeInterval($0) } ?? Date.distantFuture
+        pausedUntil = expiry
+        applyPauseState()
+        if expiry != .distantFuture {
+            pauseExpiryTask = Task { @MainActor [weak self] in
+                let delay = max(0, expiry.timeIntervalSinceNow)
+                try? await Task.sleep(for: .seconds(delay))
+                guard let self else { return }
+                if self.pausedUntil == expiry { self.resumeThrottling() }
+            }
+        }
+    }
+
+    func resumeThrottling() {
+        pauseExpiryTask?.cancel()
+        pauseExpiryTask = nil
+        pausedUntil = nil
+        applyPauseState()
+    }
+
+    private func applyPauseState() {
+        let paused = isPauseActive
+        governor?.isPaused   = paused
+        ruleEngine?.isPaused = paused
+        if paused { processThrottler.releaseAll() }
+    }
+
     var sensors: [Sensor] { sensorService.sensors }
 
     var enabledSensors: [Sensor] {

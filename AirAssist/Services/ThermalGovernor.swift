@@ -21,6 +21,23 @@ final class ThermalGovernor {
     private(set) var isTempThrottling: Bool = false
     private(set) var isCPUThrottling:  Bool = false
 
+    /// Last-sampled total user CPU% across non-excluded processes.
+    /// Updated each tick. 0 until the first tick completes.
+    private(set) var lastTotalCPUPercent: Double = 0
+
+    /// Externally-set pause. When true the governor releases targets
+    /// and sleeps until cleared. Set by ThermalStore on user-initiated
+    /// "pause throttling" actions.
+    var isPaused: Bool = false {
+        didSet {
+            if isPaused {
+                releaseAllGovernorTargets()
+                isTempThrottling = false
+                isCPUThrottling  = false
+            }
+        }
+    }
+
     /// PIDs the governor itself is managing (separate from per-app rules).
     private var governorPIDs: Set<pid_t> = []
 
@@ -61,6 +78,7 @@ final class ThermalGovernor {
 
     /// One decision cycle: sample, decide, act.
     func tick() {
+        if isPaused { return }
         guard !config.isOff else {
             releaseAllGovernorTargets()
             isTempThrottling = false
@@ -73,6 +91,7 @@ final class ThermalGovernor {
             minPercent: 0.0
         )
         let totalCPU = procs.reduce(0.0) { $0 + $1.cpuPercent }
+        lastTotalCPUPercent = totalCPU
         let temp = hottestTempC()
 
         // --- temperature branch ---
