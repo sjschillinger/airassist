@@ -105,10 +105,10 @@ private struct GovernorSection: View {
     private var tempSection: some View {
         GroupBox("Temperature cap") {
             VStack(alignment: .leading, spacing: 6) {
-                Slider(value: bind(\.maxTempC), in: 40...95, step: 1) {
+                Slider(value: bind(\.maxTempC), in: 40...100, step: 1) {
                     Text("Max")
                 } minimumValueLabel: { Text("40°C").font(.caption) }
-                  maximumValueLabel: { Text("95°C").font(.caption) }
+                  maximumValueLabel: { Text("100°C").font(.caption) }
                 HStack {
                     Text("Max: \(Int(store.governorConfig.maxTempC))°C").monospacedDigit()
                     Spacer()
@@ -122,7 +122,7 @@ private struct GovernorSection: View {
                     Text("Hysteresis: \(Int(store.governorConfig.tempHysteresisC))°C")
                         .font(.caption)
                 }
-                Text("macOS begins its own thermal throttling above ~95°C, so keep the cap below that to act first.")
+                Text("Apple Silicon begins its own thermal management in the mid-90s °C. Caps near 100°C overlap with that — set lower to intervene first.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
         }
