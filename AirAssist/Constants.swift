@@ -27,6 +27,8 @@ enum AppStrings {
         static let display = "Display"
         static let thresholds = "Thresholds"
         static let sensors = "Sensors"
+        static let cpuRules = "App Rules"
+        static let governor = "Governor"
         static let launchAtLogin = "Launch at login"
         static let showDockIcon = "Show dock icon"
         static let updateInterval = "Update interval"

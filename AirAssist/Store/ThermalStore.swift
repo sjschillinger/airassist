@@ -8,6 +8,30 @@ final class ThermalStore {
     private let logger = HistoryLogger()
     private var logTask: Task<Void, Never>?
 
+    // MARK: - CPU / Governor subsystem
+    let processInspector = ProcessInspector()
+    let processThrottler = ProcessThrottler()
+    private(set) var governor: ThermalGovernor!
+    private(set) var ruleEngine: ThrottleRuleEngine!
+
+    var governorConfig: GovernorConfig {
+        didSet {
+            GovernorConfigPersistence.save(governorConfig)
+            governor?.updateConfig(governorConfig)
+        }
+    }
+    var throttleRules: ThrottleRulesConfig {
+        didSet {
+            ThrottleRulesPersistence.save(throttleRules)
+            ruleEngine?.updateConfig(throttleRules)
+        }
+    }
+
+    /// Live view of currently throttled processes across both engines.
+    var liveThrottledPIDs: [(pid: pid_t, duty: Double, name: String)] {
+        processThrottler.throttledPIDs
+    }
+
     var sensors: [Sensor] { sensorService.sensors }
 
     var enabledSensors: [Sensor] {
@@ -28,6 +52,25 @@ final class ThermalStore {
             .max { a, b in stateRank(a) < stateRank(b) }
     }
 
+    init() {
+        self.governorConfig = GovernorConfigPersistence.load()
+        self.throttleRules  = ThrottleRulesPersistence.load()
+        // Capture self weakly in the hottest-temp closure.
+        self.governor = ThermalGovernor(
+            inspector: processInspector,
+            throttler: processThrottler,
+            config: governorConfig,
+            hottestTempC: { [weak self] in
+                self?.enabledSensors.compactMap(\.currentValue).max()
+            }
+        )
+        self.ruleEngine = ThrottleRuleEngine(
+            inspector: processInspector,
+            throttler: processThrottler,
+            config: throttleRules
+        )
+    }
+
     func start() {
         sensorService.start()
         logger.pruneOldEntries()
@@ -38,12 +81,17 @@ final class ThermalStore {
                 self.logger.log(store: self)
             }
         }
+        governor.start()
+        ruleEngine.start()
     }
 
     func stop() {
         logTask?.cancel()
         logTask = nil
         sensorService.stop()
+        governor.stop()
+        ruleEngine.stop()
+        processThrottler.releaseAll()
     }
 
     /// Resolves a temperature from the two-part slot encoding stored in UserDefaults.
@@ -81,6 +129,39 @@ final class ThermalStore {
     func averageTemp() -> Double? {
         let vals = enabledSensors.compactMap(\.currentValue)
         return vals.isEmpty ? nil : vals.reduce(0, +) / Double(vals.count)
+    }
+
+    // MARK: - Rule management helpers (used by UI)
+
+    /// Insert or replace a rule for a process. Keyed by bundleID when available.
+    func upsertRule(for process: RunningProcess, duty: Double, enabled: Bool = true) {
+        let key = ThrottleRule.key(for: process)
+        var cfg = throttleRules
+        if let idx = cfg.rules.firstIndex(where: { $0.id == key }) {
+            cfg.rules[idx].duty = duty
+            cfg.rules[idx].isEnabled = enabled
+            cfg.rules[idx].displayName = process.displayName
+        } else {
+            cfg.rules.append(ThrottleRule(
+                id: key,
+                displayName: process.displayName,
+                duty: duty,
+                isEnabled: enabled
+            ))
+        }
+        throttleRules = cfg
+    }
+
+    func removeRule(id: String) {
+        var cfg = throttleRules
+        cfg.rules.removeAll { $0.id == id }
+        throttleRules = cfg
+    }
+
+    func setRulesEngineEnabled(_ enabled: Bool) {
+        var cfg = throttleRules
+        cfg.enabled = enabled
+        throttleRules = cfg
     }
 
     private func stateRank(_ sensor: Sensor) -> Int {

@@ -41,6 +41,10 @@ struct DashboardView: View {
             toolbar
             Divider()
             sensorGrid
+            if !store.liveThrottledPIDs.isEmpty {
+                Divider()
+                throttlePanel
+            }
         }
         .frame(minWidth: 520, minHeight: 380)
     }
@@ -79,6 +83,41 @@ struct DashboardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    // MARK: - Throttle panel
+
+    private var throttlePanel: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Image(systemName: "tortoise.fill").foregroundStyle(.orange)
+                Text("Currently throttling \(store.liveThrottledPIDs.count) process\(store.liveThrottledPIDs.count == 1 ? "" : "es")")
+                    .font(.subheadline).bold()
+                Spacer()
+                if store.governor.isTempThrottling {
+                    Label("Temp", systemImage: "thermometer.high")
+                        .labelStyle(.titleAndIcon).font(.caption)
+                        .foregroundStyle(.red)
+                }
+                if store.governor.isCPUThrottling {
+                    Label("CPU", systemImage: "cpu")
+                        .labelStyle(.titleAndIcon).font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
+            ForEach(store.liveThrottledPIDs.sorted { $0.duty < $1.duty }, id: \.pid) { item in
+                HStack {
+                    Text(item.name).lineLimit(1)
+                    Spacer()
+                    Text("PID \(item.pid)").foregroundStyle(.secondary).monospacedDigit()
+                    Text("\(Int((item.duty * 100).rounded()))%").monospacedDigit().frame(width: 48, alignment: .trailing)
+                }
+                .font(.caption)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color.secondary.opacity(0.06))
     }
 
     // MARK: - Sensor grid

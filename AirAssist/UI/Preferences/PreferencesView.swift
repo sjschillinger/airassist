@@ -13,7 +13,11 @@ struct PreferencesView: View {
                 .tabItem { Label(AppStrings.Preferences.thresholds, systemImage: "thermometer.medium") }
             SensorsPrefsView(store: store)
                 .tabItem { Label(AppStrings.Preferences.sensors,    systemImage: "sensor") }
+            CPURulesPrefsView(store: store)
+                .tabItem { Label(AppStrings.Preferences.cpuRules,   systemImage: "cpu") }
+            GovernorPrefsView(store: store)
+                .tabItem { Label(AppStrings.Preferences.governor,   systemImage: "gauge.with.dots.needle.67percent") }
         }
-        .frame(minWidth: 520, minHeight: 460)
+        .frame(minWidth: 560, minHeight: 480)
     }
 }

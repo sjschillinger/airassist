@@ -2,6 +2,10 @@
 #define AIRASSIST_IOKIT_BRIDGE_H
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <libproc.h>
+#include <sys/proc_info.h>
+#include <sys/sysctl.h>
+#include <signal.h>
 
 // Private IOHIDEventSystem API — Apple Silicon thermal sensor enumeration.
 // CF_RETURNS_RETAINED tells Swift these are +1 retained objects (Create/Copy rule),
