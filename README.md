@@ -43,12 +43,32 @@ your shell has.
 
 ## Install
 
-<!-- TODO: Replace with real download link once the first signed +
-notarized build is published. -->
+### Homebrew (recommended)
 
-Pre-built releases will appear on the [Releases](https://github.com/TODO_USER/airassist/releases)
-page. Download the `.zip`, unzip, drag `AirAssist.app` into
-`/Applications`, and launch.
+```bash
+brew install --cask TODO_USER/airassist/airassist
+```
+
+No Xcode or developer tools required — Homebrew fetches a pre-built,
+ad-hoc signed `.app` from the GitHub Releases page and drops it into
+`/Applications`. Update with `brew upgrade --cask airassist`.
+
+### Manual download
+
+Grab the latest `AirAssist-<version>.zip` from the
+[Releases](https://github.com/TODO_USER/airassist/releases) page,
+unzip, and drag `AirAssist.app` into `/Applications`.
+
+One extra step the first time: because the build is ad-hoc signed
+rather than Developer-ID-signed, browsers add a quarantine flag that
+triggers macOS's "damaged / can't be opened" dialog. Clear it once:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/AirAssist.app
+```
+
+(Homebrew-installed copies skip this — `curl` doesn't set the
+quarantine attribute.)
 
 Updates are delivered via [Sparkle](https://sparkle-project.org/);
 AirAssist will check for new versions weekly.

@@ -18,11 +18,17 @@ Last updated: 2026-04-18
 
 ## 🚨 Blocks launch (must fix before public release)
 
-- [ ] **#1 Signing & notarization infrastructure**
-  - Enroll in Apple Developer Program ($99/yr)
-  - Obtain Developer ID Application cert + App Store Connect API key
-  - Fill signing/notarization TODOs in `.github/workflows/release.yml`
-  - Dry-run `notarytool submit` on a throwaway build before tagging 1.0
+- [~] **#1 Signing & notarization infrastructure** — free-tier path landed
+  - ✅ Free-tier release pipeline: ad-hoc signed zip via Homebrew cask
+    (`.github/workflows/release.yml` + `scripts/homebrew-tap-template/` +
+    `docs/releasing.md`). Draft-only; nothing publishes without a manual
+    click.
+  - [ ] Decision: stay on free tier for 0.1.0, or enroll in Apple
+    Developer Program ($99/yr) and switch to Developer ID + notarization
+    before 1.0. Upgrade path is a single workflow edit (see the comment
+    block at the top of `release.yml`).
+  - [ ] Still-pending if we stay free-tier: create the separate
+    `homebrew-airassist` public repo from `scripts/homebrew-tap-template/`.
 
 - [ ] **#2 Sparkle framework not actually linked**
   - `SUFeedURL`/`SUPublicEDKey` are declared but Sparkle is absent from `project.yml`
@@ -142,3 +148,6 @@ Last updated: 2026-04-18
 - ✅ Natural sensor sort (commit `618ca3f`).
 - ✅ Stay Awake + launch checklist (commit `4338654`).
 - ✅ Quick-win batch (12 items: #7, #12, #13, #15, #20, #23–#28, #32).
+- ✅ Free-tier distribution pipeline (ad-hoc signed Homebrew cask):
+  rewrote `release.yml`, added `scripts/homebrew-tap-template/`,
+  wrote `docs/releasing.md`, updated README install section.

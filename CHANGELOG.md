@@ -24,12 +24,21 @@ Dates are in ISO 8601 (YYYY-MM-DD).
   across launches.
 - GitHub Actions: CI build + test workflow, forbidden-strings guard,
   tag-driven release skeleton.
+- Free-tier release pipeline: tagged pushes build an ad-hoc signed
+  `AirAssist-<version>.zip`, compute SHA256, and create a **draft**
+  GitHub Release ready to attach to a Homebrew cask.
+- Homebrew tap scaffold under `scripts/homebrew-tap-template/` (dev-only)
+  with a cask formula + README for the separate `homebrew-airassist` repo.
+- `docs/releasing.md` — end-to-end release flow (tag → draft →
+  publish → tap bump).
 - Allowlist-based `scripts/publish.sh` export to a separate public repo, plus
   a pre-commit hook blocking stray references to third-party products.
 
 ### Changed
 - README clarifies the sandboxing decision and the single outgoing
   network request (Sparkle appcast).
+- Install instructions lead with `brew install --cask` and cover the
+  one-time `xattr -dr com.apple.quarantine` step for manual downloads.
 
 ### Fixed
 - Popover no longer renders a blank rectangle when all sensors are
