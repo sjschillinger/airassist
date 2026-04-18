@@ -141,6 +141,24 @@ and confirm the target resumes.
 
 ---
 
+## Originality of code and assets
+
+All source code in this repository is original work, written against
+publicly-documented Apple APIs (IOHIDEvent, libproc, POSIX signals) and
+standard Unix idioms. No code, strings, constants, sensor mappings, or
+assets have been copied or derived from any third-party commercial
+application.
+
+Art assets (app icon, menu bar glyphs) are original work for this
+project. If you contribute new assets, they must be your own original
+work or under a license compatible with AGPL-3.0; include attribution
+in this file.
+
+PRs whose diffs resemble decompiled Swift/Objective-C from another
+app — or that introduce hard-coded tables of sensor keys, process
+names, or magic constants without a cited public source — will be
+rejected on sight.
+
 ## Scope
 
 Air Assist is **fanless-Air-first**. Non-Air features (fan control,

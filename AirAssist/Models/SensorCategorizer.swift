@@ -1,5 +1,14 @@
 import Foundation
 
+/// Maps raw sensor names (as returned by Apple's public IOHIDEvent API —
+/// specifically `IOHIDServiceClientCopyProperty(..., "Product")`) to our
+/// display categories.
+///
+/// All the tokens matched here (`PMU tdie`, `PMU2 tdie`, `gas gauge`,
+/// `NAND`, `SSD`, etc.) are the factual strings the OS itself emits; they
+/// are not a proprietary curated mapping lifted from any other utility.
+/// The categorisation is heuristic pattern-matching on those OS-supplied
+/// identifiers, derived independently from Apple's documented API.
 enum SensorCategorizer {
 
     static func category(for rawName: String) -> SensorCategory {
