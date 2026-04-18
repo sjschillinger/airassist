@@ -22,7 +22,7 @@ final class DashboardWindowController: NSWindowController {
         window.title = AppStrings.Dashboard.title
         window.minSize = NSSize(width: 520, height: 380)
         window.setFrameAutosaveName("AirAssist.Dashboard")
-        window.contentViewController = NSHostingController(rootView: DashboardView(store: store))
+        window.contentViewController = NSHostingController(rootView: DashboardContainerView(store: store))
         super.init(window: window)
     }
 
