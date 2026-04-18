@@ -47,6 +47,23 @@ struct ThrottlingPrefsView: View {
 private struct GovernorSection: View {
     @Bindable var store: ThermalStore
 
+    /// CPU scale mode. When `.normalized`, slider and displays show 0–100%
+    /// of total system capacity (1 core fully pegged on an 8-core machine
+    /// reads 12.5%). When `.perCore`, we show the raw kernel-reported sum
+    /// (8 cores fully pegged reads 800%) — matches `top`/Activity Monitor.
+    /// Persisted as an AppStorage so it survives launches.
+    @AppStorage("cpuCapScaleMode") private var scaleModeRaw: String = "normalized"
+    private var scaleMode: CPUScaleMode {
+        get { CPUScaleMode(rawValue: scaleModeRaw) ?? .normalized }
+    }
+
+    /// Cores visible to the kernel — used to convert between the two
+    /// scales. `activeProcessorCount` tracks e-core park state on Apple
+    /// Silicon, so "100% of system" honours the cores actually online.
+    private var coreCount: Double {
+        max(1, Double(ProcessInfo.processInfo.activeProcessorCount))
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -185,24 +202,119 @@ private struct GovernorSection: View {
     private var cpuSection: some View {
         GroupBox("CPU cap") {
             VStack(alignment: .leading, spacing: 6) {
-                Slider(value: bind(\.maxCPUPercent), in: 50...1600, step: 25) {
-                    Text("Max")
-                } minimumValueLabel: { Text("50%").font(.caption) }
-                  maximumValueLabel: { Text("1600%").font(.caption) }
+                // Scale-mode picker. Toggling this doesn't mutate the stored
+                // config (which is always per-core under the hood) — it
+                // only changes how the slider and current-value are shown.
+                Picker("", selection: Binding(
+                    get: { scaleMode },
+                    set: { scaleModeRaw = $0.rawValue }
+                )) {
+                    Text("% of system").tag(CPUScaleMode.normalized)
+                    Text("Per-core sum").tag(CPUScaleMode.perCore)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+
+                cpuSlider
                 HStack {
-                    Text("Max: \(Int(store.governorConfig.maxCPUPercent))%").monospacedDigit()
+                    Text("Max: \(formatCPU(store.governorConfig.maxCPUPercent))").monospacedDigit()
                     Spacer()
-                    Text("now \(Int(currentTotalCPU))%")
+                    Text("now \(formatCPU(currentTotalCPU))")
                         .foregroundStyle(.secondary).monospacedDigit()
                 }
                 .font(.caption)
-                Stepper(value: bind(\.cpuHysteresisPercent), in: 10...400, step: 10) {
-                    Text("Hysteresis: \(Int(store.governorConfig.cpuHysteresisPercent))%")
-                        .font(.caption)
-                }
-                Text("100% ≈ one core.")
+                cpuHysteresisStepper
+
+                Text(scaleMode == .normalized
+                     ? "100% = every core on this Mac fully used (\(Int(coreCount)) cores online)."
+                     : "100% ≈ one core.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
+        }
+    }
+
+    /// The slider's bounds and step depend on the scale mode. In normalized
+    /// mode we cap at 100%; in per-core mode we cap at `coreCount * 100`.
+    /// The underlying stored value is always per-core percent, so we
+    /// convert in/out of the slider binding.
+    @ViewBuilder
+    private var cpuSlider: some View {
+        switch scaleMode {
+        case .normalized:
+            Slider(value: normalizedMaxCPU, in: 5...100, step: 1) {
+                Text("Max")
+            } minimumValueLabel: { Text("5%").font(.caption) }
+              maximumValueLabel: { Text("100%").font(.caption) }
+        case .perCore:
+            let ceiling = coreCount * 100
+            Slider(value: bind(\.maxCPUPercent),
+                   in: 50...ceiling,
+                   step: 25) {
+                Text("Max")
+            } minimumValueLabel: { Text("50%").font(.caption) }
+              maximumValueLabel: { Text("\(Int(ceiling))%").font(.caption) }
+        }
+    }
+
+    /// Hysteresis uses the same scale as the max cap, so users don't flip
+    /// between mental models when tuning. Stepper step size stays
+    /// proportional to the scale.
+    @ViewBuilder
+    private var cpuHysteresisStepper: some View {
+        switch scaleMode {
+        case .normalized:
+            let step = 1.0
+            let bounds: ClosedRange<Double> = 1...50
+            Stepper(value: normalizedHysteresis(step: step, bounds: bounds),
+                    in: bounds, step: step) {
+                Text("Hysteresis: \(formatCPU(store.governorConfig.cpuHysteresisPercent, forceSameModeAsMax: true))")
+                    .font(.caption)
+            }
+        case .perCore:
+            Stepper(value: bind(\.cpuHysteresisPercent), in: 10...400, step: 10) {
+                Text("Hysteresis: \(Int(store.governorConfig.cpuHysteresisPercent))%")
+                    .font(.caption)
+            }
+        }
+    }
+
+    // MARK: - Scale conversion helpers
+
+    /// Slider binding in 0–100 "% of system" that maps to the stored
+    /// per-core percent.
+    private var normalizedMaxCPU: Binding<Double> {
+        Binding(
+            get: { store.governorConfig.maxCPUPercent / coreCount },
+            set: { v in
+                var c = store.governorConfig
+                c.maxCPUPercent = (v * coreCount).rounded()
+                store.governorConfig = c
+            }
+        )
+    }
+
+    private func normalizedHysteresis(step: Double, bounds: ClosedRange<Double>) -> Binding<Double> {
+        Binding(
+            get: { store.governorConfig.cpuHysteresisPercent / coreCount },
+            set: { v in
+                var c = store.governorConfig
+                c.cpuHysteresisPercent = (v * coreCount).rounded()
+                store.governorConfig = c
+            }
+        )
+    }
+
+    /// Format a per-core percent for display according to the active
+    /// scale mode. Suffix always "%" — in normalized mode we divide by
+    /// coreCount and show one decimal when small.
+    private func formatCPU(_ perCorePercent: Double, forceSameModeAsMax: Bool = false) -> String {
+        switch scaleMode {
+        case .perCore:
+            return "\(Int(perCorePercent.rounded()))%"
+        case .normalized:
+            let v = perCorePercent / coreCount
+            if v < 10 { return String(format: "%.1f%%", v) }
+            return "\(Int(v.rounded()))%"
         }
     }
 
@@ -234,6 +346,15 @@ private struct GovernorSection: View {
         Binding(get: { store.governorConfig[keyPath: path] },
                 set: { v in var c = store.governorConfig; c[keyPath: path] = v; store.governorConfig = c })
     }
+}
+
+/// Two ways of expressing CPU usage. Stored as a raw string in
+/// AppStorage. `.normalized` is 0–100% of total system capacity;
+/// `.perCore` is the raw sum-across-cores number (matches Activity
+/// Monitor and the kernel's own reporting).
+enum CPUScaleMode: String, Hashable {
+    case normalized
+    case perCore
 }
 
 // MARK: - Rules

@@ -14,8 +14,11 @@ struct DashboardView: View {
     @State private var addingPID: pid_t?
     @State private var addingDuty: Double = 0.5
 
-    @AppStorage("tempUnit")      private var tempUnitRaw: Int    = TempUnit.celsius.rawValue
-    @AppStorage("dashSortOrder") private var sortRaw: String     = SensorSortOrder.category.rawValue
+    @AppStorage("tempUnit")       private var tempUnitRaw: Int    = TempUnit.celsius.rawValue
+    @AppStorage("dashSortOrder")  private var sortRaw: String     = SensorSortOrder.category.rawValue
+    /// Shared with the Governor preferences pane so the "Total CPU" chip
+    /// and the CPU-cap slider speak the same language.
+    @AppStorage("cpuCapScaleMode") private var cpuScaleRaw: String = "normalized"
 
     private var unit:      TempUnit         { TempUnit(rawValue: tempUnitRaw) ?? .celsius }
     private var sortOrder: SensorSortOrder  { SensorSortOrder(rawValue: sortRaw) ?? .category }
@@ -179,7 +182,7 @@ struct DashboardView: View {
             summaryChip(
                 icon: "cpu",
                 label: "Total CPU",
-                value: "\(Int(store.governor.lastTotalCPUPercent))%",
+                value: formattedTotalCPU,
                 tint: .blue
             )
             summaryChip(
@@ -220,6 +223,21 @@ struct DashboardView: View {
         guard let h = store.hottestSensor, let v = h.currentValue else { return "—" }
         return "\(h.displayName) \(Int(v))\(unit == .celsius ? "°C" : "°F")"
     }
+    /// "Total CPU" value formatted per the shared CPU scale preference.
+    /// Normalized mode divides by the number of online cores so the number
+    /// maxes at 100%; per-core mode preserves the kernel's sum (matches
+    /// `top` / Activity Monitor).
+    private var formattedTotalCPU: String {
+        let raw = store.governor.lastTotalCPUPercent
+        if cpuScaleRaw == "perCore" {
+            return "\(Int(raw.rounded()))%"
+        }
+        let cores = Double(max(1, ProcessInfo.processInfo.activeProcessorCount))
+        let v = raw / cores
+        if v < 10 { return String(format: "%.1f%%", v) }
+        return "\(Int(v.rounded()))%"
+    }
+
     private var hottestSummaryTint: Color {
         guard let h = store.hottestSensor else { return .secondary }
         switch h.thresholdState(using: store.thresholds) {
