@@ -14,13 +14,19 @@ final class MenuBarController {
         self.store = store
         setupStatusItem()
         setupPopover()
-        // Cmd+, fires only when our app is key (i.e. popover is open)
+        // Cmd+, and Cmd+D fire only when our app is key (e.g. popover is open).
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.modifierFlags.contains(.command), event.charactersIgnoringModifiers == "," {
+            guard event.modifierFlags.contains(.command) else { return event }
+            switch event.charactersIgnoringModifiers {
+            case ",":
                 self?.openPreferences()
                 return nil
+            case "d", "D":
+                self?.openDashboard()
+                return nil
+            default:
+                return event
             }
-            return event
         }
         // Re-render immediately when the user toggles Appearance / Increase Contrast
         // so tinted (red/orange) states update right away instead of waiting for
@@ -86,8 +92,11 @@ final class MenuBarController {
                                accessibilityDescription: AppStrings.appName)
         button.image?.isTemplate = true
         button.imagePosition = .imageLeft
-        button.action = #selector(togglePopover)
+        // Respond to both left- and right-click on the button so we can
+        // show the popover on left-click and a quick-action menu on right.
+        button.action = #selector(statusItemClicked(_:))
         button.target = self
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
     }
 
     private func syncButton() {
@@ -125,6 +134,17 @@ final class MenuBarController {
         case .stacked:    targetLength = Self.widthStacked
         }
 
+        // Throttle indicator — small dot overlaid on the icon when the
+        // governor or rule engine is actively throttling anything. Red
+        // if a cap is breached; orange if rules are the only reason.
+        let throttleDot: NSColor? = {
+            if store.isPauseActive { return nil }
+            if store.governor.isTempThrottling { return .systemRed }
+            if store.governor.isCPUThrottling  { return .systemOrange }
+            if !store.liveThrottledPIDs.isEmpty { return .systemOrange }
+            return nil
+        }()
+
         // Render the entire content (icon + text, or two-line text) into a
         // single NSImage sized exactly to the status item. NSButtonCell
         // vertically centers images by default, so this gives pixel-accurate
@@ -136,6 +156,7 @@ final class MenuBarController {
             layout: layout,
             v1: v1, v2: v2, unit: unit,
             iconName: iconName, tint: tint,
+            throttleDot: throttleDot,
             width: targetLength
         )
 
@@ -160,6 +181,7 @@ final class MenuBarController {
         layout: MenuBarLayout,
         v1: Double?, v2: Double?, unit: TempUnit,
         iconName: String, tint: NSColor?,
+        throttleDot: NSColor?,
         width: CGFloat
     ) -> NSImage {
         let size = NSSize(width: width, height: barHeight)
@@ -169,6 +191,7 @@ final class MenuBarController {
                 drawIconPlusText(
                     text: v1.map(unit.format) ?? "",
                     iconName: iconName, tint: tint,
+                    throttleDot: throttleDot,
                     size: size
                 )
             case .sideBySide:
@@ -178,6 +201,7 @@ final class MenuBarController {
                 drawIconPlusText(
                     text: parts.joined(separator: "  "),
                     iconName: iconName, tint: tint,
+                    throttleDot: throttleDot,
                     size: size
                 )
             case .stacked:
@@ -189,13 +213,15 @@ final class MenuBarController {
             }
             return true
         }
-        // Only treat as template (auto-tinted by AppKit) when there's no explicit tint.
-        img.isTemplate = (tint == nil)
+        // Baking a colored dot forces the image out of template mode, so
+        // auto-tinting only applies when there is neither a tint nor a dot.
+        img.isTemplate = (tint == nil && throttleDot == nil)
         return img
     }
 
     private static func drawIconPlusText(
         text: String, iconName: String, tint: NSColor?,
+        throttleDot: NSColor?,
         size: NSSize
     ) {
         let scale = barScale
@@ -244,6 +270,24 @@ final class MenuBarController {
             )
             (text as NSString).draw(in: textRect, withAttributes: textAttrs)
         }
+
+        // Throttle indicator dot — tiny filled circle at the icon's
+        // bottom-right corner, with a thin translucent halo for contrast
+        // against both light and dark menu bars.
+        if let dotColor = throttleDot {
+            let dotDiameter: CGFloat = max(4, BaseSize.iconPt * scale * 0.38)
+            let dotRect = NSRect(
+                x: iconRect.maxX - dotDiameter * 0.9,
+                y: iconRect.minY - dotDiameter * 0.15,
+                width: dotDiameter,
+                height: dotDiameter
+            )
+            // Halo
+            NSColor.windowBackgroundColor.withAlphaComponent(0.6).set()
+            NSBezierPath(ovalIn: dotRect.insetBy(dx: -0.8, dy: -0.8)).fill()
+            dotColor.set()
+            NSBezierPath(ovalIn: dotRect).fill()
+        }
     }
 
     private static func drawStackedText(top: String, bottom: String, size: NSSize) {
@@ -287,6 +331,11 @@ final class MenuBarController {
             // all slot modes (highest, average, individual) update on every poll
             _ = store.sensors.count
             store.enabledSensors.forEach { _ = $0.currentValue }
+            // Also track throttle state so the icon's dot overlay follows it.
+            _ = store.governor.isTempThrottling
+            _ = store.governor.isCPUThrottling
+            _ = store.liveThrottledPIDs.count
+            _ = store.isPauseActive
         } onChange: { [weak self] in
             Task { @MainActor [weak self] in
                 self?.syncButton()
@@ -315,6 +364,16 @@ final class MenuBarController {
         popover.contentViewController = vc
     }
 
+    @objc private func statusItemClicked(_ sender: Any?) {
+        let event = NSApp.currentEvent
+        if event?.type == .rightMouseUp
+            || (event?.modifierFlags.contains(.control) == true) {
+            showQuickMenu()
+        } else {
+            togglePopover()
+        }
+    }
+
     @objc private func togglePopover() {
         guard let button = statusItem?.button else { return }
         if popover.isShown {
@@ -324,6 +383,84 @@ final class MenuBarController {
             popover.show(relativeTo: .zero, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
         }
+    }
+
+    /// Right-click / control-click quick menu. Mirrors the core popover
+    /// actions so power users don't have to open the full popover for a
+    /// one-shot "pause for an hour" or "open dashboard."
+    private func showQuickMenu() {
+        guard let item = statusItem, let button = item.button else { return }
+        if popover.isShown { popover.performClose(nil) }
+
+        let menu = NSMenu()
+
+        // Dashboard / Preferences.
+        let dashItem = NSMenuItem(title: "Open Dashboard",
+                                  action: #selector(qmDashboard),
+                                  keyEquivalent: "d")
+        dashItem.target = self
+        dashItem.keyEquivalentModifierMask = [.command]
+        menu.addItem(dashItem)
+
+        let prefItem = NSMenuItem(title: "Preferences…",
+                                  action: #selector(qmPreferences),
+                                  keyEquivalent: ",")
+        prefItem.target = self
+        prefItem.keyEquivalentModifierMask = [.command]
+        menu.addItem(prefItem)
+
+        menu.addItem(.separator())
+
+        // Pause / resume submenu.
+        if store.isPauseActive {
+            let resume = NSMenuItem(title: "Resume throttling",
+                                    action: #selector(qmResume),
+                                    keyEquivalent: "")
+            resume.target = self
+            menu.addItem(resume)
+        } else {
+            let pauseParent = NSMenuItem(title: "Pause throttling",
+                                         action: nil, keyEquivalent: "")
+            let pauseSub = NSMenu()
+            pauseSub.addItem(makePauseItem("15 minutes",   seconds: 15 * 60))
+            pauseSub.addItem(makePauseItem("1 hour",       seconds: 60 * 60))
+            pauseSub.addItem(makePauseItem("4 hours",      seconds: 4 * 60 * 60))
+            pauseSub.addItem(makePauseItem("Until quit",   seconds: nil))
+            pauseParent.submenu = pauseSub
+            menu.addItem(pauseParent)
+        }
+
+        menu.addItem(.separator())
+        let quit = NSMenuItem(title: "Quit Air Assist",
+                              action: #selector(qmQuit),
+                              keyEquivalent: "q")
+        quit.target = self
+        quit.keyEquivalentModifierMask = [.command]
+        menu.addItem(quit)
+
+        // Detach the menu after it closes so right-click stays available.
+        item.menu = menu
+        button.performClick(nil)
+        item.menu = nil
+    }
+
+    private func makePauseItem(_ title: String, seconds: TimeInterval?) -> NSMenuItem {
+        let item = NSMenuItem(title: title,
+                              action: #selector(qmPause(_:)),
+                              keyEquivalent: "")
+        item.target = self
+        // Encode the duration as the menu item's tag (in seconds; -1 = nil).
+        item.tag = seconds.map { Int($0) } ?? -1
+        return item
+    }
+
+    @objc private func qmDashboard()    { openDashboard() }
+    @objc private func qmPreferences()  { openPreferences() }
+    @objc private func qmResume()       { store.resumeThrottling() }
+    @objc private func qmQuit()         { NSApp.terminate(nil) }
+    @objc private func qmPause(_ sender: NSMenuItem) {
+        let duration: TimeInterval? = sender.tag == -1 ? nil : TimeInterval(sender.tag)
+        store.pauseThrottling(for: duration)
     }
 
     func openDashboard() {

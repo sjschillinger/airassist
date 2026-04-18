@@ -1,5 +1,58 @@
 import Foundation
 
+/// One-click setups for users who don't want to tune individual numbers.
+/// Each preset sets all governor fields except `mode`, which is preserved
+/// so applying a preset never silently turns the governor on or off.
+enum GovernorPreset: String, CaseIterable, Identifiable {
+    case gentle, balanced, aggressive
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .gentle:     return "Gentle"
+        case .balanced:   return "Balanced"
+        case .aggressive: return "Aggressive"
+        }
+    }
+
+    var tagline: String {
+        switch self {
+        case .gentle:     return "Only step in when things get really hot."
+        case .balanced:   return "Sensible defaults — recommended."
+        case .aggressive: return "Keep the Mac cool and quiet, even under load."
+        }
+    }
+
+    /// Apply this preset's numbers to a config, preserving mode.
+    func applied(to config: GovernorConfig) -> GovernorConfig {
+        var c = config
+        switch self {
+        case .gentle:
+            c.maxTempC             = 93
+            c.tempHysteresisC      = 8
+            c.maxCPUPercent        = 600
+            c.cpuHysteresisPercent = 100
+            c.maxTargets           = 3
+            c.minCPUForTargeting   = 25
+        case .balanced:
+            c.maxTempC             = 85
+            c.tempHysteresisC      = 5
+            c.maxCPUPercent        = 400
+            c.cpuHysteresisPercent = 50
+            c.maxTargets           = 4
+            c.minCPUForTargeting   = 15
+        case .aggressive:
+            c.maxTempC             = 75
+            c.tempHysteresisC      = 3
+            c.maxCPUPercent        = 250
+            c.cpuHysteresisPercent = 30
+            c.maxTargets           = 6
+            c.minCPUForTargeting   = 10
+        }
+        return c
+    }
+}
+
 /// Which system-wide cap modes are active. Freely combinable.
 enum GovernorMode: String, Codable, CaseIterable {
     case off         // governor does nothing

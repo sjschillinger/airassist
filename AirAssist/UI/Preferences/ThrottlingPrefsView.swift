@@ -74,6 +74,19 @@ private struct GovernorSection: View {
             .pickerStyle(.segmented)
             .labelsHidden()
 
+            // Presets: one-click tuning.
+            HStack(spacing: 6) {
+                Text("Preset:").font(.caption).foregroundStyle(.secondary)
+                ForEach(GovernorPreset.allCases) { preset in
+                    Button(preset.label) {
+                        store.governorConfig = preset.applied(to: store.governorConfig)
+                    }
+                    .controlSize(.small)
+                    .help(preset.tagline)
+                }
+                Spacer()
+            }
+
             if store.governorConfig.tempEnabled {
                 tempSection
             }
@@ -214,12 +227,7 @@ private struct RulesSection: View {
                 .font(.caption).foregroundStyle(.secondary)
 
             if store.throttleRules.rules.isEmpty {
-                ContentUnavailableView(
-                    "No rules yet",
-                    systemImage: "tortoise",
-                    description: Text("Click + to cap a specific app's CPU usage.")
-                )
-                .frame(maxWidth: .infinity, minHeight: 140)
+                EmptyRulesView(store: store, onAdd: { showAddSheet = true })
             } else {
                 Table(store.throttleRules.rules, selection: $selectedRuleID) {
                     TableColumn("App") { rule in
@@ -303,6 +311,75 @@ private struct RulesSection: View {
                     .monospacedDigit().frame(width: 44, alignment: .trailing)
             }
         }
+    }
+}
+
+// MARK: - Empty-rules state with smart suggestions
+
+/// Shown when the user has no throttle rules yet. Scans the governor's
+/// last top-CPU snapshot for processes whose names match known hot-running
+/// apps (Electron helpers, Chrome renderers, etc.) and surfaces them as
+/// one-click "Throttle at 50%" suggestions.
+private struct EmptyRulesView: View {
+    let store: ThermalStore
+    let onAdd: () -> Void
+
+    /// Substrings that identify processes commonly worth throttling.
+    /// Matched case-insensitively against the executable name.
+    private static let hotAppPatterns: [String] = [
+        "Helper", "Electron", "renderer", "chrome",
+        "slack", "discord", "notion", "spotify", "figma",
+        "teams", "zoom", "code", "docker",
+    ]
+
+    private var suggestions: [RunningProcess] {
+        let procs = store.governor.lastTopProcesses
+        let seen = Set(store.throttleRules.rules.map(\.id))
+        return procs
+            .filter { p in
+                Self.hotAppPatterns.contains { p.name.localizedCaseInsensitiveContains($0) }
+            }
+            .filter { !seen.contains(ThrottleRule.key(for: $0)) }
+            .prefix(5)
+            .map { $0 }
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ContentUnavailableView {
+                Label("No rules yet", systemImage: "tortoise")
+            } description: {
+                Text("Cap how much CPU a specific app can use. 100% means no throttle; 50% means it runs half the wall-clock time.")
+            } actions: {
+                Button("Add Rule…", action: onAdd).controlSize(.regular)
+            }
+
+            if !suggestions.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Suggestions based on what's running")
+                        .font(.caption).foregroundStyle(.secondary)
+                    ForEach(suggestions) { p in
+                        HStack {
+                            Image(systemName: "sparkles").foregroundStyle(.yellow)
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(p.displayName).font(.subheadline)
+                                Text("\(p.name) · \(Int(p.cpuPercent))% CPU")
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button("Cap at 50%") {
+                                store.upsertRule(for: p, duty: 0.5)
+                            }
+                            .controlSize(.small)
+                        }
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(Color.secondary.opacity(0.06),
+                                    in: RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 140)
     }
 }
 

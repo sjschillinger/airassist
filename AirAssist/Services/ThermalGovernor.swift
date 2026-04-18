@@ -25,6 +25,12 @@ final class ThermalGovernor {
     /// Updated each tick. 0 until the first tick completes.
     private(set) var lastTotalCPUPercent: Double = 0
 
+    /// Last snapshot of top user processes by CPU%. Published each tick so
+    /// UI surfaces (dashboard Top CPU panel) can share the governor's
+    /// single sampling pass instead of double-sampling ProcessInspector
+    /// (which would corrupt the delta-CPU state).
+    private(set) var lastTopProcesses: [RunningProcess] = []
+
     /// Externally-set pause. When true the governor releases targets
     /// and sleeps until cleared. Set by ThermalStore on user-initiated
     /// "pause throttling" actions.
@@ -78,6 +84,16 @@ final class ThermalGovernor {
 
     /// One decision cycle: sample, decide, act.
     func tick() {
+        // Always sample first so UI consumers (Top CPU panel) have fresh
+        // data even when the governor is off or paused.
+        let procs = inspector.topUserProcessesByCPU(
+            limit: 50,
+            minPercent: 0.0
+        )
+        let totalCPU = procs.reduce(0.0) { $0 + $1.cpuPercent }
+        lastTotalCPUPercent = totalCPU
+        lastTopProcesses    = procs
+
         if isPaused { return }
         guard !config.isOff else {
             releaseAllGovernorTargets()
@@ -86,12 +102,6 @@ final class ThermalGovernor {
             return
         }
 
-        let procs = inspector.topUserProcessesByCPU(
-            limit: 50,
-            minPercent: 0.0
-        )
-        let totalCPU = procs.reduce(0.0) { $0 + $1.cpuPercent }
-        lastTotalCPUPercent = totalCPU
         let temp = hottestTempC()
 
         // --- temperature branch ---

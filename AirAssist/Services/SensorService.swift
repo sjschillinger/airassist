@@ -31,6 +31,7 @@ final class SensorService {
         for reading in readings {
             if let existing = index[reading.id] {
                 existing.currentValue = reading.value
+                existing.pushHistory(reading.value)
             } else {
                 let sensor = Sensor(
                     id: reading.id,
@@ -38,6 +39,7 @@ final class SensorService {
                     category: SensorCategorizer.category(for: reading.name)
                 )
                 sensor.currentValue = reading.value
+                sensor.pushHistory(reading.value)
                 sensor.isEnabled = SensorEnabledPersistence.isEnabled(sensorID: reading.id)
                 sensors.append(sensor)
                 index[sensor.id] = sensor

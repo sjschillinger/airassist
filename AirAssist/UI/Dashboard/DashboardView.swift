@@ -10,7 +10,9 @@ enum SensorSortOrder: String, CaseIterable, Identifiable {
 }
 
 struct DashboardView: View {
-    let store: ThermalStore
+    @Bindable var store: ThermalStore
+    @State private var addingPID: pid_t?
+    @State private var addingDuty: Double = 0.5
 
     @AppStorage("tempUnit")      private var tempUnitRaw: Int    = TempUnit.celsius.rawValue
     @AppStorage("dashSortOrder") private var sortRaw: String     = SensorSortOrder.category.rawValue
@@ -42,13 +44,124 @@ struct DashboardView: View {
             Divider()
             toolbar
             Divider()
-            sensorGrid
+            HSplitView {
+                sensorGrid
+                    .frame(minWidth: 340)
+                topCPUPanel
+                    .frame(minWidth: 240, idealWidth: 280, maxWidth: 340)
+            }
             if !store.liveThrottledPIDs.isEmpty {
                 Divider()
                 throttlePanel
             }
         }
-        .frame(minWidth: 560, minHeight: 420)
+        .frame(minWidth: 760, minHeight: 460)
+    }
+
+    // MARK: - Top CPU panel (right column)
+
+    private var topCPUPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "cpu").foregroundStyle(.blue)
+                Text("Top CPU").font(.headline)
+                Spacer()
+            }
+            .padding(.horizontal, 12).padding(.top, 10)
+            Divider()
+            if store.governor.lastTopProcesses.isEmpty {
+                Text("Sampling processes…")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(topProcesses) { p in
+                            topCPURow(p)
+                            Divider().padding(.leading, 12)
+                        }
+                    }
+                }
+            }
+        }
+        .background(Color.secondary.opacity(0.04))
+    }
+
+    private var topProcesses: [RunningProcess] {
+        let base = store.governor.lastTopProcesses
+            .filter { $0.cpuPercent > 0.5 }
+            .sorted { $0.cpuPercent > $1.cpuPercent }
+        return Array(base.prefix(12))
+    }
+
+    @ViewBuilder
+    private func topCPURow(_ p: RunningProcess) -> some View {
+        let existing = store.throttleRules.rule(for: p)
+        let throttled = store.liveThrottledPIDs.contains { $0.pid == p.id }
+
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(p.displayName).font(.subheadline).lineLimit(1)
+                    Text(p.name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer()
+                Text("\(Int(p.cpuPercent))%")
+                    .font(.system(.subheadline, design: .rounded).monospacedDigit())
+                    .foregroundStyle(cpuTint(p.cpuPercent))
+                if throttled {
+                    Image(systemName: "tortoise.fill")
+                        .foregroundStyle(.orange).font(.caption)
+                        .help("Currently throttled")
+                }
+                if let rule = existing {
+                    Button {
+                        store.removeRule(id: rule.id)
+                    } label: {
+                        Image(systemName: "minus.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Remove rule (\(Int(rule.duty * 100))% cap)")
+                } else if addingPID == p.id {
+                    EmptyView()
+                } else {
+                    Button {
+                        addingPID = p.id
+                        addingDuty = 0.5
+                    } label: {
+                        Image(systemName: "plus.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Add throttle rule for this app")
+                }
+            }
+            if addingPID == p.id {
+                HStack {
+                    Text("Cap at").font(.caption)
+                    Slider(value: $addingDuty, in: 0.05...1.0, step: 0.05)
+                    Text("\(Int(addingDuty * 100))%")
+                        .font(.caption.monospacedDigit())
+                        .frame(width: 40, alignment: .trailing)
+                    Button("Cancel") { addingPID = nil }
+                        .controlSize(.small)
+                    Button("Save") {
+                        store.upsertRule(for: p, duty: addingDuty)
+                        addingPID = nil
+                    }
+                    .controlSize(.small)
+                    .keyboardShortcut(.defaultAction)
+                }
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 6)
+    }
+
+    private func cpuTint(_ pct: Double) -> Color {
+        switch pct {
+        case 80...:  return .red
+        case 40...:  return .orange
+        default:     return .primary
+        }
     }
 
     // MARK: - Summary band (always visible)

@@ -42,8 +42,8 @@ struct SensorCardView: View {
                 .font(.system(size: 22, weight: .semibold).monospacedDigit())
                 .foregroundStyle(stateColor)
 
-            // Placeholder sparkline
-            SparklinePlaceholder()
+            // Real sparkline from the sensor's rolling history
+            Sparkline(samples: sensor.history, tint: stateColor)
                 .frame(height: 24)
         }
         .padding(10)
@@ -56,22 +56,63 @@ struct SensorCardView: View {
     }
 }
 
-// MARK: - Sparkline placeholder (replaced with real data in a later step)
+// MARK: - Sparkline
 
-private struct SparklinePlaceholder: View {
+/// Compact line chart of the last N temperature samples. Auto-scales to
+/// the observed min/max with a small padding band so flat lines still
+/// show as a line rather than clipping to the top or bottom edge.
+private struct Sparkline: View {
+    let samples: [Double]
+    let tint: Color
+
     var body: some View {
         GeometryReader { geo in
-            Path { path in
-                let w = geo.size.width
-                let h = geo.size.height
-                let points: [CGFloat] = [0.5, 0.4, 0.55, 0.45, 0.5, 0.6, 0.5]
-                let step = w / CGFloat(points.count - 1)
-                path.move(to: CGPoint(x: 0, y: h * points[0]))
-                for (i, y) in points.enumerated().dropFirst() {
-                    path.addLine(to: CGPoint(x: step * CGFloat(i), y: h * y))
+            let w = geo.size.width
+            let h = geo.size.height
+            if samples.count < 2 {
+                Path { path in
+                    let y = h / 2
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: w, y: y))
                 }
+                .stroke(tint.opacity(0.25), style: StrokeStyle(lineWidth: 1.2, dash: [2, 3]))
+            } else {
+                let minV = samples.min()!
+                let maxV = samples.max()!
+                // Pad range so a flat-ish line doesn't hug the top/bottom.
+                let span = max(maxV - minV, 1.0)
+                let lo = minV - span * 0.15
+                let hi = maxV + span * 0.15
+                let range = hi - lo
+
+                let step = w / CGFloat(samples.count - 1)
+                let points = samples.enumerated().map { (i, v) in
+                    CGPoint(
+                        x: step * CGFloat(i),
+                        y: h - (CGFloat((v - lo) / range) * h)
+                    )
+                }
+
+                // Gradient fill under the line.
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: h))
+                    path.addLine(to: points[0])
+                    for p in points.dropFirst() { path.addLine(to: p) }
+                    path.addLine(to: CGPoint(x: w, y: h))
+                    path.closeSubpath()
+                }
+                .fill(LinearGradient(
+                    colors: [tint.opacity(0.25), tint.opacity(0.0)],
+                    startPoint: .top, endPoint: .bottom
+                ))
+
+                // Line.
+                Path { path in
+                    path.move(to: points[0])
+                    for p in points.dropFirst() { path.addLine(to: p) }
+                }
+                .stroke(tint.opacity(0.9), lineWidth: 1.4)
             }
-            .stroke(Color.secondary.opacity(0.4), lineWidth: 1.5)
         }
     }
 }

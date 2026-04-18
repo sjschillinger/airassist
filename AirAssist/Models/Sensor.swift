@@ -16,18 +16,32 @@ enum ThresholdState {
 @Observable
 @MainActor
 final class Sensor: Identifiable {
+    /// Number of historical samples kept for the sparkline (~60s at 1Hz).
+    static let historyCapacity: Int = 60
+
     let id: String            // stable registry-ID hex string from IOKit
     let rawName: String       // original IOKit product string
     let displayName: String   // human-readable mapped name
     let category: SensorCategory
     var currentValue: Double?
     var isEnabled: Bool = true
+    /// Rolling temperature history, oldest → newest. Appended by the
+    /// SensorService each poll. Used by the sparkline on sensor cards.
+    var history: [Double] = []
 
     init(id: String, rawName: String, category: SensorCategory) {
         self.id          = id
         self.rawName     = rawName
         self.displayName = SensorCategorizer.displayName(for: rawName)
         self.category    = category
+    }
+
+    /// Append a reading and trim to `historyCapacity`.
+    func pushHistory(_ value: Double) {
+        history.append(value)
+        if history.count > Self.historyCapacity {
+            history.removeFirst(history.count - Self.historyCapacity)
+        }
     }
 
     func thresholdState(using thresholds: ThresholdSettings) -> ThresholdState {
