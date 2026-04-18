@@ -21,6 +21,9 @@ enum GovernorMode: String, Codable, CaseIterable {
 struct GovernorConfig: Codable {
     var mode: GovernorMode = .off
     /// Upper bound for any enabled temperature sensor, °C.
+    /// Default 85°C leaves headroom below Apple's own thermal management
+    /// (which begins throttling around 95°C on Apple Silicon die sensors),
+    /// so our governor intervenes first.
     var maxTempC: Double = 85
     /// Upper bound for total CPU% across all user processes.
     /// 100 = one whole core. 400 = four cores on an M1/M2/M3.
@@ -47,8 +50,11 @@ enum GovernorConfigPersistence {
 
     static func load() -> GovernorConfig {
         guard let data = UserDefaults.standard.data(forKey: key),
-              let cfg  = try? JSONDecoder().decode(GovernorConfig.self, from: data)
+              var cfg  = try? JSONDecoder().decode(GovernorConfig.self, from: data)
         else { return GovernorConfig() }
+        // Migration: old builds allowed temps up to 110°C, but the OS
+        // already throttles by then. Clamp so the UI slider matches.
+        if cfg.maxTempC > 95 { cfg.maxTempC = 95 }
         return cfg
     }
 
