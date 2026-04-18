@@ -53,6 +53,29 @@ struct SensorCardView: View {
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(stateColor.opacity(0.25), lineWidth: 1)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityValue(accessibilityValue)
+    }
+
+    /// VoiceOver label: category + sensor + threshold state, in a form a
+    /// screen reader can speak without the user needing to see the colored
+    /// status dot. Temperature is exposed separately as the accessibility
+    /// value so VoiceOver reads "Sensor: <name>, hot — 87°C".
+    private var accessibilityLabel: String {
+        let stateWord: String
+        switch state {
+        case .cool: stateWord = "cool"
+        case .warm: stateWord = "warm"
+        case .hot:  stateWord = "hot"
+        case .unknown: stateWord = "no reading"
+        }
+        return "\(sensor.category.rawValue) sensor, \(sensor.displayName), \(stateWord)"
+    }
+
+    private var accessibilityValue: String {
+        guard let v = sensor.currentValue else { return "no reading" }
+        return unit.format(v)
     }
 }
 

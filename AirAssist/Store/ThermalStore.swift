@@ -208,6 +208,26 @@ final class ThermalStore {
         return vals.isEmpty ? nil : vals.reduce(0, +) / Double(vals.count)
     }
 
+    // MARK: - Manual throttle (menu-bar escape hatch)
+
+    /// Fire-and-forget cap on a specific PID via the `.manual` source. Used
+    /// by the "Throttle frontmost at X%" quick-menu action. Bypasses the
+    /// foreground-duty floor because the whole point is to rein in the app
+    /// the user is currently interacting with. Auto-releases after
+    /// `duration` (default 1h) so the user can't accidentally leave
+    /// something pegged forever. Re-invoking replaces the cap.
+    func throttleFrontmost(pid: pid_t,
+                           name: String,
+                           duty: Double,
+                           duration: TimeInterval = 60 * 60) {
+        guard pid > 0, pid != getpid() else { return }
+        processThrottler.setDuty(duty, for: pid, name: name, source: .manual)
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(duration))
+            self?.processThrottler.clearDuty(source: .manual, for: pid)
+        }
+    }
+
     // MARK: - Rule management helpers (used by UI)
 
     /// Insert or replace a rule for a process. Keyed by bundleID when available.

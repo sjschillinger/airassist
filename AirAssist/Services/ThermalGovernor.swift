@@ -29,11 +29,32 @@ final class ThermalGovernor {
     /// Updated each tick. 0 until the first tick completes.
     private(set) var lastTotalCPUPercent: Double = 0
 
+    /// Short plain-language explanation of why the governor is (or isn't)
+    /// throttling right now. Updated each tick. Used by dashboard + popover
+    /// to answer the "why is this happening" question without forcing the
+    /// user to reason about caps and live values themselves.
+    private(set) var reason: String = ""
+
     /// Last snapshot of top user processes by CPU%. Published each tick so
     /// UI surfaces (dashboard Top CPU panel) can share the governor's
     /// single sampling pass instead of double-sampling ProcessInspector
     /// (which would corrupt the delta-CPU state).
     private(set) var lastTopProcesses: [RunningProcess] = []
+
+    /// Rolling CPU% history keyed by rule identity (bundleID when available,
+    /// else process name). Used by the UI's empty-rules suggestions panel
+    /// to surface apps that have been *sustaining* high CPU — not just
+    /// spiky, one-tick blips. Window is `sustainedWindowSec` samples long
+    /// (one per tick ≈ 1s).
+    private var cpuHistoryByKey: [String: (samples: [Double], lastSeen: RunningProcess)] = [:]
+    /// Number of recent samples kept per identity. 30 ≈ 30 seconds at the
+    /// shared 1Hz tick. Longer windows filter spikes better but delay
+    /// surfacing of genuinely-new hot apps.
+    static let sustainedWindowSec: Int = 30
+    /// Minimum windowed-average CPU% for "this is worth suggesting a rule
+    /// for". 40% is ~half a core on average over 30s — enough that the
+    /// user is likely to feel it in battery or fan behavior.
+    static let sustainedThresholdPct: Double = 40
 
     /// Externally-set pause. When true the governor releases targets
     /// and sleeps until cleared. Set by ThermalStore on user-initiated
@@ -82,6 +103,7 @@ final class ThermalGovernor {
         lastTotalCPUPercent = snapshots.latestTotalCPU
         lastTopProcesses    = snapshots.latest
         let procs = snapshots.latest
+        updateCPUHistory(procs: procs)
 
         if isPaused { return }
         guard !config.isOff else {
@@ -115,6 +137,16 @@ final class ThermalGovernor {
         } else {
             isCPUThrottling = false
         }
+
+        // Update narrative — done regardless of whether we end up applying
+        // a throttle this tick so "Armed" also gets a reason.
+        reason = Self.describe(
+            config: config,
+            temp: temp,
+            totalCPU: totalCPU,
+            isTemp: isTempThrottling,
+            isCPU: isCPUThrottling
+        )
 
         if isTempThrottling || isCPUThrottling {
             // Compute how aggressive the throttle should be.
@@ -171,8 +203,80 @@ final class ThermalGovernor {
         }
     }
 
+    /// Append the current CPU% of every seen process to its rolling
+    /// window, create windows for newly-seen identities, and drop any
+    /// identity we haven't seen this tick (process ended).
+    private func updateCPUHistory(procs: [RunningProcess]) {
+        var seenKeys: Set<String> = []
+        for p in procs {
+            let key = ThrottleRule.key(for: p)
+            seenKeys.insert(key)
+            var entry = cpuHistoryByKey[key] ?? (samples: [], lastSeen: p)
+            entry.samples.append(p.cpuPercent)
+            if entry.samples.count > Self.sustainedWindowSec {
+                entry.samples.removeFirst(entry.samples.count - Self.sustainedWindowSec)
+            }
+            entry.lastSeen = p
+            cpuHistoryByKey[key] = entry
+        }
+        // Evict identities that disappeared — prevents unbounded growth
+        // when short-lived processes (shell one-shots, test runs) churn.
+        for k in cpuHistoryByKey.keys where !seenKeys.contains(k) {
+            cpuHistoryByKey.removeValue(forKey: k)
+        }
+    }
+
+    /// Processes whose windowed-average CPU% exceeds `sustainedThresholdPct`
+    /// AND have been observed for at least half the window. Sorted by
+    /// average CPU descending. Used by the empty-rules suggestions panel.
+    var sustainedHighCPUCandidates: [RunningProcess] {
+        let minSamples = Self.sustainedWindowSec / 2
+        return cpuHistoryByKey.values
+            .filter { $0.samples.count >= minSamples }
+            .compactMap { entry -> (avg: Double, proc: RunningProcess)? in
+                let avg = entry.samples.reduce(0, +) / Double(entry.samples.count)
+                guard avg >= Self.sustainedThresholdPct else { return nil }
+                return (avg, entry.lastSeen)
+            }
+            .sorted { $0.avg > $1.avg }
+            .map { $0.proc }
+    }
+
     private func releaseAllGovernorTargets() {
         throttler.releaseSource(.governor)
         governorPIDs.removeAll()
+    }
+
+    /// Build the user-facing narrative string. Kept static + pure so it's
+    /// trivially unit-testable in isolation from the tick loop.
+    private static func describe(
+        config: GovernorConfig,
+        temp: Double?,
+        totalCPU: Double,
+        isTemp: Bool,
+        isCPU: Bool
+    ) -> String {
+        if config.isOff { return "Off" }
+        // Active throttling — most specific reason wins.
+        if isTemp, let t = temp {
+            let over = Int((t - config.maxTempC).rounded())
+            return "Temperature \(Int(t))°C > cap \(Int(config.maxTempC))°C (+\(over)°C)"
+        }
+        if isCPU {
+            let over = Int((totalCPU - config.maxCPUPercent).rounded())
+            return "CPU \(Int(totalCPU))% > cap \(Int(config.maxCPUPercent))% (+\(over)%)"
+        }
+        // Armed — show the tightest margin so the user knows which cap
+        // will fire first.
+        var notes: [String] = []
+        if config.tempEnabled, let t = temp {
+            let margin = Int((config.maxTempC - t).rounded())
+            notes.append("temp \(Int(t))/\(Int(config.maxTempC))°C (−\(margin)°C)")
+        }
+        if config.cpuEnabled {
+            let margin = Int((config.maxCPUPercent - totalCPU).rounded())
+            notes.append("cpu \(Int(totalCPU))/\(Int(config.maxCPUPercent))% (−\(margin)%)")
+        }
+        return notes.isEmpty ? "Armed" : "Armed · " + notes.joined(separator: ", ")
     }
 }

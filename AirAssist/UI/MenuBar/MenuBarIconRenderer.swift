@@ -36,14 +36,25 @@ enum MenuBarIconRenderer {
 
     static var barHeight: CGFloat { NSStatusBar.system.thickness }
 
+    /// Minimum alpha of the heartbeat pulse at phase=0. 0.35 is low enough
+    /// to read as a fade but high enough that the dot never fully vanishes
+    /// (so the user doesn't think throttling just stopped).
+    static let pulseMinAlpha: CGFloat = 0.35
+
     /// Produce the complete status-item image for the given layout & state.
     /// Auto-template mode is on unless a tint or throttle dot would be lost
     /// under system tinting.
+    /// Render the complete status-item image.
+    /// - Parameter pulsePhase: 0.0…1.0. Used only by the throttle dot: its
+    ///   alpha is modulated between `pulseMinAlpha` and 1.0 via a raised-
+    ///   sine curve so the dot slowly breathes while throttling is active.
+    ///   Pass 1.0 for a static dot (no animation).
     static func render(
         layout: MenuBarLayout,
         v1: Double?, v2: Double?, unit: TempUnit,
         iconName: String, tint: NSColor?,
         throttleDot: NSColor?,
+        pulsePhase: CGFloat = 1.0,
         width: CGFloat
     ) -> NSImage {
         let size = NSSize(width: width, height: barHeight)
@@ -54,6 +65,7 @@ enum MenuBarIconRenderer {
                     text: v1.map(unit.format) ?? "",
                     iconName: iconName, tint: tint,
                     throttleDot: throttleDot,
+                    pulsePhase: pulsePhase,
                     size: size
                 )
             case .sideBySide:
@@ -64,6 +76,7 @@ enum MenuBarIconRenderer {
                     text: parts.joined(separator: "  "),
                     iconName: iconName, tint: tint,
                     throttleDot: throttleDot,
+                    pulsePhase: pulsePhase,
                     size: size
                 )
             case .stacked:
@@ -84,6 +97,7 @@ enum MenuBarIconRenderer {
     private static func drawIconPlusText(
         text: String, iconName: String, tint: NSColor?,
         throttleDot: NSColor?,
+        pulsePhase: CGFloat = 1.0,
         size: NSSize
     ) {
         let scale = barScale
@@ -132,7 +146,8 @@ enum MenuBarIconRenderer {
             (text as NSString).draw(in: textRect, withAttributes: textAttrs)
         }
 
-        // Throttle dot
+        // Throttle dot — pulsePhase 0→1 maps to alpha pulseMinAlpha→1.0
+        // via a raised-sine so the dot breathes smoothly.
         if let dotColor = throttleDot {
             let dotDiameter: CGFloat = max(4, BaseSize.iconPt * scale * 0.38)
             let dotRect = NSRect(
@@ -141,9 +156,10 @@ enum MenuBarIconRenderer {
                 width: dotDiameter,
                 height: dotDiameter
             )
-            NSColor.windowBackgroundColor.withAlphaComponent(0.6).set()
+            let alpha = pulseMinAlpha + (1.0 - pulseMinAlpha) * max(0, min(1, pulsePhase))
+            NSColor.windowBackgroundColor.withAlphaComponent(0.6 * alpha).set()
             NSBezierPath(ovalIn: dotRect.insetBy(dx: -0.8, dy: -0.8)).fill()
-            dotColor.set()
+            dotColor.withAlphaComponent(alpha).set()
             NSBezierPath(ovalIn: dotRect).fill()
         }
     }

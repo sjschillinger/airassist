@@ -44,6 +44,19 @@ final class MenuBarQuickMenu: NSObject {
         prefItem.keyEquivalentModifierMask = [.command]
         menu.addItem(prefItem)
 
+        // Escape hatch: throttle the app the user is currently interacting
+        // with. Only offered when that app isn't us — we'd refuse our own
+        // PID anyway, but the menu item would be misleading.
+        if let frontmost = NSWorkspace.shared.frontmostApplication,
+           frontmost.processIdentifier != getpid() {
+            let title = "Throttle \(frontmost.localizedName ?? "Frontmost") at 30%"
+            let throttleItem = NSMenuItem(title: title,
+                                          action: #selector(qmThrottleFrontmost),
+                                          keyEquivalent: "")
+            throttleItem.target = self
+            menu.addItem(throttleItem)
+        }
+
         menu.addItem(.separator())
 
         if store.isPauseActive {
@@ -94,5 +107,14 @@ final class MenuBarQuickMenu: NSObject {
     @objc private func qmPause(_ sender: NSMenuItem) {
         let duration: TimeInterval? = sender.tag == -1 ? nil : TimeInterval(sender.tag)
         store?.pauseThrottling(for: duration)
+    }
+    @objc private func qmThrottleFrontmost() {
+        guard let frontmost = NSWorkspace.shared.frontmostApplication,
+              frontmost.processIdentifier != getpid() else { return }
+        store?.throttleFrontmost(
+            pid: frontmost.processIdentifier,
+            name: frontmost.localizedName ?? "Frontmost",
+            duty: 0.30
+        )
     }
 }

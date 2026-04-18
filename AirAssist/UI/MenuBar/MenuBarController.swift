@@ -28,6 +28,16 @@ final class MenuBarController {
     private var keyMonitor: Any?
     private var appearanceObserver: NSKeyValueObservation?
 
+    // Heartbeat pulse: a timer re-renders the button at ~8 Hz while the
+    // throttle dot is visible so it slowly fades in and out. Timer is
+    // started/stopped on demand from syncButton() to avoid wasting CPU
+    // when nothing is being throttled.
+    private var pulseTimer: Timer?
+    private var pulseStart: Date?
+    /// Seconds for one full fade-in/out cycle. 1.6s ≈ resting human pulse,
+    /// slow enough to read as deliberate rather than nervous.
+    private static let pulsePeriod: TimeInterval = 1.6
+
     init(store: ThermalStore) {
         self.store = store
         self.quickMenu = MenuBarQuickMenu(
@@ -65,12 +75,49 @@ final class MenuBarController {
     func teardown() {
         appearanceObserver?.invalidate()
         appearanceObserver = nil
+        stopPulse()
         if let m = keyMonitor { NSEvent.removeMonitor(m); keyMonitor = nil }
         if popover.isShown { popover.performClose(nil) }
         if let item = statusItem {
             NSStatusBar.system.removeStatusItem(item)
             statusItem = nil
         }
+    }
+
+    // MARK: - Pulse driver
+
+    private func startPulseIfNeeded() {
+        guard pulseTimer == nil else { return }
+        pulseStart = Date()
+        // 8 Hz is smooth enough to read as a fade without thrashing the
+        // cross-process ControlCenter notification chain.
+        pulseTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 8.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.renderWithPulse() }
+        }
+        if let t = pulseTimer { RunLoop.main.add(t, forMode: .common) }
+    }
+
+    private func stopPulse() {
+        pulseTimer?.invalidate()
+        pulseTimer = nil
+        pulseStart = nil
+    }
+
+    /// Compute current pulsePhase (0…1) and redraw. Separate from syncButton()
+    /// to avoid re-reading every store value 8×/s — we just re-render with the
+    /// existing state and a new phase.
+    private func renderWithPulse() {
+        guard pulseTimer != nil else { return }
+        syncButton()
+    }
+
+    private func currentPulsePhase() -> CGFloat {
+        guard let start = pulseStart else { return 1.0 }
+        let t = Date().timeIntervalSince(start)
+        // Raised sine: 0.5 + 0.5·sin(…) sweeps 0 → 1 → 0 smoothly.
+        let twoPi = 2 * Double.pi
+        let phase = 0.5 + 0.5 * sin(twoPi * t / Self.pulsePeriod - .pi / 2)
+        return CGFloat(phase)
     }
 
     // MARK: - Status item
@@ -131,11 +178,22 @@ final class MenuBarController {
             return nil
         }()
 
+        // Start or stop the pulse depending on whether a throttle dot is
+        // being drawn this frame. pulsePhase is sampled from the pulse's
+        // start time so the fade is monotonic and frame-rate independent.
+        if throttleDot != nil {
+            startPulseIfNeeded()
+        } else {
+            stopPulse()
+        }
+        let phase = currentPulsePhase()
+
         let rendered = MenuBarIconRenderer.render(
             layout: layout,
             v1: v1, v2: v2, unit: unit,
             iconName: iconName, tint: tint,
             throttleDot: throttleDot,
+            pulsePhase: phase,
             width: targetLength
         )
 

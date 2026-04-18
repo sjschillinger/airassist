@@ -11,6 +11,11 @@ enum ThrottleSource: Hashable {
     case rule
     /// The `ThermalGovernor` reacting to a live cap breach.
     case governor
+    /// Ad-hoc user request via the menu bar escape hatch
+    /// ("Throttle frontmost app now"). Unlike `.rule`/`.governor` this
+    /// source *bypasses* the foreground-duty floor — the whole point is
+    /// to cap an app the user is actively looking at.
+    case manual
 }
 
 /// Throttles running processes via SIGSTOP/SIGCONT duty cycling — AppTamer's
@@ -230,8 +235,13 @@ final class ProcessThrottler {
             // foreground floor so the user's active window isn't being
             // SIGSTOP'd mid-keystroke.
             let duty: Double = await MainActor.run {
-                guard let base = active[pid]?.effectiveDuty else { return Self.maxDuty }
-                if pid == foregroundPID {
+                guard let entry = active[pid] else { return Self.maxDuty }
+                let base = entry.effectiveDuty
+                // Apply foreground floor unless the only requester is the
+                // ad-hoc manual escape hatch — the user explicitly asked for
+                // the frontmost app to be throttled.
+                let onlyManual = entry.sources.keys.allSatisfy { $0 == .manual }
+                if pid == foregroundPID && !onlyManual {
                     return max(base, Self.foregroundDutyFloor)
                 }
                 return base

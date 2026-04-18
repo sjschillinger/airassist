@@ -95,6 +95,46 @@ private struct GovernorSection: View {
             }
             if !store.governorConfig.isOff {
                 targetingSection
+                previewSection
+            }
+        }
+    }
+
+    /// "Would get throttled" preview — shows exactly which processes the
+    /// governor would pick *right now* under the current targeting settings,
+    /// without needing to wait for a cap to breach. Lets the user test
+    /// threshold tuning before it bites.
+    @ViewBuilder
+    private var previewSection: some View {
+        let cfg = store.governorConfig
+        let ruleCovered: Set<pid_t> = Set(
+            store.ruleEngine.managedPIDs
+        )
+        let candidates = store.governor.lastTopProcesses
+            .filter { $0.cpuPercent >= cfg.minCPUForTargeting }
+            .filter { !ruleCovered.contains($0.id) }
+            .prefix(cfg.maxTargets)
+        GroupBox("Would get throttled now") {
+            if candidates.isEmpty {
+                Text("No process currently meets the targeting threshold. Lower “Consider processes ≥ …% CPU” to preview more candidates.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(Array(candidates)) { p in
+                        HStack(spacing: 8) {
+                            Text(p.displayName).lineLimit(1)
+                            Text(p.name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                            Spacer()
+                            Text("\(Int(p.cpuPercent))%")
+                                .monospacedDigit().foregroundStyle(.orange)
+                        }
+                        .font(.caption)
+                    }
+                    Text("Shown if a cap breached this instant. Live snapshot, updates every second.")
+                        .font(.caption2).foregroundStyle(.secondary)
+                        .padding(.top, 2)
+                }
             }
         }
     }
@@ -203,6 +243,20 @@ private struct RulesSection: View {
     @State private var selectedRuleID: ThrottleRule.ID?
     @State private var showAddSheet: Bool = false
 
+    /// Format "3m 20s" / "45s" / "1h 12m". Uses minutes once past a minute
+    /// and drops seconds once past an hour — matches the precision users
+    /// actually care about ("was it seconds or minutes?").
+    fileprivate static func formatDuration(_ s: TimeInterval) -> String {
+        let total = Int(s.rounded())
+        if total < 60 { return "\(total)s" }
+        if total < 3600 {
+            let m = total / 60, rem = total % 60
+            return rem == 0 ? "\(m)m" : "\(m)m \(rem)s"
+        }
+        let h = total / 3600, m = (total % 3600) / 60
+        return m == 0 ? "\(h)h" : "\(h)h \(m)m"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -247,6 +301,18 @@ private struct RulesSection: View {
                         Text("\(Int((rule.duty * 100).rounded()))%").monospacedDigit()
                     }
                     .width(80)
+                    TableColumn("Today") { rule in
+                        let s = store.ruleEngine.stats[rule.id]
+                        if let s, s.fires > 0 {
+                            Text("\(s.fires)× · \(Self.formatDuration(s.throttleSeconds))")
+                                .font(.caption).monospacedDigit()
+                                .foregroundStyle(.secondary)
+                                .help("Fired \(s.fires) time\(s.fires == 1 ? "" : "s") today, total \(Self.formatDuration(s.throttleSeconds)) of active throttling")
+                        } else {
+                            Text("—").foregroundStyle(.secondary.opacity(0.5))
+                        }
+                    }
+                    .width(110)
                     TableColumn("On") { rule in
                         Toggle("", isOn: Binding(
                             get: { rule.isEnabled },
@@ -333,8 +399,18 @@ private struct EmptyRulesView: View {
     ]
 
     private var suggestions: [RunningProcess] {
-        let procs = store.governor.lastTopProcesses
         let seen = Set(store.throttleRules.rules.map(\.id))
+        // Primary signal: apps that have sustained high CPU for half the
+        // rolling window. Governed by ThermalGovernor's rolling buffer.
+        let sustained = store.governor.sustainedHighCPUCandidates
+            .filter { !seen.contains(ThrottleRule.key(for: $0)) }
+        if !sustained.isEmpty {
+            return Array(sustained.prefix(5))
+        }
+        // Fallback: name-pattern heuristic on the current top snapshot. Used
+        // before the rolling buffer has accumulated enough data (first ~15s
+        // after launch) and on quiet systems where nothing is sustained.
+        let procs = store.governor.lastTopProcesses
         return procs
             .filter { p in
                 Self.hotAppPatterns.contains { p.name.localizedCaseInsensitiveContains($0) }

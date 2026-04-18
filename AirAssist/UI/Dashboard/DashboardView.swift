@@ -50,7 +50,7 @@ struct DashboardView: View {
                 topCPUPanel
                     .frame(minWidth: 240, idealWidth: 280, maxWidth: 340)
             }
-            if !store.liveThrottledPIDs.isEmpty {
+            if !store.liveThrottledPIDs.isEmpty || !store.governor.reason.isEmpty {
                 Divider()
                 throttlePanel
             }
@@ -154,6 +154,8 @@ struct DashboardView: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(p.displayName), \(Int(p.cpuPercent)) percent CPU\(throttled ? ", throttled" : "")")
     }
 
     private func cpuTint(_ pct: Double) -> Color {
@@ -210,6 +212,8 @@ struct DashboardView: View {
         }
         .padding(.horizontal, 10).padding(.vertical, 6)
         .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 
     private var hottestSummaryValue: String {
@@ -299,6 +303,11 @@ struct DashboardView: View {
                         .foregroundStyle(.orange)
                 }
             }
+            if !store.governor.reason.isEmpty {
+                Text(store.governor.reason)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
             ForEach(store.liveThrottledPIDs.sorted { $0.duty < $1.duty }, id: \.pid) { item in
                 HStack {
                     Text(item.name).lineLimit(1)
@@ -307,6 +316,8 @@ struct DashboardView: View {
                     Text("\(Int((item.duty * 100).rounded()))%").monospacedDigit().frame(width: 48, alignment: .trailing)
                 }
                 .font(.caption)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(item.name), PID \(item.pid), capped at \(Int((item.duty * 100).rounded())) percent")
             }
         }
         .padding(.horizontal, 16)
