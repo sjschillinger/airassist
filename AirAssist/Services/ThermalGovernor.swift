@@ -11,8 +11,12 @@ import Foundation
 @MainActor
 final class ThermalGovernor {
 
-    private let inspector: ProcessInspector
+    private let snapshots: ProcessSnapshotPublisher
     private let throttler: ProcessThrottler
+    /// Called to ask "is this PID already covered by a user's per-app rule?"
+    /// The governor refuses to touch rule-covered PIDs so the rule engine
+    /// is the single authority for those. Nil → always false.
+    var isRuleCoveredPID: ((pid_t) -> Bool)?
 
     /// Current live config — edited by UI through ThermalStore.
     var config: GovernorConfig
@@ -51,48 +55,33 @@ final class ThermalGovernor {
     /// Supplied by ThermalStore so the governor doesn't depend on its internals.
     private let hottestTempC: () -> Double?
 
-    private var tickTask: Task<Void, Never>?
-
-    init(inspector: ProcessInspector,
+    init(snapshots: ProcessSnapshotPublisher,
          throttler: ProcessThrottler,
          config: GovernorConfig,
          hottestTempC: @escaping () -> Double?) {
-        self.inspector    = inspector
+        self.snapshots    = snapshots
         self.throttler    = throttler
         self.config       = config
         self.hottestTempC = hottestTempC
     }
 
-    func start() {
-        guard tickTask == nil else { return }
-        tickTask = Task { @MainActor [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(1))
-                guard let self else { break }
-                self.tick()
-            }
-        }
-    }
-
+    /// Release every PID the governor has requested. Called by ThermalStore
+    /// on app teardown after the shared tick loop has stopped.
     func stop() {
-        tickTask?.cancel()
-        tickTask = nil
         releaseAllGovernorTargets()
         isTempThrottling = false
         isCPUThrottling  = false
     }
 
-    /// One decision cycle: sample, decide, act.
+    /// Drive a decision. Called by `ThermalStore` on its shared 1Hz tick
+    /// after the snapshot publisher has already refreshed — that way both
+    /// engines see identical process data for the same instant.
     func tick() {
-        // Always sample first so UI consumers (Top CPU panel) have fresh
-        // data even when the governor is off or paused.
-        let procs = inspector.topUserProcessesByCPU(
-            limit: 50,
-            minPercent: 0.0
-        )
-        let totalCPU = procs.reduce(0.0) { $0 + $1.cpuPercent }
-        lastTotalCPUPercent = totalCPU
-        lastTopProcesses    = procs
+        // Mirror the latest snapshot for UI consumers. Reading it through
+        // the governor keeps the existing dashboard binding stable.
+        lastTotalCPUPercent = snapshots.latestTotalCPU
+        lastTopProcesses    = snapshots.latest
+        let procs = snapshots.latest
 
         if isPaused { return }
         guard !config.isOff else {
@@ -116,6 +105,7 @@ final class ThermalGovernor {
         }
 
         // --- cpu branch ---
+        let totalCPU = snapshots.latestTotalCPU
         if config.cpuEnabled {
             if totalCPU >= config.maxCPUPercent {
                 isCPUThrottling = true
@@ -161,25 +151,28 @@ final class ThermalGovernor {
     private func applyThrottle(duty: Double, candidates: [RunningProcess]) {
         let targets = candidates
             .filter { $0.cpuPercent >= config.minCPUForTargeting }
+            // Skip PIDs already covered by a user's per-app rule — the rule
+            // engine is the single authority there. Prevents a 1Hz duty
+            // tug-of-war between the two systems.
+            .filter { isRuleCoveredPID?($0.id) != true }
             .prefix(config.maxTargets)
 
         let wantedPIDs = Set(targets.map(\.id))
 
-        // Release any pids we were throttling that aren't in the new target set.
+        // Withdraw governor's request from pids we no longer want (leave
+        // any rule-engine request on those pids intact).
         for pid in governorPIDs.subtracting(wantedPIDs) {
-            throttler.release(pid: pid)
+            throttler.clearDuty(source: .governor, for: pid)
         }
         governorPIDs = wantedPIDs
 
         for p in targets {
-            throttler.setDuty(duty, for: p.id, name: p.name)
+            throttler.setDuty(duty, for: p.id, name: p.name, source: .governor)
         }
     }
 
     private func releaseAllGovernorTargets() {
-        for pid in governorPIDs {
-            throttler.release(pid: pid)
-        }
+        throttler.releaseSource(.governor)
         governorPIDs.removeAll()
     }
 }

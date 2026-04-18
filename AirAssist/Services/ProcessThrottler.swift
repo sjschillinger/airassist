@@ -1,6 +1,18 @@
 import Foundation
 import Darwin
 
+/// Identifies who is asking the throttler to cap a process. Multiple sources
+/// may want different duties on the same PID; the throttler applies the most
+/// restrictive (lowest duty) across sources. This is how the per-app rule
+/// engine and the system-wide governor coexist without fighting over PIDs
+/// second-by-second.
+enum ThrottleSource: Hashable {
+    /// A user-defined `ThrottleRule` ("Chrome Helper ≤ 50%").
+    case rule
+    /// The `ThermalGovernor` reacting to a live cap breach.
+    case governor
+}
+
 /// Throttles running processes via SIGSTOP/SIGCONT duty cycling — AppTamer's
 /// public-API approach. For each throttled PID, a background task cycles:
 ///
@@ -10,6 +22,12 @@ import Darwin
 /// A `duty` of 1.0 means "no throttle" (task is not started). A duty of 0.05
 /// means the process runs only 5% of wall time. Period is ~100ms which is a
 /// good balance between responsiveness and scheduler overhead.
+///
+/// Multiple sources (per-app rules, governor) can request different duties on
+/// the same PID. The throttler applies `min(duty)` across sources so whichever
+/// source wants the process slower wins — never the other way around. Sources
+/// that no longer care about a PID call `clearDuty(source:for:)` rather than
+/// `release()`, so other sources' requests remain in effect.
 ///
 /// Safety:
 ///   * Never throttles a PID whose name is in `ProcessInspector.excludedNames`.
@@ -26,11 +44,20 @@ final class ProcessThrottler {
     nonisolated static let minDuty: Double = 0.05
     nonisolated static let maxDuty: Double = 1.0
 
-    /// Per-PID state. `task` is the cycler; `duty` is its current target.
+    /// Per-PID state. `task` is the cycler; `sources` maps each requester to
+    /// its requested duty. The effective duty sent to the cycler each cycle
+    /// is `min(sources.values)`. An empty `sources` means no one wants the
+    /// PID throttled → release.
     private struct Entry {
-        var duty: Double
+        var sources: [ThrottleSource: Double]
         var name: String
         var task: Task<Void, Never>
+
+        /// Most restrictive duty across all sources, clamped to `[minDuty, maxDuty]`.
+        /// An entry should never exist with an empty sources map — release it first.
+        var effectiveDuty: Double {
+            sources.values.min() ?? ProcessThrottler.maxDuty
+        }
     }
 
     private var active: [pid_t: Entry] = [:]
@@ -48,52 +75,81 @@ final class ProcessThrottler {
 
     // MARK: - Public API
 
-    /// Apply a duty to a pid. If duty ≥ 1.0 the pid is released. Idempotent:
-    /// calling with the same duty does nothing; calling with a new duty
-    /// updates the live target.
-    func setDuty(_ rawDuty: Double, for pid: pid_t, name: String) {
+    /// Request that `pid` run at `rawDuty` on behalf of `source`. Multiple
+    /// sources may co-request — the effective cycle duty is `min()` across
+    /// sources. If `rawDuty >= 1.0` this source's request is cleared (it no
+    /// longer cares about the PID). Idempotent.
+    func setDuty(_ rawDuty: Double,
+                 for pid: pid_t,
+                 name: String,
+                 source: ThrottleSource) {
         guard pid > 0 else { return }
         // Safety: never throttle excluded system processes.
         if ProcessInspector.excludedNames.contains(name) {
-            release(pid: pid)
+            clearDuty(source: source, for: pid)
             return
         }
         // Safety: never touch processes we don't own.
         var uid: uid_t = 0
         if !ownedByCurrentUser(pid: pid, uidOut: &uid) {
-            release(pid: pid)
+            clearDuty(source: source, for: pid)
             return
         }
         // Safety: never throttle self or any ancestor (shell, launcher, etc.)
         if protectAncestors && SafetyCoordinator.isAncestorOrSelf(pid: pid) {
-            release(pid: pid)
+            clearDuty(source: source, for: pid)
             return
         }
 
         let duty = clamp(rawDuty, lo: Self.minDuty, hi: Self.maxDuty)
+        // duty == maxDuty means "source no longer wants throttling" → clear
+        // this source. Other sources' requests remain active.
         if duty >= Self.maxDuty {
-            release(pid: pid)
+            clearDuty(source: source, for: pid)
             return
         }
 
         if var existing = active[pid] {
-            // Just update the target. The live task reads the latest duty
-            // out of `active` each cycle.
-            existing.duty = duty
+            existing.sources[source] = duty
+            existing.name = name  // keep the freshest display name
             active[pid] = existing
             return
         }
 
-        // Spawn a new cycler.
+        // Spawn a new cycler with this source's request as the initial entry.
         let task = Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
             await self.runCycle(pid: pid)
         }
-        active[pid] = Entry(duty: duty, name: name, task: task)
+        active[pid] = Entry(sources: [source: duty], name: name, task: task)
         publishInflight()
     }
 
-    /// Release a single pid — SIGCONT and cancel its cycler.
+    /// Withdraw a specific source's request for this PID. If no source still
+    /// wants the PID throttled, it's released. Rule engine / governor use
+    /// this (not `release`) so they only retract their own requests.
+    func clearDuty(source: ThrottleSource, for pid: pid_t) {
+        guard var entry = active[pid] else { return }
+        entry.sources.removeValue(forKey: source)
+        if entry.sources.isEmpty {
+            release(pid: pid)
+        } else {
+            active[pid] = entry
+        }
+    }
+
+    /// Remove *all* requests from a single source. Used on engine
+    /// teardown / pause so that source stops influencing any PID.
+    func releaseSource(_ source: ThrottleSource) {
+        let toUpdate = active.keys.filter { active[$0]?.sources.keys.contains(source) == true }
+        for pid in toUpdate {
+            clearDuty(source: source, for: pid)
+        }
+    }
+
+    /// Release a single pid unconditionally — SIGCONT, cancel cycler, drop
+    /// all source requests. Use sparingly; prefer `clearDuty` when you only
+    /// want to retract one source's interest.
     func release(pid: pid_t) {
         guard let entry = active.removeValue(forKey: pid) else { return }
         entry.task.cancel()
@@ -121,13 +177,25 @@ final class ProcessThrottler {
         safety?.noteInflightChange(pids: Array(active.keys))
     }
 
-    /// PIDs currently under active throttling, with their current duty.
+    /// PIDs currently under active throttling, with their *effective* duty
+    /// (min across sources) and the set of sources requesting the cap.
     var throttledPIDs: [(pid: pid_t, duty: Double, name: String)] {
-        active.map { (pid: $0.key, duty: $0.value.duty, name: $0.value.name) }
+        active.map { (pid: $0.key, duty: $0.value.effectiveDuty, name: $0.value.name) }
     }
 
-    /// Is this pid currently throttled?
+    /// Full detail: which sources are requesting each pid, and at what duty.
+    /// Used by UI to explain why a PID is throttled ("rule + governor").
+    var throttleDetail: [(pid: pid_t, name: String, sources: [ThrottleSource: Double])] {
+        active.map { (pid: $0.key, name: $0.value.name, sources: $0.value.sources) }
+    }
+
+    /// Is this pid currently throttled by any source?
     func isThrottled(pid: pid_t) -> Bool { active[pid] != nil }
+
+    /// Is this pid throttled by a specific source?
+    func isThrottled(pid: pid_t, by source: ThrottleSource) -> Bool {
+        active[pid]?.sources[source] != nil
+    }
 
     // MARK: - Cycler
 
@@ -139,7 +207,7 @@ final class ProcessThrottler {
         while !Task.isCancelled {
             // Snapshot current duty (may have been updated by setDuty).
             let duty: Double = await MainActor.run {
-                active[pid]?.duty ?? Self.maxDuty
+                active[pid]?.effectiveDuty ?? Self.maxDuty
             }
             if duty >= Self.maxDuty { return }
 

@@ -11,14 +11,15 @@ import Foundation
 @MainActor
 final class ThrottleRuleEngine {
 
-    private let inspector: ProcessInspector
+    private let snapshots: ProcessSnapshotPublisher
+    private let inspector: ProcessInspector   // for the Add-rule picker only
     private let throttler: ProcessThrottler
 
     /// Currently loaded user rules.
     var config: ThrottleRulesConfig
 
     /// PIDs the rule engine is currently managing.
-    private var managedPIDs: Set<pid_t> = []
+    private(set) var managedPIDs: Set<pid_t> = []
 
     /// Externally-set pause. When true the engine releases everything
     /// and skips its tick.
@@ -26,30 +27,19 @@ final class ThrottleRuleEngine {
         didSet { if isPaused { releaseAll() } }
     }
 
-    private var tickTask: Task<Void, Never>?
-
-    init(inspector: ProcessInspector,
+    init(snapshots: ProcessSnapshotPublisher,
+         inspector: ProcessInspector,
          throttler: ProcessThrottler,
          config: ThrottleRulesConfig) {
+        self.snapshots = snapshots
         self.inspector = inspector
         self.throttler = throttler
         self.config    = config
     }
 
-    func start() {
-        guard tickTask == nil else { return }
-        tickTask = Task { @MainActor [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(1))
-                guard let self else { break }
-                self.tick()
-            }
-        }
-    }
-
+    /// Release every PID the rule engine has requested. Called by
+    /// ThermalStore on teardown after the shared tick loop has stopped.
     func stop() {
-        tickTask?.cancel()
-        tickTask = nil
         releaseAll()
     }
 
@@ -59,7 +49,9 @@ final class ThrottleRuleEngine {
     }
 
     /// List all currently running processes with bundle info, for the UI's
-    /// "Add rule for this app" flow. Filters obvious noise.
+    /// "Add rule for this app" flow. Filters obvious noise. This is the only
+    /// place we still call `inspector.snapshot()` ad-hoc — it doesn't
+    /// participate in the shared 1Hz tick.
     func availableProcesses() -> [RunningProcess] {
         inspector.snapshot()
             .filter { $0.isCurrentUser }
@@ -73,9 +65,7 @@ final class ThrottleRuleEngine {
             return
         }
 
-        let procs = inspector.snapshot()
-            .filter { $0.isCurrentUser }
-            .filter { !ProcessInspector.excludedNames.contains($0.name) }
+        let procs = snapshots.latest
 
         var wanted: [pid_t: (duty: Double, name: String)] = [:]
         for p in procs {
@@ -84,21 +74,19 @@ final class ThrottleRuleEngine {
             }
         }
 
-        // Release pids that no longer match a rule.
+        // Withdraw our source from pids that no longer match a rule.
         for pid in managedPIDs where wanted[pid] == nil {
-            throttler.release(pid: pid)
+            throttler.clearDuty(source: .rule, for: pid)
         }
         managedPIDs = Set(wanted.keys)
 
         for (pid, spec) in wanted {
-            throttler.setDuty(spec.duty, for: pid, name: spec.name)
+            throttler.setDuty(spec.duty, for: pid, name: spec.name, source: .rule)
         }
     }
 
     private func releaseAll() {
-        for pid in managedPIDs {
-            throttler.release(pid: pid)
-        }
+        throttler.releaseSource(.rule)
         managedPIDs.removeAll()
     }
 }

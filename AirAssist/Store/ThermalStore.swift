@@ -12,8 +12,13 @@ final class ThermalStore {
     let processInspector = ProcessInspector()
     let processThrottler = ProcessThrottler()
     let safety = SafetyCoordinator()
+    let snapshots: ProcessSnapshotPublisher
     private(set) var governor: ThermalGovernor!
     private(set) var ruleEngine: ThrottleRuleEngine!
+    /// Shared 1Hz driver — refreshes the snapshot publisher, then ticks both
+    /// engines in deterministic order (rules first, governor second, so the
+    /// governor can skip rule-covered PIDs on the same cycle).
+    private var controlLoopTask: Task<Void, Never>?
 
     var governorConfig: GovernorConfig {
         didSet {
@@ -98,9 +103,10 @@ final class ThermalStore {
         self.governorConfig = GovernorConfigPersistence.load()
         self.throttleRules  = ThrottleRulesPersistence.load()
         self.processThrottler.safety = safety
+        self.snapshots = ProcessSnapshotPublisher(inspector: processInspector)
         // Capture self weakly in the hottest-temp closure.
         self.governor = ThermalGovernor(
-            inspector: processInspector,
+            snapshots: snapshots,
             throttler: processThrottler,
             config: governorConfig,
             hottestTempC: { [weak self] in
@@ -108,10 +114,16 @@ final class ThermalStore {
             }
         )
         self.ruleEngine = ThrottleRuleEngine(
+            snapshots: snapshots,
             inspector: processInspector,
             throttler: processThrottler,
             config: throttleRules
         )
+        // Governor asks the rule engine whether a PID is already rule-covered
+        // so it never fights rules on the same PID.
+        self.governor.isRuleCoveredPID = { [weak self] pid in
+            self?.ruleEngine.managedPIDs.contains(pid) ?? false
+        }
     }
 
     func start() {
@@ -125,13 +137,25 @@ final class ThermalStore {
                 self.logger.log(store: self)
             }
         }
-        governor.start()
-        ruleEngine.start()
+        // Shared 1Hz control loop — single source of process data for both
+        // engines, and a deterministic ordering (rules → governor) so the
+        // governor sees up-to-date rule-coverage within the same cycle.
+        controlLoopTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard let self else { break }
+                self.snapshots.refresh()
+                self.ruleEngine.tick()
+                self.governor.tick()
+            }
+        }
     }
 
     func stop() {
         logTask?.cancel()
         logTask = nil
+        controlLoopTask?.cancel()
+        controlLoopTask = nil
         sensorService.stop()
         governor.stop()
         ruleEngine.stop()

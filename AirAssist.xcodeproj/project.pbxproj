@@ -37,6 +37,7 @@
 		C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2340286CEE2E559824D689B1 /* MenuBarController.swift */; };
 		C731C152534FB6D04AA9863E /* ProcessThrottler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */; };
 		AA01010101010101010101A0 /* SafetyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01010101010101010101A1 /* SafetyCoordinator.swift */; };
+		AA01010101010101010101B0 /* ProcessSnapshotPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01010101010101010101B1 /* ProcessSnapshotPublisher.swift */; };
 		C99CE41C0148623FB418A91D /* HistoryLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */; };
 		CAB1687E2D8A71F55C3F50B5 /* ThermalEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */; };
 		DA468550C7C0B1564688DBF2 /* SensorCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD667C42F60AF2E26D510B5F /* SensorCardView.swift */; };
@@ -81,6 +82,7 @@
 		CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardWindowController.swift; sourceTree = "<group>"; };
 		CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottler.swift; sourceTree = "<group>"; };
 		AA01010101010101010101A1 /* SafetyCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinator.swift; sourceTree = "<group>"; };
+		AA01010101010101010101B1 /* ProcessSnapshotPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessSnapshotPublisher.swift; sourceTree = "<group>"; };
 		D0BD89C1534037D26554015A /* SensorsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorsPrefsView.swift; sourceTree = "<group>"; };
 		F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryLogger.swift; sourceTree = "<group>"; };
 		FAE7B1E9B83D8BC64EA57633 /* IOKitBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOKitBridge.h; sourceTree = "<group>"; };
@@ -221,6 +223,7 @@
 				BEE7645B03DAEDE64CB56215 /* ProcessInspector.swift */,
 				CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */,
 				AA01010101010101010101A1 /* SafetyCoordinator.swift */,
+				AA01010101010101010101B1 /* ProcessSnapshotPublisher.swift */,
 				05664AF6DD35210D50D4D873 /* SensorService.swift */,
 				730102034F0141285957EA50 /* ThermalGovernor.swift */,
 				9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */,
@@ -325,6 +328,7 @@
 				30D3D067217FDCD224706495 /* ProcessInspector.swift in Sources */,
 				C731C152534FB6D04AA9863E /* ProcessThrottler.swift in Sources */,
 				AA01010101010101010101A0 /* SafetyCoordinator.swift in Sources */,
+				AA01010101010101010101B0 /* ProcessSnapshotPublisher.swift in Sources */,
 				E421277A46C55704D12DEDB4 /* RunningProcess.swift in Sources */,
 				50EF7E4928DD0A61A1B3869B /* Sensor.swift in Sources */,
 				DA468550C7C0B1564688DBF2 /* SensorCardView.swift in Sources */,
