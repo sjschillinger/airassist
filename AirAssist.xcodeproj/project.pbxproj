@@ -1,0 +1,516 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07DEAE60DE866AE450B0D168 /* SensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05664AF6DD35210D50D4D873 /* SensorService.swift */; };
+		0A04AF5B11A0831917ADD356 /* SensorListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B85179E897A875693EE50AD /* SensorListView.swift */; };
+		133CBE6FAE9AA07D61B348B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0C523C9176A233CA7DDF721 /* Assets.xcassets */; };
+		1D99B043A174F61732F796F8 /* PreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE69B36A4A78E82AFCE02EA /* PreferencesWindowController.swift */; };
+		1FBEFE6AFC18FA9F73206F50 /* GeneralPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */; };
+		23E76F3C783FC9160017310E /* ThermalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E2A65A91770B1DB2B928FA /* ThermalStore.swift */; };
+		24F6786F7227631D1C081DF9 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68ECE41B669EE247996A79BF /* PreferencesView.swift */; };
+		254DB2E2FACDA67A078A87BC /* DisplayPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E549E666DE63625227F2ED /* DisplayPrefsView.swift */; };
+		2E8787E468BA9D77080343A2 /* IOKitSensorReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */; };
+		3C53C4BE5E248A344EB5EFBF /* DashboardWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */; };
+		4111D77C0E4FD338E48D7F0C /* AirAssistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */; };
+		50EF7E4928DD0A61A1B3869B /* Sensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CA07BBE53129D2A34A1589 /* Sensor.swift */; };
+		669F7ADA3EFC37AAD09B3AD2 /* MenuBarPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2EA235795456EF4D733B04 /* MenuBarPrefs.swift */; };
+		704A38ED1043918BE5782CD2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B8A97982FB78D94D328FDB /* IOKit.framework */; };
+		72FE15AFF7FE2FD18EBD5B04 /* ThresholdPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */; };
+		8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */; };
+		8EDE88F52ED18CCF2EFC8CBD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C1EA66578373DFC8BB8830 /* AppDelegate.swift */; };
+		96364AA71968BC08B8C14C16 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73665E744DF97F6A87703F65 /* DashboardView.swift */; };
+		A421ADB89070A8D476A827E9 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */; };
+		AB48799889B27371203501F4 /* SensorCategorizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DC26A8B4587EC9DE928881 /* SensorCategorizer.swift */; };
+		B0A47662747C2867086D592B /* SensorsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD89C1534037D26554015A /* SensorsPrefsView.swift */; };
+		BE5EDF0AE532002C1CBD310B /* ThresholdsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BBC23E831FE57862AD02A52 /* ThresholdsPrefsView.swift */; };
+		C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2340286CEE2E559824D689B1 /* MenuBarController.swift */; };
+		C99CE41C0148623FB418A91D /* HistoryLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */; };
+		CAB1687E2D8A71F55C3F50B5 /* ThermalEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */; };
+		DA468550C7C0B1564688DBF2 /* SensorCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD667C42F60AF2E26D510B5F /* SensorCardView.swift */; };
+		E9F23A842ABC54031BBAE6AB /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43403D677D51F2FAC26B14EA /* Constants.swift */; };
+		EBE6C2163E1F9171F1E8F87E /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		05664AF6DD35210D50D4D873 /* SensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorService.swift; sourceTree = "<group>"; };
+		0D2EA235795456EF4D733B04 /* MenuBarPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPrefs.swift; sourceTree = "<group>"; };
+		1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AirAssist.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		22B8A97982FB78D94D328FDB /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		2340286CEE2E559824D689B1 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalEntry.swift; sourceTree = "<group>"; };
+		43403D677D51F2FAC26B14EA /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		4BE69B36A4A78E82AFCE02EA /* PreferencesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesWindowController.swift; sourceTree = "<group>"; };
+		58CA07BBE53129D2A34A1589 /* Sensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sensor.swift; sourceTree = "<group>"; };
+		5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPrefsView.swift; sourceTree = "<group>"; };
+		5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitSensorReader.swift; sourceTree = "<group>"; };
+		5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirAssistApp.swift; sourceTree = "<group>"; };
+		5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThresholdPersistence.swift; sourceTree = "<group>"; };
+		68ECE41B669EE247996A79BF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		6BBC23E831FE57862AD02A52 /* ThresholdsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThresholdsPrefsView.swift; sourceTree = "<group>"; };
+		73665E744DF97F6A87703F65 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
+		8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
+		84E549E666DE63625227F2ED /* DisplayPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayPrefsView.swift; sourceTree = "<group>"; };
+		8B85179E897A875693EE50AD /* SensorListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorListView.swift; sourceTree = "<group>"; };
+		A0C523C9176A233CA7DDF721 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A3DC26A8B4587EC9DE928881 /* SensorCategorizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorCategorizer.swift; sourceTree = "<group>"; };
+		A3E2A65A91770B1DB2B928FA /* ThermalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalStore.swift; sourceTree = "<group>"; };
+		A4C1EA66578373DFC8BB8830 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AD667C42F60AF2E26D510B5F /* SensorCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorCardView.swift; sourceTree = "<group>"; };
+		C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormatter.swift; sourceTree = "<group>"; };
+		CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardWindowController.swift; sourceTree = "<group>"; };
+		D0BD89C1534037D26554015A /* SensorsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorsPrefsView.swift; sourceTree = "<group>"; };
+		F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryLogger.swift; sourceTree = "<group>"; };
+		FAE7B1E9B83D8BC64EA57633 /* IOKitBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOKitBridge.h; sourceTree = "<group>"; };
+		FB12A736A62BA39A609E7C19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		774A4810A74CE21D9CEE4E5B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				704A38ED1043918BE5782CD2 /* IOKit.framework in Frameworks */,
+				EBE6C2163E1F9171F1E8F87E /* ServiceManagement.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04DD910EBF200267DE31F9B7 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				511DEC8A353C08911776EAF3 /* Dashboard */,
+				7140075E39639BFF50709213 /* MenuBar */,
+				3C33EFF878E8ADDEBD294ED8 /* Preferences */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		09669E238E58D811CA3E5D82 /* AirAssist */ = {
+			isa = PBXGroup;
+			children = (
+				A0C523C9176A233CA7DDF721 /* Assets.xcassets */,
+				43403D677D51F2FAC26B14EA /* Constants.swift */,
+				FB12A736A62BA39A609E7C19 /* Info.plist */,
+				FAE7B1E9B83D8BC64EA57633 /* IOKitBridge.h */,
+				6B61702148936805F829A124 /* App */,
+				560B8DB62576E337A69F01F9 /* Models */,
+				803F2BB8CDD42057DA27761A /* Services */,
+				15EC29B34DF5123FC884E725 /* Store */,
+				04DD910EBF200267DE31F9B7 /* UI */,
+			);
+			path = AirAssist;
+			sourceTree = "<group>";
+		};
+		0B21C9C1D4DFC06A0D6B88EE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				22B8A97982FB78D94D328FDB /* IOKit.framework */,
+				738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		15EC29B34DF5123FC884E725 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				A3E2A65A91770B1DB2B928FA /* ThermalStore.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		2E24B3DBCD6DB64E93F0D5EE = {
+			isa = PBXGroup;
+			children = (
+				09669E238E58D811CA3E5D82 /* AirAssist */,
+				0B21C9C1D4DFC06A0D6B88EE /* Frameworks */,
+				E475C39220847B2C421D62B4 /* Products */,
+			);
+			indentWidth = 4;
+			sourceTree = "<group>";
+			tabWidth = 4;
+			usesTabs = 0;
+		};
+		3C33EFF878E8ADDEBD294ED8 /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				84E549E666DE63625227F2ED /* DisplayPrefsView.swift */,
+				5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */,
+				68ECE41B669EE247996A79BF /* PreferencesView.swift */,
+				4BE69B36A4A78E82AFCE02EA /* PreferencesWindowController.swift */,
+				D0BD89C1534037D26554015A /* SensorsPrefsView.swift */,
+				6BBC23E831FE57862AD02A52 /* ThresholdsPrefsView.swift */,
+			);
+			path = Preferences;
+			sourceTree = "<group>";
+		};
+		511DEC8A353C08911776EAF3 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				73665E744DF97F6A87703F65 /* DashboardView.swift */,
+				CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */,
+				AD667C42F60AF2E26D510B5F /* SensorCardView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		560B8DB62576E337A69F01F9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				0D2EA235795456EF4D733B04 /* MenuBarPrefs.swift */,
+				58CA07BBE53129D2A34A1589 /* Sensor.swift */,
+				A3DC26A8B4587EC9DE928881 /* SensorCategorizer.swift */,
+				C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */,
+				292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */,
+				5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6B61702148936805F829A124 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */,
+				A4C1EA66578373DFC8BB8830 /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		7140075E39639BFF50709213 /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				2340286CEE2E559824D689B1 /* MenuBarController.swift */,
+				8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */,
+				8B85179E897A875693EE50AD /* SensorListView.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		803F2BB8CDD42057DA27761A /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */,
+				5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */,
+				05664AF6DD35210D50D4D873 /* SensorService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E475C39220847B2C421D62B4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7BA1AA1EFB1012E94DD9A5FA /* AirAssist */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4FA0E1B18539A68F99F3865F /* Build configuration list for PBXNativeTarget "AirAssist" */;
+			buildPhases = (
+				7F558EAAFC9B6A4D4C76C239 /* Sources */,
+				9F3BCA545AB0D073E1BC2EC0 /* Resources */,
+				774A4810A74CE21D9CEE4E5B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AirAssist;
+			packageProductDependencies = (
+			);
+			productName = AirAssist;
+			productReference = 1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F33C39F33672A17BC2A1E0D9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					7BA1AA1EFB1012E94DD9A5FA = {
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 428C7B04D096766B3F4AB90C /* Build configuration list for PBXProject "AirAssist" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 2E24B3DBCD6DB64E93F0D5EE;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E475C39220847B2C421D62B4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7BA1AA1EFB1012E94DD9A5FA /* AirAssist */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9F3BCA545AB0D073E1BC2EC0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				133CBE6FAE9AA07D61B348B5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7F558EAAFC9B6A4D4C76C239 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4111D77C0E4FD338E48D7F0C /* AirAssistApp.swift in Sources */,
+				8EDE88F52ED18CCF2EFC8CBD /* AppDelegate.swift in Sources */,
+				E9F23A842ABC54031BBAE6AB /* Constants.swift in Sources */,
+				96364AA71968BC08B8C14C16 /* DashboardView.swift in Sources */,
+				3C53C4BE5E248A344EB5EFBF /* DashboardWindowController.swift in Sources */,
+				254DB2E2FACDA67A078A87BC /* DisplayPrefsView.swift in Sources */,
+				1FBEFE6AFC18FA9F73206F50 /* GeneralPrefsView.swift in Sources */,
+				C99CE41C0148623FB418A91D /* HistoryLogger.swift in Sources */,
+				2E8787E468BA9D77080343A2 /* IOKitSensorReader.swift in Sources */,
+				C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */,
+				8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */,
+				669F7ADA3EFC37AAD09B3AD2 /* MenuBarPrefs.swift in Sources */,
+				24F6786F7227631D1C081DF9 /* PreferencesView.swift in Sources */,
+				1D99B043A174F61732F796F8 /* PreferencesWindowController.swift in Sources */,
+				50EF7E4928DD0A61A1B3869B /* Sensor.swift in Sources */,
+				DA468550C7C0B1564688DBF2 /* SensorCardView.swift in Sources */,
+				AB48799889B27371203501F4 /* SensorCategorizer.swift in Sources */,
+				0A04AF5B11A0831917ADD356 /* SensorListView.swift in Sources */,
+				07DEAE60DE866AE450B0D168 /* SensorService.swift in Sources */,
+				B0A47662747C2867086D592B /* SensorsPrefsView.swift in Sources */,
+				A421ADB89070A8D476A827E9 /* TemperatureFormatter.swift in Sources */,
+				CAB1687E2D8A71F55C3F50B5 /* ThermalEntry.swift in Sources */,
+				23E76F3C783FC9160017310E /* ThermalStore.swift in Sources */,
+				72FE15AFF7FE2FD18EBD5B04 /* ThresholdPersistence.swift in Sources */,
+				BE5EDF0AE532002C1CBD310B /* ThresholdsPrefsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		03AFA9ACD1F59090D4738FD7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"EXCLUDED_ARCHS[sdk=macosx*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		5F9E350F869C654265BB16D8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = AirAssist/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.airAssist.app;
+				PRODUCT_NAME = AirAssist;
+				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = AirAssist/IOKitBridge.h;
+				SWIFT_STRICT_CONCURRENCY = complete;
+			};
+			name = Debug;
+		};
+		70BDE6495D7908A0A992ACB7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = AirAssist/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.airAssist.app;
+				PRODUCT_NAME = AirAssist;
+				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = AirAssist/IOKitBridge.h;
+				SWIFT_STRICT_CONCURRENCY = complete;
+			};
+			name = Release;
+		};
+		BEC7E416ADC1330875050BFC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				"EXCLUDED_ARCHS[sdk=macosx*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		428C7B04D096766B3F4AB90C /* Build configuration list for PBXProject "AirAssist" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BEC7E416ADC1330875050BFC /* Debug */,
+				03AFA9ACD1F59090D4738FD7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4FA0E1B18539A68F99F3865F /* Build configuration list for PBXNativeTarget "AirAssist" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5F9E350F869C654265BB16D8 /* Debug */,
+				70BDE6495D7908A0A992ACB7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F33C39F33672A17BC2A1E0D9 /* Project object */;
+}

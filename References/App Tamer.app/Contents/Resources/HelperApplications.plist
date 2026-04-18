@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.adobe.dreamweaver-10.0</key>
+	<array>
+		<string>com.barebones.bbedit</string>
+	</array>
+	<key>com.adobe.dreamweaver-11.0</key>
+	<array>
+		<string>com.barebones.bbedit</string>
+	</array>
+	<key>com.adobe.dreamweaver-9.0</key>
+	<array>
+		<string>com.barebones.bbedit</string>
+	</array>
+	<key>com.adobe.flash</key>
+	<array>
+		<string>com.macromedia.Flash Player.app</string>
+		<string>com.macromedia.Flash Player Debugger</string>
+		<string>com.macromedia.Flash Player Debugger.app</string>
+	</array>
+	<key>com.adobe.flash-9.0-en_us</key>
+	<array>
+		<string>com.macromedia.Flash Player.app</string>
+		<string>com.macromedia.Flash Player Debugger</string>
+		<string>com.macromedia.Flash Player Debugger.app</string>
+	</array>
+	<key>com.apple.ActivityMonitor</key>
+	<array>
+		<string>activitymonitord</string>
+		<string>sysmond</string>
+	</array>
+	<key>org.mozilla.firefox</key>
+	<array>
+		<string>org.mozilla.plugincontainer</string>
+		<string>org.mozilla.updater</string>
+	</array>
+	<key>firefox-bin</key>
+	<array>
+		<string>org.mozilla.plugincontainer</string>
+		<string>org.mozilla.updater</string>
+	</array>
+	<key>com.apple.Xcode</key>
+	<array>
+		<string>com.barebones.bbedit</string>
+	</array>
+	<key>org.videolan.vlc</key>
+	<array>
+		<string>com.apple.iTunes</string>
+	</array>
+	<key>com.alienskin.*</key>
+	<array>
+		<string>com.adobe.Photoshop</string>
+	</array>
+	<key>com.parallels.desktop.console</key>
+	<array>
+		<string>prl_vm_app</string>
+		<string>com.parallels.winapp.*</string>
+		<string>com.parallels.winapp.*.*</string>
+		<string>com.parallels.winapp.*.*.*</string>
+	</array>
+	<key>com.vmware.fusion</key>
+	<array>
+		<string>vmware-vmx</string>
+	</array>
+	<key>com.skitch.skitch</key>
+	<array>
+		<string>com.apple.Safari</string>
+	</array>
+	<key>com.stclairsoft.AppTamer.SpotlightAggregator</key>
+	<array>
+		<string>mdworker</string>
+		<string>mdworker32</string>
+		<string>mdworker_shared</string>
+	</array>
+	<key>com.spotify.client</key>
+	<array>
+		<string>SpotifyWebHelper</string>
+	</array>
+	<key>com.google.Chrome.app.*</key>
+	<array>
+		<string>com.google.Chrome</string>
+	</array>
+	<key>org.chromium.Chromium.app.*</key>
+	<array>
+		<string>org.chromium.Chromium</string>
+	</array>
+	<key>CalendarAgent</key>
+	<array>
+		<string>com.apple.iCal</string>
+	</array>
+	<key>com.apple.iphonesimulator</key>
+	<array>
+		<string>com.apple.CoreSimulator.SimulatorTrampoline</string>
+		<string>com.apple.CoreSimulator.CoreSimulatorService</string>
+	</array>
+</dict>
+</plist>

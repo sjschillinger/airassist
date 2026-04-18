@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.WebKit.WebContent</key>
+	<string>%@ Web Content</string>
+	<key>com.apple.WebKit.Networking</key>
+	<string>%@ Networking</string>
+	<key>com.stclairsoft.AppTamer.Helper</key>
+	<string>App Tamer Helper</string>
+	<key>backupd</key>
+	<string>Time Machine Backup</string>
+	<key>mtmd</key>
+	<string>Time Machine Local Backup</string>
+	<key>mtmfs</key>
+	<string>Time Machine Local Backup</string>
+	<key>mds</key>
+	<string>Spotlight Engine</string>
+	<key>mdworker</key>
+	<string>Spotlight Indexer</string>
+	<key>mdworker32</key>
+	<string>Spotlight Indexer</string>
+	<key>mdworker_shared</key>
+	<string>Spotlight Indexer</string>
+	<key>mds_stores</key>
+	<string>Spotlight Storage</string>
+	<key>com.apple.spotlight.IndexAgent</key>
+	<string>Spotlight Index Agent</string>
+	<key>SpotlightAggregator</key>
+	<string>Spotlight Indexer</string>
+	<key>sysmond</key>
+	<string>Activity Monitor Helper</string>
+	<key>activitymonitord</key>
+	<string>Activity Monitor Helper</string>
+</dict>
+</plist>

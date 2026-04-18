@@ -1,0 +1,78 @@
+/* Class = "NSMenuItem"; title = "Sample Process"; ObjectID = "0fV-4g-n49"; */
+"0fV-4g-n49.title" = "Échantillonner le processus";
+
+/* Class = "NSWindow"; title = "App Tamer"; ObjectID = "1"; */
+"1.title" = "App Tamer";
+
+/* Class = "NSMenuItem"; title = "Activate"; ObjectID = "51e-qG-Hyp"; */
+"51e-qG-Hyp.title" = "Activer";
+
+/* Class = "NSTextFieldCell"; title = "CPU Used by All Apps"; ObjectID = "86"; */
+"86.title" = "Processeurs utilisés par les apps";
+
+/* Class = "NSTextFieldCell"; title = "CPU Saved by App Tamer"; ObjectID = "88"; */
+"88.title" = "Processeurs économisés par App Tamer";
+
+/* Class = "NSTableView"; ibExternalAccessibilityDescription = "Tamed processes"; ObjectID = "141"; */
+"141.ibExternalAccessibilityDescription" = "Processus contrôlables";
+
+/* Class = "NSTableColumn"; headerCell.title = "% Savings"; ObjectID = "142"; */
+"142.headerCell.title" = "% économies";
+
+/* Class = "NSTableColumn"; headerCell.title = "TAMED PROCESSES"; ObjectID = "144"; */
+"144.headerCell.title" = "PROCESSUS CONTROLABLES";
+
+/* Class = "NSButtonCell"; title = "On / Off"; ObjectID = "209"; */
+"209.title" = "Interrupteur";
+
+/* Class = "NSTableView"; ibExternalAccessibilityDescription = "Running processes"; ObjectID = "308"; */
+"308.ibExternalAccessibilityDescription" = "Processus en marche";
+
+/* Class = "NSTableColumn"; headerCell.title = "% Avg"; ObjectID = "318"; */
+"318.headerCell.title" = "% Moy";
+
+/* Class = "NSTableColumn"; headerCell.title = "ALL RUNNING PROCESSES"; ObjectID = "319"; */
+"319.headerCell.title" = "PROCESSUS EN MARCHE";
+
+/* Class = "NSTableColumn"; headerCell.title = "% CPU"; ObjectID = "320"; */
+"320.headerCell.title" = "% UCT";
+
+/* Class = "NSMenu"; title = "Graph Options"; ObjectID = "346"; */
+"346.title" = "Options du graphe";
+
+/* Class = "NSMenuItem"; title = "Linear"; ObjectID = "347"; */
+"347.title" = "Linéaire";
+
+/* Class = "NSMenuItem"; title = "Logarithmic"; ObjectID = "348"; */
+"348.title" = "Logarithmique";
+
+/* Class = "NSButtonCell"; title = "Show All…"; ObjectID = "393"; */
+"393.title" = "Tout Afficher…";
+
+/* Class = "NSButtonCell"; title = "Show All…"; ObjectID = "400"; */
+"400.title" = "Tout afficher…";
+
+/* Class = "NSMenuItem"; title = "Force Quit"; ObjectID = "blC-oQ-UBU"; */
+"blC-oQ-UBU.title" = "Forcer à quitter";
+
+/* Class = "NSMenuItem"; title = "Show CPU Graph"; ObjectID = "jRz-8x-k3b"; */
+"jRz-8x-k3b.title" = "Afficher le graphe du processeur";
+
+/* Class = "NSButton"; ibExternalAccessibilityDescription = "Auxiliary Menu"; ObjectID = "kIX-Jn-rP9"; */
+"kIX-Jn-rP9.ibExternalAccessibilityDescription" = "Menu auxiliaire";
+
+/* Class = "NSTextFieldCell"; title = "Efficiency Cores"; ObjectID = "OQs-hQ-dFB"; */
+"OQs-hQ-dFB.title" = "Cœurs efficaces";
+
+/* Class = "NSMenuItem"; title = "Quit"; ObjectID = "pcs-sq-iX5"; */
+"pcs-sq-iX5.title" = "Quitter";
+
+/* Class = "NSMenuItem"; title = "Relaunch"; ObjectID = "VqM-5k-Kgt"; */
+"VqM-5k-Kgt.title" = "Relancer";
+
+/* Class = "NSTextFieldCell"; title = "Performance Cores"; ObjectID = "Wbh-BJ-G3t"; */
+"Wbh-BJ-G3t.title" = "Cœurs performants";
+
+/* Class = "NSMenuItem"; title = "Reveal in Finder"; ObjectID = "YJe-dA-P7m"; */
+"YJe-dA-P7m.title" = "Afficher dans le Finder";
+

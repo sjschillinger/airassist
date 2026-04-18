@@ -1,0 +1,8 @@
+.DS_Store
+**/.DS_Store
+AirAssist.xcodeproj/xcuserdata/
+AirAssist.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+DerivedData/
+_inbox/
+screenshots/

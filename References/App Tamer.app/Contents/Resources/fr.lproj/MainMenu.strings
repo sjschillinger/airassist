@@ -1,0 +1,216 @@
+/* Class = "NSTextFieldCell"; title = "App Tamer automatically manages CPU-hungry, battery-draining apps like Chrome, Safari, Firefox, Spotlight and many others. But you can save more by customizing it for the way you use your Mac."; ObjectID = "3zV-hu-9S0"; */
+"3zV-hu-9S0.title" = "App Tamer gère automatiquement les apps gourmandes qui vident la batterie, comme Chrome, Safari, Firefox, Spotlight et bien d'autres. Mais, vous pouvez économiser plus en le personnalisant pour la façon dont vous utilisez votre Mac.";
+
+/* Class = "NSMenuItem"; title = "Check for Update…"; ObjectID = "5gj-9b-HqL"; */
+"5gj-9b-HqL.title" = "Rechercher une mise à jour…";
+
+/* Class = "NSMenuItem"; title = "Buy App Tamer…"; ObjectID = "8Hy-vs-qAk"; */
+"8Hy-vs-qAk.title" = "Acheter App Tamer…";
+
+/* Class = "NSTextFieldCell"; title = "To increase your savings, click on busy apps and tell App Tamer how to manage them for you."; ObjectID = "18N-Ha-x35"; */
+"18N-Ha-x35.title" = "Pour augmenter vos économies, cliquez sur les apps occupées et dites à App Tamer comment les gérer pour vous.";
+
+/* Class = "NSMenuItem"; title = "Window"; ObjectID = "19"; */
+"19.title" = "Fenêtre";
+
+/* Class = "NSMenu"; title = "Window"; ObjectID = "24"; */
+"24.title" = "Fenêtre";
+
+/* Class = "NSMenu"; title = "MainMenu"; ObjectID = "29"; */
+"29.title" = "MainMenu";
+
+/* Class = "NSMenuItem"; title = "App Tamer"; ObjectID = "56"; */
+"56.title" = "App Tamer";
+
+/* Class = "NSMenu"; title = "App Tamer"; ObjectID = "57"; */
+"57.title" = "App Tamer";
+
+/* Class = "NSMenuItem"; title = "About App Tamer"; ObjectID = "58"; */
+"58.title" = "À propos d’App Tamer…";
+
+/* Class = "NSTextFieldCell"; title = "Welcome to App Tamer!"; ObjectID = "62U-FW-T8w"; */
+"62U-FW-T8w.title" = "Bienvenue à App Tamer!";
+
+/* Class = "NSMenuItem"; title = "Help"; ObjectID = "103"; */
+"103.title" = "Aide";
+
+/* Class = "NSMenu"; title = "Help"; ObjectID = "106"; */
+"106.title" = "Aide";
+
+/* Class = "NSMenuItem"; title = "App Tamer Help"; ObjectID = "111"; */
+"111.title" = "Aide App Tamer";
+
+/* Class = "NSMenuItem"; title = "Preferences…"; ObjectID = "129"; */
+"129.title" = "Préférences…";
+
+/* Class = "NSMenu"; title = "Services"; ObjectID = "130"; */
+"130.title" = "Services";
+
+/* Class = "NSMenuItem"; title = "Services"; ObjectID = "131"; */
+"131.title" = "Services";
+
+/* Class = "NSMenuItem"; title = "Hide App Tamer"; ObjectID = "134"; */
+"134.title" = "Masquer App Tamer";
+
+/* Class = "NSMenuItem"; title = "Quit App Tamer"; ObjectID = "136"; */
+"136.title" = "Quitter App Tamer";
+
+/* Class = "NSMenuItem"; title = "Hide Others"; ObjectID = "145"; */
+"145.title" = "Masquer les autres";
+
+/* Class = "NSMenuItem"; title = "Show All"; ObjectID = "150"; */
+"150.title" = "Tout afficher";
+
+/* Class = "NSMenuItem"; title = "Copy"; ObjectID = "197"; */
+"197.title" = "Copier";
+
+/* Class = "NSMenuItem"; title = "Select All"; ObjectID = "198"; */
+"198.title" = "Tout sélectionner";
+
+/* Class = "NSMenuItem"; title = "Cut"; ObjectID = "199"; */
+"199.title" = "Couper";
+
+/* Class = "NSMenuItem"; title = "Delete"; ObjectID = "202"; */
+"202.title" = "Supprimer";
+
+/* Class = "NSMenuItem"; title = "Paste"; ObjectID = "203"; */
+"203.title" = "Coller";
+
+/* Class = "NSMenu"; title = "Edit"; ObjectID = "205"; */
+"205.title" = "Édition";
+
+/* Class = "NSMenuItem"; title = "Undo"; ObjectID = "207"; */
+"207.title" = "Annuler";
+
+/* Class = "NSMenuItem"; title = "Redo"; ObjectID = "215"; */
+"215.title" = "Rétablir";
+
+/* Class = "NSMenuItem"; title = "Edit"; ObjectID = "217"; */
+"217.title" = "Édition";
+
+/* Class = "NSMenuItem"; title = "Close"; ObjectID = "1043"; */
+"1043.title" = "Fermer";
+
+/* Class = "NSMenuItem"; title = "Application Manager"; ObjectID = "1046"; */
+"1046.title" = "Gestionnaire d'applications";
+
+/* Class = "NSMenuItem"; title = "Check for Update…"; ObjectID = "1243"; */
+"1243.title" = "Rechercher une mise à jour…";
+
+/* Class = "NSMenuItem"; title = "License…"; ObjectID = "1258"; */
+"1258.title" = "Licence…";
+
+/* Class = "NSMenuItem"; title = "Buy App Tamer…"; ObjectID = "1260"; */
+"1260.title" = "Acheter App Tamer…";
+
+/* Class = "NSMenuItem"; title = "Quick Start"; ObjectID = "1325"; */
+"1325.title" = "Départ rapide";
+
+/* Class = "NSMenu"; title = "Status"; ObjectID = "1496"; */
+"1496.title" = "État";
+
+/* Class = "NSMenuItem"; title = "Disable AutoStop"; ObjectID = "1497"; */
+"1497.title" = "Désactiver l'Arrêt auto";
+
+/* Class = "NSMenuItem"; title = "Disable AutoStop..."; ObjectID = "1498"; */
+"1498.title" = "Désactiver l'Arrêt auto…";
+
+/* Class = "NSMenuItem"; title = "Application Manager…"; ObjectID = "1500"; */
+"1500.title" = "Gestionnaire d'applications…";
+
+/* Class = "NSMenuItem"; title = "Preferences…"; ObjectID = "1507"; */
+"1507.title" = "Préférences…";
+
+/* Class = "NSMenuItem"; title = "Preferences…"; ObjectID = "aME-14-0bS"; */
+"aME-14-0bS.title" = "Préférences…";
+
+/* Class = "NSMenuItem"; title = "App Tamer Help…"; ObjectID = "c7j-pA-w3X"; */
+"c7j-pA-w3X.title" = "Aide App Tamer…";
+
+/* Class = "NSButtonCell"; title = "Close"; ObjectID = "cD6-Gz-bLd"; */
+"cD6-Gz-bLd.title" = "Fermer";
+
+/* Class = "NSButtonCell"; title = "Next"; ObjectID = "DA9-Fw-pLu"; */
+"DA9-Fw-pLu.title" = "Suivant";
+
+/* Class = "NSTextFieldCell"; title = "Thank you for being a loyal customer. There is a small $7.95 upgrade fee for the big changes in this version. Please right-click on App Tamer's icon to buy your upgrade."; ObjectID = "do5-sI-rOR"; */
+"do5-sI-rOR.title" = "Merci d'être un client fidèle. Le coût de la mise à niveau est de 7,95 $ US pour les grands changements dans cette version. S'il vous plaît, faites un clic droit sur ​​l'icône d'App Tamer pour acheter votre mise à niveau.";
+
+/* Class = "NSTextFieldCell"; title = "Tame applications that waste your CPU and battery power."; ObjectID = "FIj-Og-127"; */
+"FIj-Og-127.title" = "Apprivoiser les applications qui surutilisent votre processeur et la batterie.";
+
+/* Class = "NSTextFieldCell"; title = "To increase your savings, click on busy apps and tell App Tamer how to manage them for you."; ObjectID = "FV4-Jz-09m"; */
+"FV4-Jz-09m.title" = "Pour augmenter vos économies, cliquez sur les apps occupées et dites à App Tamer comment les gérer pour vous.";
+
+/* Class = "NSMenuItem"; title = "License…"; ObjectID = "gK2-AG-Htm"; */
+"gK2-AG-Htm.title" = "Licence…";
+
+/* Class = "NSTextFieldCell"; title = "To save CPU and battery power, App Tamer can slow down an application or stop it completely when you're not using it."; ObjectID = "gW6-cZ-FT9"; */
+"gW6-cZ-FT9.title" = "Pour réduire l'usage du processeur et la charge sur la batterie, App Tamer peut ralentir une application ou l'arrêter complètement lorsque vous ne l'utilisez pas.";
+
+/* Class = "NSMenuItem"; title = "Frequently Asked Questions…"; ObjectID = "HcU-gg-bRP"; */
+"HcU-gg-bRP.title" = "Foire aux questions…";
+
+/* Class = "NSTextFieldCell"; title = "You'll see which apps are using the most CPU, and how much App Tamer is currently saving."; ObjectID = "hJp-Qd-KZQ"; */
+"hJp-Qd-KZQ.title" = "Vous verrez quelles applications utilisent le plus de processeur, et combien App Tamer est capable d'économiser.";
+
+/* Class = "NSMenuItem"; title = "Quit App Tamer"; ObjectID = "hjr-5z-Ghj"; */
+"hjr-5z-Ghj.title" = "Quitter App Tamer";
+
+/* Class = "NSTextFieldCell"; title = "Stopping an app saves the most power, but doesn't allow it to do anything while it is in the background. For example, if you completely stop Mail, it can't check for new messages while you are using another application."; ObjectID = "i69-jG-C5a"; */
+"i69-jG-C5a.title" = "L'arrêt d'une app économise le plus d'énergie, mais ne lui permet pas de faire quelque chose alors qu'elle est en arrière-plan. Par exemple, si vous arrêtez complètement Mail, l'app ne peut pas relever les nouveaux messages lorsque vous utilisez une autre app.";
+
+/* Class = "NSButtonCell"; title = "Back"; ObjectID = "IiB-ES-uk8"; */
+"IiB-ES-uk8.title" = "Revenir";
+
+/* Class = "NSTextFieldCell"; title = "Just turn on one of the checkboxes to tell App Tamer what to do. It will handle things automatically from there."; ObjectID = "IMR-9a-MNe"; */
+"IMR-9a-MNe.title" = "Il suffit d'activer l'une des cases à cocher et dire à App Tamer quoi faire. Il va gérer les choses automatiquement à partir de là.";
+
+/* Class = "NSImageView"; ibExternalAccessibilityDescription = "App Tamer"; ObjectID = "KwL-Vc-JDK"; */
+"KwL-Vc-JDK.ibExternalAccessibilityDescription" = "App Tamer";
+
+/* Class = "NSMenu"; title = "App Tamer"; ObjectID = "l5H-W2-djg"; */
+"l5H-W2-djg.title" = "App Tamer";
+
+/* Class = "NSTextFieldCell"; title = "Slowing down an app saves less power, but allows it to still do work in the background."; ObjectID = "lz3-vC-vyY"; */
+"lz3-vC-vyY.title" = "Ralentir une application économise moins d'énergie, mais lui permet de fonctionner en arrière-plan.";
+
+/* Class = "NSTextFieldCell"; title = "Try different settings to save the most power while still keeping your applications responsive."; ObjectID = "MHl-yU-2e6"; */
+"MHl-yU-2e6.title" = "Essayez différents réglages pour économiser le plus de puissance tout en gardant vos apps réactives.";
+
+/* Class = "NSTextFieldCell"; title = "You'll see which apps are using the most CPU, and how much App Tamer is currently saving."; ObjectID = "neV-Lv-4Gc"; */
+"neV-Lv-4Gc.title" = "Vous verrez quelles applications utilisent le plus du processeur, et combien App Tamer arrive à économiser.";
+
+/* Class = "NSImageView"; ibExternalAccessibilityDescription = "App Tamer"; ObjectID = "psl-zj-J8h"; */
+"psl-zj-J8h.ibExternalAccessibilityDescription" = "App Tamer";
+
+/* Class = "NSMenuItem"; title = "Frequently Asked Questions"; ObjectID = "Q4r-5W-XdI"; */
+"Q4r-5W-XdI.title" = "Foire aux questions";
+
+/* Class = "NSTextFieldCell"; title = "To get started, click on App Tamer's icon in your menu bar."; ObjectID = "Qb9-d2-Nyh"; */
+"Qb9-d2-Nyh.title" = "Pour débuter, cliquez sur l'icône App Tamer dans votre barre des menus.";
+
+/* Class = "NSMenuItem"; title = "About App Tamer…"; ObjectID = "qsp-yC-kde"; */
+"qsp-yC-kde.title" = "À propos d’App Tamer…";
+
+/* Class = "NSTextFieldCell"; title = "App Tamer automatically manages CPU-hungry, battery-draining apps like Chrome, Safari, Firefox, Spotlight and many others. But you can save more by customizing it for the way you use your Mac."; ObjectID = "sR7-Py-a9i"; */
+"sR7-Py-a9i.title" = "App Tamer gère automatiquement, les apps gourmandes qui vident la batterie, comme Chrome, Safari, Firefox, Spotlight et bien d'autres. Mais, vous pouvez économiser plus en la personnalisant pour la façon dont vous utilisez votre Mac.";
+
+/* Class = "NSImageView"; ibExternalAccessibilityDescription = "App Tamer"; ObjectID = "SV5-dL-Vgm"; */
+"SV5-dL-Vgm.ibExternalAccessibilityDescription" = "App Tamer";
+
+/* Class = "NSTextFieldCell"; title = "Welcome to App Tamer 2!"; ObjectID = "Sws-DB-dEi"; */
+"Sws-DB-dEi.title" = "Bienvenue à App Tamer 2!";
+
+/* Class = "NSMenuItem"; title = "Quick Start…"; ObjectID = "T3j-VP-eCc"; */
+"T3j-VP-eCc.title" = "Départ rapide…";
+
+/* Class = "NSTextFieldCell"; title = "To get started, click on App Tamer's icon in your menu bar."; ObjectID = "UbP-b4-6oR"; */
+"UbP-b4-6oR.title" = "Pour débuter, cliquez sur l'icône App Tamer dans votre barre des menus.";
+
+/* Class = "NSImageView"; ibExternalAccessibilityDescription = "App Tamer"; ObjectID = "WVv-yi-BLn"; */
+"WVv-yi-BLn.ibExternalAccessibilityDescription" = "App Tamer";
+
+/* Class = "NSButtonCell"; title = "Next"; ObjectID = "XYg-Yb-x9b"; */
+"XYg-Yb-x9b.title" = "Suivant";
+

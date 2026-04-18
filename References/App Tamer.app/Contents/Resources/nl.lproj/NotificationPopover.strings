@@ -1,0 +1,18 @@
+/* Class = "NSTextFieldCell"; title = "What would you like to do about it?"; ObjectID = "070-QH-zBI"; */
+"070-QH-zBI.title" = "Wat wil je eraan doen?";
+
+/* Class = "NSButtonCell"; title = "Let it continue"; ObjectID = "Qdm-0e-8eE"; */
+"Qdm-0e-8eE.title" = "Laten doorgaan";
+
+/* Class = "NSButtonCell"; title = "Don't warn about %@"; ObjectID = "cco-f3-dfe"; */
+"cco-f3-dfe.title" = "Geef geen melding over %@";
+
+/* Class = "NSTextFieldCell"; title = "%@ had CPU usage above %g%% for the last %d seconds."; ObjectID = "eXd-oG-Dxy"; */
+"eXd-oG-Dxy.title" = "%@ heeft hoog gebruik CPU %g%% voor %d seconden.";
+
+/* Class = "NSButtonCell"; title = "Change notification settings"; ObjectID = "hL9-Mg-FhX"; */
+"hL9-Mg-FhX.title" = "Verander notificaties";
+
+/* Class = "NSButtonCell"; title = "Limit its CPU usage"; ObjectID = "kRa-G9-0vj"; */
+"kRa-G9-0vj.title" = "Beperk CPU gebruik";
+

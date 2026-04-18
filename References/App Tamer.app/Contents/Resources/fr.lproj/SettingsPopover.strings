@@ -1,0 +1,84 @@
+/* Class = "NSTextFieldCell"; title = "Normal"; ObjectID = "2XD-3r-FCu"; */
+"2XD-3r-FCu.title" = "Normale";
+
+/* Class = "NSSlider"; ibShadowedToolTip = "This slider has a maximum of 100%, but you can enter higher numbers by typing in the box to its left."; ObjectID = "3"; */
+"3.ibShadowedToolTip" = "Ce curseur a un maximum de 100 %, mais vous pouvez entrer des nombres plus élevés en tapant dans la case à sa gauche.";
+
+/* Class = "NSButtonCell"; title = "Stop this app completely"; ObjectID = "10"; */
+"10.title" = "Arrêter cette app complètement";
+
+/* Class = "NSButtonCell"; title = "Slow down this app if it uses more than:"; ObjectID = "11"; */
+"11.title" = "Ralentir cette app si elle utilise plus de :";
+
+/* Class = "NSTextField"; ibShadowedToolTip = "Click here and type in a value directly."; ObjectID = "317"; */
+"317.ibShadowedToolTip" = "Cliquez ici et tapez une valeur directement.";
+
+/* Class = "NSTextFieldCell"; title = "When not in front…"; ObjectID = "334"; */
+"334.title" = "Lorsque pas en avant…";
+
+/* Class = "NSButtonCell"; title = "OK"; ObjectID = "337"; */
+"337.title" = "OK";
+
+/* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "341"; */
+"341.title" = "Annuler";
+
+/* Class = "NSButtonCell"; title = "Don't warn me again"; ObjectID = "343"; */
+"343.title" = "Ne plus m'avertir";
+
+/* Class = "NSTextFieldCell"; title = "Default Folder X will not work correctly if App Tamer pauses it."; ObjectID = "345"; */
+"345.title" = "Default Folder X ne fonctionnera pas correctement si App Tamer l'arrête.";
+
+/* Class = "NSButtonCell"; title = "Only stop or slow when app is hidden"; ObjectID = "360"; */
+"360.title" = "Arrêter ou ralentir cette app que si masquée";
+
+/* Class = "NSButton"; ibShadowedToolTip = "Use this setting with caution, as it may degrade the usability of this app."; ObjectID = "383"; */
+"383.ibShadowedToolTip" = "Utilisez ce réglage avec prudence, car il peut dégrader la facilité d'utilisation de cette application.";
+
+/* Class = "NSButtonCell"; title = "Also slow this app when it's in front"; ObjectID = "384"; */
+"384.title" = "Ralentir cette app quand elle est en avant-plan";
+
+/* Class = "NSTextFieldCell"; title = "When idle…"; ObjectID = "BBn-bO-Ny7"; */
+"BBn-bO-Ny7.title" = "Lorsqu'inactive…";
+
+/* Class = "NSTextFieldCell"; title = "High"; ObjectID = "ek6-gi-oFE"; */
+"ek6-gi-oFE.title" = "Élevée";
+
+/* Class = "NSTextFieldCell"; title = "Low"; ObjectID = "eUW-bW-vrw"; */
+"eUW-bW-vrw.title" = "Basse";
+
+/* Class = "NSTextFieldCell"; title = "App Tamer only considers an app to be hidden if you use the Hide command in the application's menu. Minimizing its window to the Dock or covering it with another window will not make App Tamer slow it down or stop it."; ObjectID = "H2N-tC-Fp4"; */
+"H2N-tC-Fp4.title" = "App Tamer considère qu'une application est masquée que si vous utilisez la commande Masquer dans le menu de l'application. App Tamer ne ralentira ou n'arrêtera pas une app dont la fenêtre est recouverte par une autre ou est placée dans le Dock.";
+
+/* Class = "NSButtonCell"; title = "Don't stop or slow when sound is playing"; ObjectID = "HiQ-Iu-kxP"; */
+"HiQ-Iu-kxP.title" = "Ne pas arrêter ou ralentir lorsque le son joue";
+
+/* Class = "NSButtonCell"; title = "Hide after:"; ObjectID = "HMe-Jd-kWD"; */
+"HMe-Jd-kWD.title" = "Masquer après :";
+
+/* Class = "NSButton"; ibShadowedToolTip = "App Tamer will keep this app running at full speed when sound is being played by any app."; ObjectID = "I7c-SR-C01"; */
+"I7c-SR-C01.ibShadowedToolTip" = "App Tamer fera fonctionner cette application à pleine vitesse lorsque le son est lu par n'importe quelle application.";
+
+/* Class = "NSButtonCell"; title = "Don't remind me again"; ObjectID = "KCr-J6-9EZ"; */
+"KCr-J6-9EZ.title" = "Ne plus me le rappeler";
+
+/* Class = "NSSlider"; ibShadowedToolTip = "This slider changes the Unix priority of this process. It usually has minimal effect on CPU savings, but can help in special cases."; ObjectID = "kda-rZ-pt4"; */
+"kda-rZ-pt4.ibShadowedToolTip" = "Ce curseur modifie la priorité Unix de ce processus. Il a généralement un effet minimal sur les économies de processeur, mais peut aider dans des cas particuliers.";
+
+/* Class = "NSButtonCell"; title = "Run this app on the CPU's efficiency cores"; ObjectID = "Ly4-nX-Txp"; */
+"Ly4-nX-Txp.title" = "Exécuter cette app sur les cœurs efficace";
+
+/* Class = "NSTextFieldCell"; title = "Minutes"; ObjectID = "Nlf-wp-Ka7"; */
+"Nlf-wp-Ka7.title" = "minutes";
+
+/* Class = "NSTextFieldCell"; title = "Priority:"; ObjectID = "qG9-Dm-w8Q"; */
+"qG9-Dm-w8Q.title" = "Priorité :";
+
+/* Class = "NSTextFieldCell"; title = "Note: This only works if you explicitly hide an app."; ObjectID = "SrQ-5h-jup"; */
+"SrQ-5h-jup.title" = "Nota : cela ne fonctionne que si vous masquez explicitement une application.";
+
+/* Class = "NSTextFieldCell"; title = "Minutes"; ObjectID = "SYN-gy-1aq"; */
+"SYN-gy-1aq.title" = "minutes";
+
+/* Class = "NSButtonCell"; title = "Quit after:"; ObjectID = "tMV-DH-rNM"; */
+"tMV-DH-rNM.title" = "Quitter après :";
+

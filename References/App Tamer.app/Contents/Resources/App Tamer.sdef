@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+
+<!-- declare the namespace for using XInclude so we can include the standard suite -->
+<dictionary xmlns:xi="http://www.w3.org/2003/XInclude">
+
+
+		<!-- use XInclude to include the standard suite -->
+	<xi:include href="file:///System/Library/ScriptingDefinitions/CocoaStandard.sdef" xpointer="xpointer(/dictionary/suite)"/>
+
+
+		<!-- specific suite(s) for the application follow... -->
+	<suite name="App Tamer" code="Atmr" description="Terminology for App Tamer.">
+
+		<command name="autostop" code="AtmrOnOf" description="turn AutoStop on and off">
+			<cocoa class="AutoStopScriptCommand"/>
+			<direct-parameter description="boolean YES or NO">
+				<type type="boolean"/>
+			</direct-parameter>
+			<result type="boolean" description="true for success, false for failure"/>
+		</command>
+		
+        <command name="wake" code="AtmrWake" description="wake an application">
+            <cocoa class="WakeScriptCommand"/>
+            <direct-parameter description="the name of an application or 'All' to wake all applications">
+                <type type="text"/>
+            </direct-parameter>
+            <result type="boolean" description="true for success, false for failure"/>
+        </command>
+        
+    <command name="manage" code="AtmrMnag" description="manage an application">
+        <cocoa class="ManageAppScriptCommand"/>
+        <direct-parameter description="the name of an application">
+            <type type="text"/>
+        </direct-parameter>
+        <parameter name="stop" code="pstp" type="boolean" optional="yes" description="stop when in the background">
+            <cocoa key="stop"/>
+        </parameter>
+        <parameter name="lowQOS" code="psqs" type="boolean" optional="yes" description="reduce priority or run on E cores in the background">
+            <cocoa key="lowQOS"/>
+        </parameter>
+        <parameter name="slow" code="pslw" type="boolean" optional="yes" description="slow when in the background">
+            <cocoa key="slow"/>
+        </parameter>
+        <parameter name="slowCPU" code="pcpu" type="integer" optional="yes" description="cpu percentage when slowed">
+            <cocoa key="slowcpu"/>
+        </parameter>
+        <parameter name="slowInForeground" code="pslf" type="boolean" optional="yes" description="slow when in the foreground as well as in the background">
+            <cocoa key="slowinforeground"/>
+        </parameter>
+        <parameter name="onlyWhenHidden" code="pohd" type="boolean" optional="yes" description="slow or stop only when the app is hidden">
+            <cocoa key="onlywhenhidden"/>
+        </parameter>
+        <parameter name="priority" code="ppri" type="integer" optional="yes" description="process priority (from -5 to +5; 0 is normal priority)">
+            <cocoa key="priority"/>
+        </parameter>
+        <parameter name="hide" code="phid" type="boolean" optional="yes" description="hide when idle">
+            <cocoa key="hide"/>
+        </parameter>
+        <parameter name="hideDelay" code="phtm" type="integer" optional="yes" description="minutes of idle time before hiding">
+            <cocoa key="hidedelay"/>
+        </parameter>
+        <parameter name="quit" code="pqit" type="boolean" optional="yes" description="quit when idle">
+            <cocoa key="quit"/>
+        </parameter>
+        <parameter name="quitDelay" code="pqtm" type="integer" optional="yes" description="minutes of idle time before quitting">
+            <cocoa key="quitdelay"/>
+        </parameter>
+        <result type="boolean" description="true for success, false for failure"/>
+    </command>
+    
+	</suite>
+
+</dictionary>

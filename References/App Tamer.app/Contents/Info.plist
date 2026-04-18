@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BuildMachineOSBuild</key>
+	<string>23G80</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleDisplayName</key>
+	<string>App Tamer</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>atlic</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>documentType</string>
+			<key>CFBundleTypeName</key>
+			<string>App Tamer License File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSTypeIsPackage</key>
+			<false/>
+			<key>NSPersistentStoreTypeKey</key>
+			<string>XML</string>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>App Tamer</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.stclairsoft.AppTamer</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleLongVersionString</key>
+	<string>App Tamer 2.8.4 (build 12203), Copyright 2010-2024 St. Clair Software. All rights reserved.</string>
+	<key>CFBundleName</key>
+	<string>App Tamer</string>
+	<key>CFBundleNumericVersion</key>
+	<integer>12203</integer>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>2.8.4</string>
+	<key>CFBundleSignature</key>
+	<string>Tamr</string>
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>MacOSX</string>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>12203</string>
+	<key>DTCompiler</key>
+	<string>com.apple.compilers.llvm.clang.1_0</string>
+	<key>DTPlatformBuild</key>
+	<string></string>
+	<key>DTPlatformName</key>
+	<string>macosx</string>
+	<key>DTPlatformVersion</key>
+	<string>14.2</string>
+	<key>DTSDKBuild</key>
+	<string>23C53</string>
+	<key>DTSDKName</key>
+	<string>macosx14.2</string>
+	<key>DTXcode</key>
+	<string>1510</string>
+	<key>DTXcodeBuild</key>
+	<string>15C65</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.13</string>
+	<key>LSUIElement</key>
+	<string>1</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>App Tamer needs access so it can wake applications when you need them.</string>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright 2010-2024 St. Clair Software. All rights reserved.</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSSupportsAutomaticTermination</key>
+	<false/>
+	<key>NSSupportsSuddenTermination</key>
+	<false/>
+	<key>OSAScriptingDefinition</key>
+	<string>App Tamer.sdef</string>
+	<key>SUFeedURL</key>
+	<string>https://www.stclairsoft.com/cgi-bin/sparkle.cgi?AT</string>
+	<key>SUPublicEDKey</key>
+	<string>/MSMGOwckM3VeIgvwJfM3CMgiSuv+ngerh9UcuTzPmQ=</string>
+</dict>
+</plist>

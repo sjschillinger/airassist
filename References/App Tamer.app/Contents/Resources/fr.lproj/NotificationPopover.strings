@@ -1,0 +1,12 @@
+/* Class = "NSTextFieldCell"; title = "What would you like to do about it?"; ObjectID = "hRd-VF-aXw"; */
+"hRd-VF-aXw.title" = "Que voulez-vous faire à ce sujet?";
+
+/* Class = "NSButtonCell"; title = "Let it continue"; ObjectID = "MDf-2Y-OBn"; */
+"MDf-2Y-OBn.title" = "La laisser continuer";
+
+/* Class = "NSButtonCell"; title = "Limit its CPU usage"; ObjectID = "VZj-Bp-SdR"; */
+"VZj-Bp-SdR.title" = "Limiter son utilisation du processeur";
+
+/* Class = "NSButtonCell"; title = "Change notification settings"; ObjectID = "yxh-ur-i4j"; */
+"yxh-ur-i4j.title" = "Modifier les réglages de notification";
+

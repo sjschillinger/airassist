@@ -1,0 +1,18 @@
+/* Class = "NSWindow"; title = "App Tamer License Information"; ObjectID = "1"; */
+"1.title" = "App Tamer licentie info";
+
+/* Class = "NSButtonCell"; title = "Buy"; ObjectID = "4"; */
+"4.title" = "Koop";
+
+/* Class = "NSButtonCell"; title = "Unlock"; ObjectID = "6"; */
+"6.title" = "Ontgrendel";
+
+/* Class = "NSTextFieldCell"; title = "Name:"; ObjectID = "10"; */
+"10.title" = "Naam:";
+
+/* Class = "NSTextFieldCell"; title = "This copy of App Tamer is unlicensed."; ObjectID = "14"; */
+"14.title" = "Deze kopie is niet geregistreerd.";
+
+/* Class = "NSTextFieldCell"; title = "Serial Number:"; ObjectID = "23"; */
+"23.title" = "Serienummer:";
+

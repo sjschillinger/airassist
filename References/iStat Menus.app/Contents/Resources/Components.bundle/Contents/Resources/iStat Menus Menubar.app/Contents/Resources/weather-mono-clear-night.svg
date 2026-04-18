@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="a" data-name="Artwork" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 18 18">
+  <defs>
+    <style>
+      .c {
+        fill: url(#b);
+        stroke-width: 0px;
+      }
+    </style>
+    <linearGradient id="b" x1="1" y1="9" x2="17" y2="9" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".8"/>
+    </linearGradient>
+  </defs>
+  <circle class="c" cx="9" cy="9" r="8"/>
+</svg>

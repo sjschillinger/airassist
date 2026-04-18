@@ -1,0 +1,129 @@
+/* Class = "NSWindow"; title = "App Tamer"; ObjectID = "1"; */
+"1.title" = "App Tamer";
+
+/* Class = "CocoaBindingsConnection"; ibShadowedDisplayName = "predicate"; ObjectID = "5WZ-1H-NiY"; */
+"5WZ-1H-NiY.ibShadowedDisplayName" = "Voorspel";
+
+/* Class = "NSMenuItem"; title = "Activate"; ObjectID = "51e-qG-Hyp"; */
+"51e-qG-Hyp.title" = "Activeer";
+
+/* Class = "NSTextFieldCell"; title = "CPU Used by All Apps"; ObjectID = "86"; */
+"86.title" = "CPU gebruik bij alle apps";
+
+/* Class = "NSTextFieldCell"; title = "CPU Saved by App Tamer"; ObjectID = "88"; */
+"88.title" = "CPU besparing door App Tamer";
+
+/* Class = "NSTextFieldCell"; title = "20.0%"; ObjectID = "90"; */
+"90.title" = "20,0%";
+
+/* Class = "NSTextFieldCell"; title = "8.0%"; ObjectID = "92"; */
+"92.title" = "8,0%";
+
+/* Class = "NSTableColumn"; headerCell.title = "% Savings"; ObjectID = "142"; */
+"142.headerCell.title" = "% besparing";
+
+/* Class = "NSTableColumn"; headerCell.title = "TAMED PROCESSES"; ObjectID = "144"; */
+"144.headerCell.title" = "Beheerde processen";
+
+/* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "146"; */
+"146.title" = "Text cel";
+
+/* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "150"; */
+"150.title" = "Tabel weergave cel";
+
+/* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "156"; */
+"156.title" = "Text cel";
+
+/* Class = "NSTextFieldCell"; title = "19.7"; ObjectID = "158"; */
+"158.title" = "19,7";
+
+/* Class = "NSMenu"; title = "App Tamer"; ObjectID = "170"; */
+"170.title" = "App Tamer";
+
+/* Class = "NSMenuItem"; title = "Frequently Asked Questions…"; ObjectID = "171"; */
+"171.title" = "F.A.Q.";
+
+/* Class = "NSMenuItem"; title = "App Tamer Help…"; ObjectID = "173"; */
+"173.title" = "App Tamer help...";
+
+/* Class = "NSMenuItem"; title = "Preferences…"; ObjectID = "174"; */
+"174.title" = "Instellingen";
+
+/* Class = "NSMenuItem"; title = "License…"; ObjectID = "177"; */
+"177.title" = "Licentie";
+
+/* Class = "NSMenuItem"; title = "Provide Feedback…"; ObjectID = "178"; */
+"178.title" = "Geef feedback";
+
+/* Class = "NSMenuItem"; title = "Buy App Tamer Online…"; ObjectID = "179"; */
+"179.title" = "Koop App Tamer online...";
+
+/* Class = "NSMenuItem"; title = "Check for Update…"; ObjectID = "181"; */
+"181.title" = "Controleer op update...";
+
+/* Class = "NSMenuItem"; title = "About App Tamer…"; ObjectID = "182"; */
+"182.title" = "Over App Tamer...";
+
+/* Class = "NSMenuItem"; title = "Quit App Tamer"; ObjectID = "183"; */
+"183.title" = "Sluit App Tamer";
+
+/* Class = "NSButtonCell"; title = "On / Off"; ObjectID = "209"; */
+"209.title" = "Aan / Uit";
+
+/* Class = "NSTextFieldCell"; title = "Status Message"; ObjectID = "237"; */
+"237.title" = "Status bericht";
+
+/* Class = "NSTableColumn"; headerCell.title = "% Avg"; ObjectID = "318"; */
+"318.headerCell.title" = "& gem.";
+
+/* Class = "NSTableColumn"; headerCell.title = "% CPU"; ObjectID = "320"; */
+"320.headerCell.title" = "% CPU";
+
+/* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "322"; */
+"322.title" = "Text cel";
+
+/* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "327"; */
+"327.title" = "Text cel";
+
+/* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "333"; */
+"333.title" = "Text cel";
+
+/* Class = "NSTextFieldCell"; title = "12.4"; ObjectID = "335"; */
+"335.title" = "12,4";
+
+/* Class = "NSMenu"; title = "Graph Options"; ObjectID = "346"; */
+"346.title" = "Grafische Opties";
+
+/* Class = "NSMenuItem"; title = "Linear"; ObjectID = "347"; */
+"347.title" = "Linear";
+
+/* Class = "NSMenuItem"; title = "Logarithmic"; ObjectID = "348"; */
+"348.title" = "Logarithmic";
+
+/* Class = "NSButtonCell"; title = "Show All…"; ObjectID = "393"; */
+"393.title" = "Laat alle zien...";
+
+/* Class = "NSButtonCell"; title = "Show All…"; ObjectID = "400"; */
+"400.title" = "Laat alle zien...";
+
+/* Class = "NSMenuItem"; title = "Quick Start…"; ObjectID = "P2t-9T-gbo"; */
+"P2t-9T-gbo.title" = "Snel start...";
+
+/* Class = "NSMenuItem"; title = "Relaunch"; ObjectID = "VqM-5k-Kgt"; */
+"VqM-5k-Kgt.title" = "Herstart";
+
+/* Class = "NSMenuItem"; title = "Reveal in Finder"; ObjectID = "YJe-dA-P7m"; */
+"YJe-dA-P7m.title" = "Geef weer in Finder";
+
+/* Class = "NSMenuItem"; title = "Force Quit"; ObjectID = "blC-oQ-UBU"; */
+"blC-oQ-UBU.title" = "Forceer Sluit";
+
+/* Class = "NSMenuItem"; title = "Quit"; ObjectID = "pcs-sq-iX5"; */
+"pcs-sq-iX5.title" = "Sluit";
+
+/* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "s4y-VG-rxM"; */
+"s4y-VG-rxM.title" = "Tabel weergave cel";
+
+/* Class = "NSTextFieldCell"; title = "45.2"; ObjectID = "xsu-vU-jX4"; */
+"xsu-vU-jX4.title" = "45,2";
+

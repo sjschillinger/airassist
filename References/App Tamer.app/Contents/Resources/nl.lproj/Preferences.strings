@@ -1,0 +1,675 @@
+/* (No Commment) */
+"1.title" = "App Tamer instellingen";
+
+/* (No Commment) */
+"4.title" = "Controleer automatisch op updates";
+
+/* (No Commment) */
+"5.ibExternalAccessibilityDescription" = "Update interval";
+
+/* Class = "NSMenuItem"; title = "10 seconds"; ObjectID = "6Yq-gJ-z0a"; */
+"6Yq-gJ-z0a.title" = "10 seconden";
+
+/* Class = "NSMenuItem"; title = "5 minutes"; ObjectID = "6ya-p6-v7I"; */
+"6ya-p6-v7I.title" = "5 minuten";
+
+/* (No Commment) */
+"7.title" = "Andere weergave";
+
+/* (No Commment) */
+"8.title" = "Schakel App Tamer uit voor";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "8Z9-3G-oLq"; */
+"8Z9-3G-oLq.title" = "Andere weergave";
+
+/* (No Commment) */
+"9.title" = "minuten";
+
+/* Class = "NSMenuItem"; title = "70% CPU"; ObjectID = "9ZC-SS-4oJ"; */
+"9ZC-SS-4oJ.title" = "70% CPU";
+
+/* (No Commment) */
+"10.title" = "Maandelijks";
+
+/* (No Commment) */
+"16.title" = "Dagelijks";
+
+/* (No Commment) */
+"23.title" = "Update CPU statistieken elke";
+
+/* (No Commment) */
+"24.ibExternalAccessibilityDescription" = "CPU statistieken update interval";
+
+/* (No Commment) */
+"26.title" = "Andere weergave";
+
+/* (No Commment) */
+"27.title" = "1 seconde";
+
+/* (No Commment) */
+"28.title" = "2 seconden";
+
+/* (No Commment) */
+"29.title" = "3 seconden";
+
+/* (No Commment) */
+"30.title" = "4 seconden";
+
+/* (No Commment) */
+"31.title" = "5 seconden";
+
+/* (No Commment) */
+"32.title" = "10 seconden";
+
+/* (No Commment) */
+"33.title" = "15 seconden";
+
+/* (No Commment) */
+"39.title" = "Bereken gemiddelde CPU over";
+
+/* (No Commment) */
+"40.ibExternalAccessibilityDescription" = "CPU gemiddelde interval";
+
+/* (No Commment) */
+"42.title" = "Andere weergave";
+
+/* (No Commment) */
+"43.title" = "5 seconden";
+
+/* (No Commment) */
+"44.title" = "10 seconden";
+
+/* (No Commment) */
+"45.title" = "15 seconden";
+
+/* (No Commment) */
+"46.title" = "30 seconden";
+
+/* (No Commment) */
+"47.title" = "1 minuut";
+
+/* (No Commment) */
+"48.title" = "2 minuten";
+
+/* (No Commment) */
+"49.title" = "5 minuten";
+
+/* (No Commment) */
+"54.title" = "Start automatisch bij opstarten";
+
+/* (No Commment) */
+"62.title" = "Laat App Tamer icoon zien in menubalk";
+
+/* Class = "NSTextFieldCell"; title = "for longer than"; ObjectID = "66J-6W-oEe"; */
+"66J-6W-oEe.title" = "voor langer dan";
+
+/* (No Commment) */
+"68.title" = "Wacht";
+
+/* (No Commment) */
+"69.ibExternalAccessibilityDescription" = "Vertraging bij AutoStop";
+
+/* (No Commment) */
+"71.title" = "Andere weergave";
+
+/* (No Commment) */
+"74.title" = "1 minuut";
+
+/* (No Commment) */
+"75.title" = "30 seconden";
+
+/* (No Commment) */
+"76.title" = "15 seconden";
+
+/* (No Commment) */
+"77.title" = "10 seconden";
+
+/* (No Commment) */
+"78.title" = "1 seconde";
+
+/* (No Commment) */
+"84.title" = "5 seconden";
+
+/* (No Commment) */
+"85.ibExternalAccessibilityDescription" = "Applicatie activatie interval";
+
+/* (No Commment) */
+"91.title" = "Andere weergave";
+
+/* (No Commment) */
+"96.title" = "30 seconden";
+
+/* (No Commment) */
+"97.title" = "1 minuut";
+
+/* (No Commment) */
+"99.title" = "2 minuten";
+
+/* (No Commment) */
+"100.title" = "5 minuten";
+
+/* (No Commment) */
+"101.title" = "10 minuten";
+
+/* (No Commment) */
+"104.title" = "15 minuten";
+
+/* (No Commment) */
+"105.title" = "30 minuten";
+
+/* (No Commment) */
+"107.title" = "Laat App Tamer in dock zien";
+
+/* (No Commment) */
+"112.title" = "Verberg vensters";
+
+/* (No Commment) */
+"117.title" = "Controleer nu";
+
+/* (No Commment) */
+"154.title" = "Vertraag niet als stroom is aangesloten";
+
+/* (No Commment) */
+"162.title" = "2 minuten";
+
+/* (No Commment) */
+"163.title" = "5 minuten";
+
+/* (No Commment) */
+"164.ibExternalAccessibilityDescription" = "Vertraging voor starten applicatie";
+
+/* (No Commment) */
+"167.title" = "voor applicaties om te starten";
+
+/* (No Commment) */
+"168.title" = "Wacht";
+
+/* (No Commment) */
+"170.title" = "Andere weergave";
+
+/* (No Commment) */
+"171.title" = "5 minuten";
+
+/* (No Commment) */
+"172.title" = "2 minuten";
+
+/* (No Commment) */
+"177.title" = "30 seconden";
+
+/* (No Commment) */
+"178.title" = "1 minuut";
+
+/* (No Commment) */
+"183.title" = "10 minuten";
+
+/* (No Commment) */
+"185.title" = "Verberg gestopte applicaties";
+
+/* (No Commment) */
+"188.title" = "Als app is gestopt";
+
+/* Class = "NSWindow"; title = "App Tamer Preferences"; ObjectID = "190"; */
+"190.title" = "App Tamer instellingen";
+
+/* Class = "NSPopUpButton"; ibExternalAccessibilityDescription = "Application wake-up interval"; ObjectID = "196"; */
+"196.ibExternalAccessibilityDescription" = "Applicatie activatie interval";
+
+/* Class = "NSPopUpButton"; ibExternalAccessibilityDescription = "Delay before AutoStop"; ObjectID = "199"; */
+"199.ibExternalAccessibilityDescription" = "Vertraging bij AutoStop";
+
+/* Class = "NSPopUpButton"; ibExternalAccessibilityDescription = "Delay before AutoStop"; ObjectID = "209"; */
+"209.ibExternalAccessibilityDescription" = "Vertraging bij AutoStop";
+
+/* Class = "NSPopUpButton"; ibExternalAccessibilityDescription = "CPU averaging interval"; ObjectID = "213"; */
+"213.ibExternalAccessibilityDescription" = "CPU gemiddelde interval";
+
+/* Class = "NSPopUpButton"; ibExternalAccessibilityDescription = "CPU statistics update interval"; ObjectID = "215"; */
+"215.ibExternalAccessibilityDescription" = "CPU statistieken update interval";
+
+/* Class = "NSTextFieldCell"; title = "Update CPU statistics every"; ObjectID = "217"; */
+"217.title" = "Werk CPU statistieken bij elke";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "219"; */
+"219.title" = "Andere weergave";
+
+/* Class = "NSMenuItem"; title = "15 seconds"; ObjectID = "220"; */
+"220.title" = "15 seconden";
+
+/* Class = "NSMenuItem"; title = "10 seconds"; ObjectID = "221"; */
+"221.title" = "10 seconden";
+
+/* Class = "NSMenuItem"; title = "5 seconds"; ObjectID = "222"; */
+"222.title" = "5 se";
+
+/* Class = "NSMenuItem"; title = "4 seconds"; ObjectID = "223"; */
+"223.title" = "4 seconden";
+
+/* Class = "NSMenuItem"; title = "3 seconds"; ObjectID = "224"; */
+"224.title" = "3 seconden";
+
+/* Class = "NSMenuItem"; title = "2 seconds"; ObjectID = "225"; */
+"225.title" = "2 seconden";
+
+/* Class = "NSMenuItem"; title = "1 second"; ObjectID = "226"; */
+"226.title" = "1 seconde";
+
+/* Class = "NSTextFieldCell"; title = "Calculate average CPU over"; ObjectID = "227"; */
+"227.title" = "Bereken gemiddeld CPU over";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "229"; */
+"229.title" = "Andere weergave";
+
+/* Class = "NSMenuItem"; title = "5 minutes"; ObjectID = "230"; */
+"230.title" = "5 minuten";
+
+/* Class = "NSMenuItem"; title = "2 minutes"; ObjectID = "231"; */
+"231.title" = "2 minuten";
+
+/* Class = "NSMenuItem"; title = "1 minute"; ObjectID = "232"; */
+"232.title" = "1 minuut";
+
+/* Class = "NSMenuItem"; title = "30 seconds"; ObjectID = "233"; */
+"233.title" = "30 seconden";
+
+/* Class = "NSMenuItem"; title = "15 seconds"; ObjectID = "234"; */
+"234.title" = "15 seconden";
+
+/* Class = "NSMenuItem"; title = "10 seconds"; ObjectID = "235"; */
+"235.title" = "10 seconden";
+
+/* Class = "NSMenuItem"; title = "5 seconds"; ObjectID = "236"; */
+"236.title" = "5 seconden";
+
+/* Class = "NSTextFieldCell"; title = "Wait"; ObjectID = "237"; */
+"237.title" = "Wacht";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "239"; */
+"239.title" = "Andere weergave";
+
+/* Class = "NSMenuItem"; title = "5 minutes"; ObjectID = "240"; */
+"240.title" = "5 minuten";
+
+/* Class = "NSMenuItem"; title = "2 minutes"; ObjectID = "241"; */
+"241.title" = "2 minuten";
+
+/* Class = "NSMenuItem"; title = "5 seconds"; ObjectID = "242"; */
+"242.title" = "5 seconden";
+
+/* Class = "NSMenuItem"; title = "1 second"; ObjectID = "243"; */
+"243.title" = "1 seconde";
+
+/* Class = "NSMenuItem"; title = "10 seconds"; ObjectID = "244"; */
+"244.title" = "10 seconden";
+
+/* Class = "NSMenuItem"; title = "15 seconds"; ObjectID = "245"; */
+"245.title" = "15 seconden";
+
+/* Class = "NSMenuItem"; title = "30 seconds"; ObjectID = "246"; */
+"246.title" = "30 seconden";
+
+/* Class = "NSMenuItem"; title = "1 minute"; ObjectID = "247"; */
+"247.title" = "1 minuut";
+
+/* Class = "NSButtonCell"; title = "Automatically start at login"; ObjectID = "255"; */
+"255.title" = "Start automatisch bij opstarten";
+
+/* Class = "NSButtonCell"; title = "Show App Tamer in the menu bar"; ObjectID = "256"; */
+"256.title" = "Laat App Tamer in menubalk zien";
+
+/* Class = "NSTextFieldCell"; title = "before slowing or stopping an app"; ObjectID = "259"; */
+"259.title" = "voordat je de App vertraagd of stopt";
+
+/* Class = "NSButtonCell"; title = "Show App Tamer in the Dock"; ObjectID = "260"; */
+"260.title" = "Laat App Tamer in dock zien";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "262"; */
+"262.title" = "Andere weergave";
+
+/* Class = "NSMenuItem"; title = "10 minutes"; ObjectID = "263"; */
+"263.title" = "10 minuten";
+
+/* Class = "NSMenuItem"; title = "1 minute"; ObjectID = "264"; */
+"264.title" = "1 minuut";
+
+/* Class = "NSMenuItem"; title = "30 seconds"; ObjectID = "265"; */
+"265.title" = "30 seconden";
+
+/* Class = "NSMenuItem"; title = "2 minutes"; ObjectID = "266"; */
+"266.title" = "2 minuten";
+
+/* Class = "NSMenuItem"; title = "5 minutes"; ObjectID = "267"; */
+"267.title" = "5 minuten";
+
+/* Class = "NSTextFieldCell"; title = "Wait"; ObjectID = "268"; */
+"268.title" = "Wacht";
+
+/* Class = "NSTextFieldCell"; title = "for apps to launch"; ObjectID = "269"; */
+"269.title" = "voor applicaties om te starten";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "271"; */
+"271.title" = "Andere weergave";
+
+/* Class = "NSMenuItem"; title = "30 minutes"; ObjectID = "272"; */
+"272.title" = "30 minuten";
+
+/* Class = "NSMenuItem"; title = "15 minutes"; ObjectID = "273"; */
+"273.title" = "15 minuten";
+
+/* Class = "NSMenuItem"; title = "10 minutes"; ObjectID = "274"; */
+"274.title" = "10 minuten";
+
+/* Class = "NSMenuItem"; title = "5 minutes"; ObjectID = "275"; */
+"275.title" = "5 minuten";
+
+/* Class = "NSMenuItem"; title = "2 minutes"; ObjectID = "276"; */
+"276.title" = "2 minuten";
+
+/* Class = "NSMenuItem"; title = "1 minute"; ObjectID = "277"; */
+"277.title" = "1 minuut";
+
+/* Class = "NSMenuItem"; title = "30 seconds"; ObjectID = "278"; */
+"278.title" = "30 seconden";
+
+/* Class = "NSTextFieldCell"; title = "Wake stopped apps every"; ObjectID = "279"; */
+"279.title" = "Activeer gestopte apps iedere";
+
+/* Class = "NSButtonCell"; title = "Hide applications when they are stopped"; ObjectID = "280"; */
+"280.title" = "Verberg gestopte applicaties";
+
+/* Class = "NSTabViewItem"; label = "General"; ObjectID = "300"; */
+"300.label" = "Algemeen";
+
+/* Class = "NSTabViewItem"; label = "Stats"; ObjectID = "301"; */
+"301.label" = "Status";
+
+/* Class = "NSTabViewItem"; label = "Manage"; ObjectID = "304"; */
+"304.label" = "Beheer";
+
+/* Class = "NSToolbarItem"; label = "General"; ObjectID = "328"; */
+"328.label" = "Algemeen";
+
+/* Class = "NSToolbarItem"; paletteLabel = "General"; ObjectID = "328"; */
+"328.paletteLabel" = "Algemeen";
+
+/* Class = "NSToolbarItem"; label = "Control"; ObjectID = "329"; */
+"329.label" = "Controlle";
+
+/* Class = "NSToolbarItem"; paletteLabel = "Control"; ObjectID = "329"; */
+"329.paletteLabel" = "Controlle";
+
+/* Class = "NSToolbarItem"; label = "Stats"; ObjectID = "330"; */
+"330.label" = "Status";
+
+/* Class = "NSToolbarItem"; paletteLabel = "Stats"; ObjectID = "330"; */
+"330.paletteLabel" = "Status";
+
+/* (No Commment) */
+"341.title" = "30 seconden";
+
+/* (No Commment) */
+"342.title" = "60 seconden";
+
+/* (No Commment) */
+"343.title" = "Nooit";
+
+/* Class = "NSMenuItem"; title = "30 seconds"; ObjectID = "344"; */
+"344.title" = "30 seconden";
+
+/* Class = "NSMenuItem"; title = "60 seconds"; ObjectID = "345"; */
+"345.title" = "60 seconden";
+
+/* Class = "NSMenuItem"; title = "Never"; ObjectID = "346"; */
+"346.title" = "Nooit";
+
+/* (No Commment) */
+"418.title" = "Laat CPU gebruik zien in icoon";
+
+/* (No Commment) */
+"422.title" = "Kleur icoon van CPU weergave";
+
+/* (No Commment) */
+"430.title" = "Andere weergave";
+
+/* (No Commment) */
+"431.title" = "100%";
+
+/* (No Commment) */
+"432.title" = "95%";
+
+/* (No Commment) */
+"433.title" = "90%";
+
+/* (No Commment) */
+"434.title" = "85%";
+
+/* (No Commment) */
+"435.title" = "80%";
+
+/* (No Commment) */
+"436.title" = "75%";
+
+/* (No Commment) */
+"437.title" = "70%";
+
+/* (No Commment) */
+"439.title" = "60%";
+
+/* (No Commment) */
+"441.title" = "50%";
+
+/* (No Commment) */
+"447.title" = "en batterijniveau is boven";
+
+/* (No Commment) */
+"449.title" = "40%";
+
+/* (No Commment) */
+"450.title" = "30%";
+
+/* (No Commment) */
+"451.title" = "20%";
+
+/* (No Commment) */
+"452.title" = "10%";
+
+/* (No Commment) */
+"453.title" = "0%";
+
+/* Class = "NSButtonCell"; title = "Colorize the menu bar icon as CPU usage increases"; ObjectID = "456"; */
+"456.title" = "Geef kleur aan menubalk als CPU gebruik zwaarder wordt";
+
+/* Class = "NSButtonCell"; title = "Display CPU usage next to the menu bar icon"; ObjectID = "457"; */
+"457.title" = "Geef CPU gebruik weer naast menu icoon";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "466"; */
+"466.title" = "Andere weergave";
+
+/* Class = "NSMenuItem"; title = "0%"; ObjectID = "467"; */
+"467.title" = "0%";
+
+/* Class = "NSMenuItem"; title = "10%"; ObjectID = "468"; */
+"468.title" = "10%";
+
+/* Class = "NSMenuItem"; title = "20%"; ObjectID = "469"; */
+"469.title" = "20%";
+
+/* Class = "NSMenuItem"; title = "30%"; ObjectID = "470"; */
+"470.title" = "30%";
+
+/* Class = "NSMenuItem"; title = "40%"; ObjectID = "471"; */
+"471.title" = "40%";
+
+/* Class = "NSMenuItem"; title = "50%"; ObjectID = "472"; */
+"472.title" = "50%";
+
+/* Class = "NSMenuItem"; title = "60%"; ObjectID = "473"; */
+"473.title" = "60%";
+
+/* Class = "NSMenuItem"; title = "70%"; ObjectID = "474"; */
+"474.title" = "70%";
+
+/* Class = "NSMenuItem"; title = "75%"; ObjectID = "475"; */
+"475.title" = "75%";
+
+/* Class = "NSMenuItem"; title = "80%"; ObjectID = "476"; */
+"476.title" = "80%";
+
+/* Class = "NSMenuItem"; title = "85%"; ObjectID = "477"; */
+"477.title" = "85%";
+
+/* Class = "NSMenuItem"; title = "90%"; ObjectID = "478"; */
+"478.title" = "90%";
+
+/* Class = "NSMenuItem"; title = "95%"; ObjectID = "479"; */
+"479.title" = "95%";
+
+/* Class = "NSMenuItem"; title = "100%"; ObjectID = "480"; */
+"480.title" = "100%";
+
+/* Class = "NSTextFieldCell"; title = "and battery is charged above"; ObjectID = "481"; */
+"481.title" = "en batterijniveau is boven";
+
+/* Class = "NSButtonCell"; title = "Do not slow or stop apps if power is plugged in"; ObjectID = "482"; */
+"482.title" = "Vertraag niet als stroom is aangesloten";
+
+/* Class = "NSTabViewItem"; label = "Options"; ObjectID = "492"; */
+"492.label" = "Opties";
+
+/* Class = "NSPopUpButton"; ibExternalAccessibilityDescription = "Update check interval"; ObjectID = "495"; */
+"495.ibExternalAccessibilityDescription" = "Update interval";
+
+/* Class = "NSButtonCell"; title = "Check Now"; ObjectID = "497"; */
+"497.title" = "Controleer nu";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "499"; */
+"499.title" = "Andere weergave";
+
+/* Class = "NSMenuItem"; title = "Daily"; ObjectID = "500"; */
+"500.title" = "Dagelijks";
+
+/* Class = "NSMenuItem"; title = "Monthly"; ObjectID = "501"; */
+"501.title" = "Maandelijks";
+
+/* Class = "NSMenuItem"; title = "Weekly"; ObjectID = "502"; */
+"502.title" = "Weekelijks";
+
+/* Class = "NSMenuItem"; title = "Hourly"; ObjectID = "503"; */
+"503.title" = "Ieder uur";
+
+/* Class = "NSButtonCell"; title = "Automatically check for updates"; ObjectID = "504"; */
+"504.title" = "Controleer automatisch op updates";
+
+/* Class = "NSToolbarItem"; label = "Options"; ObjectID = "512"; */
+"512.label" = "Opties";
+
+/* Class = "NSToolbarItem"; paletteLabel = "Options"; ObjectID = "512"; */
+"512.paletteLabel" = "Opties";
+
+/* Class = "NSMenuItem"; title = "75% CPU"; ObjectID = "BoI-nr-Zop"; */
+"BoI-nr-Zop.title" = "75% CPU";
+
+/* Class = "NSMenuItem"; title = "130% CPU"; ObjectID = "CyU-Se-9DQ"; */
+"CyU-Se-9DQ.title" = "130% CPU";
+
+/* Class = "NSMenuItem"; title = "15 seconds"; ObjectID = "Dpc-jQ-iJr"; */
+"Dpc-jQ-iJr.title" = "15 seconden";
+
+/* Class = "NSTextFieldCell"; title = "Appearance:"; ObjectID = "EjH-sH-WtH"; */
+"EjH-sH-WtH.title" = "Verschijning";
+
+/* Class = "NSMenuItem"; title = "5 seconds"; ObjectID = "Gov-Uc-Mh0"; */
+"Gov-Uc-Mh0.title" = "5 seconden";
+
+/* Class = "NSMenuItem"; title = "1 minute"; ObjectID = "H93-cM-Cgb"; */
+"H93-cM-Cgb.title" = "1 minuut";
+
+/* Class = "NSTextFieldCell"; title = "Notify me when an application exceeds"; ObjectID = "HSG-fg-6Bi"; */
+"HSG-fg-6Bi.title" = "Geef melding als app meer verbruikt";
+
+/* Class = "NSButtonCell"; title = "Dark"; ObjectID = "IEk-CE-gso"; */
+"IEk-CE-gso.title" = "Donker";
+
+/* Class = "NSMenuItem"; title = "150% CPU"; ObjectID = "K8r-m1-FRQ"; */
+"K8r-m1-FRQ.title" = "150% CPU";
+
+/* Class = "NSMenuItem"; title = "85% CPU"; ObjectID = "M7X-pn-b6Z"; */
+"M7X-pn-b6Z.title" = "85% CPU";
+
+/* Class = "NSMenuItem"; title = "80% CPU"; ObjectID = "MzP-4K-v8c"; */
+"MzP-4K-v8c.title" = "80% CPU";
+
+/* Class = "NSMenuItem"; title = "10% CPU"; ObjectID = "QHI-6J-r3b"; */
+"QHI-6J-r3b.title" = "10% CPU";
+
+/* Class = "NSMenu"; title = "OtherViews"; ObjectID = "QQR-ZF-AQK"; */
+"QQR-ZF-AQK.title" = "Andere weergave";
+
+/* Class = "NSMenuItem"; title = "30 seconds"; ObjectID = "R1I-ZF-tNt"; */
+"R1I-ZF-tNt.title" = "30 seconden";
+
+/* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "Td8-l2-rnL"; */
+"Td8-l2-rnL.title" = "Text cell";
+
+/* Class = "NSPopUpButton"; ibExternalAccessibilityDescription = "CPU averaging interval"; ObjectID = "VEd-2P-pEg"; */
+"VEd-2P-pEg.ibExternalAccessibilityDescription" = "CPU gemiddelde interval";
+
+/* Class = "NSMenuItem"; title = "50% CPU"; ObjectID = "cNL-bF-zkh"; */
+"cNL-bF-zkh.title" = "50% CPU";
+
+/* Class = "NSMenuItem"; title = "30% CPU"; ObjectID = "fto-RZ-V8h"; */
+"fto-RZ-V8h.title" = "30% CPU";
+
+/* Class = "NSTextFieldCell"; title = "Don't notify me about these applications:"; ObjectID = "gOY-0j-oRI"; */
+"gOY-0j-oRI.title" = "Geef me geen melding van deze apps:";
+
+/* Class = "NSMenuItem"; title = "140% CPU"; ObjectID = "gQK-X8-wB5"; */
+"gQK-X8-wB5.title" = "140% CPU";
+
+/* Class = "NSMenuItem"; title = "90% CPU"; ObjectID = "h6F-cz-FER"; */
+"h6F-cz-FER.title" = "90% CPU";
+
+/* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "jHa-Kt-mi4"; */
+"jHa-Kt-mi4.title" = "Tabelweergave cell";
+
+/* Class = "NSToolbarItem"; label = "Detection"; ObjectID = "l0s-l9-HD6"; */
+"l0s-l9-HD6.label" = "Detectie";
+
+/* Class = "NSToolbarItem"; paletteLabel = "Detection"; ObjectID = "l0s-l9-HD6"; */
+"l0s-l9-HD6.paletteLabel" = "Detectie";
+
+/* Class = "NSMenuItem"; title = "20% CPU"; ObjectID = "l9c-eE-JvW"; */
+"l9c-eE-JvW.title" = "20% CPU";
+
+/* Class = "NSMenuItem"; title = "100% CPU"; ObjectID = "mRw-4u-6S2"; */
+"mRw-4u-6S2.title" = "100% CPU";
+
+/* Class = "NSTabViewItem"; label = "Detection"; ObjectID = "nXP-VU-eVG"; */
+"nXP-VU-eVG.label" = "Detectie";
+
+/* Class = "NSMenuItem"; title = "175% CPU"; ObjectID = "orr-fD-QXC"; */
+"orr-fD-QXC.title" = "175% CPU";
+
+/* Class = "NSMenuItem"; title = "110% CPU"; ObjectID = "rCC-rX-C7h"; */
+"rCC-rX-C7h.title" = "110% CPU";
+
+/* Class = "NSMenuItem"; title = "2 minutes"; ObjectID = "t0S-eS-SZ4"; */
+"t0S-eS-SZ4.title" = "2 minuten";
+
+/* Class = "NSMenuItem"; title = "95% CPU"; ObjectID = "tK5-Xb-wfu"; */
+"tK5-Xb-wfu.title" = "95% CPU";
+
+/* Class = "NSMenuItem"; title = "200% CPU"; ObjectID = "u2R-fp-3sD"; */
+"u2R-fp-3sD.title" = "200% CPU";
+
+/* Class = "NSMenuItem"; title = "60% CPU"; ObjectID = "uLa-Tp-K8q"; */
+"uLa-Tp-K8q.title" = "60% CPU";
+
+/* Class = "NSButtonCell"; title = "Standard"; ObjectID = "vdh-nl-hL0"; */
+"vdh-nl-hL0.title" = "Standaard";
+
+/* Class = "NSMenuItem"; title = "120% CPU"; ObjectID = "z3B-jY-kba"; */
+"z3B-jY-kba.title" = "120% CPU";
+
+/* Class = "NSMenuItem"; title = "40% CPU"; ObjectID = "zjJ-aB-5Wv"; */
+"zjJ-aB-5Wv.title" = "40% CPU";
+

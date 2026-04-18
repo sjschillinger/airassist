@@ -1,0 +1,65 @@
+import Foundation
+
+enum SensorCategory: String, Codable, CaseIterable {
+    case cpu     = "CPU"
+    case gpu     = "GPU"
+    case soc     = "SoC"
+    case battery = "Battery"
+    case storage = "Storage"
+    case other   = "Other"
+}
+
+enum ThresholdState {
+    case cool, warm, hot, unknown
+}
+
+@Observable
+@MainActor
+final class Sensor: Identifiable {
+    let id: String            // stable registry-ID hex string from IOKit
+    let rawName: String       // original IOKit product string
+    let displayName: String   // human-readable mapped name
+    let category: SensorCategory
+    var currentValue: Double?
+    var isEnabled: Bool = true
+
+    init(id: String, rawName: String, category: SensorCategory) {
+        self.id          = id
+        self.rawName     = rawName
+        self.displayName = SensorCategorizer.displayName(for: rawName)
+        self.category    = category
+    }
+
+    func thresholdState(using thresholds: ThresholdSettings) -> ThresholdState {
+        guard let value = currentValue else { return .unknown }
+        let t = thresholds.thresholds(for: category)
+        if value >= t.hot  { return .hot }
+        if value >= t.warm { return .warm }
+        return .cool
+    }
+}
+
+struct CategoryThresholds: Codable {
+    var warm: Double
+    var hot: Double
+}
+
+struct ThresholdSettings: Codable {
+    var cpu     = CategoryThresholds(warm: 60, hot: 85)
+    var gpu     = CategoryThresholds(warm: 55, hot: 80)
+    var soc     = CategoryThresholds(warm: 65, hot: 90)
+    var battery = CategoryThresholds(warm: 35, hot: 40)
+    var storage = CategoryThresholds(warm: 45, hot: 60)
+    var other   = CategoryThresholds(warm: 60, hot: 80)
+
+    func thresholds(for category: SensorCategory) -> CategoryThresholds {
+        switch category {
+        case .cpu:     return cpu
+        case .gpu:     return gpu
+        case .soc:     return soc
+        case .battery: return battery
+        case .storage: return storage
+        case .other:   return other
+        }
+    }
+}

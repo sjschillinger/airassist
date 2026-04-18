@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>uk.co.tla-systems.dragthing</key>
+	<string>If you stop DragThing in the background it will not be able to perform keyboard shortcuts, slide drawers out, or respond to clicks on your docks unless it is the front application.</string>
+	<key>com.apple.iChat</key>
+	<string>Be aware that you will go offline and will not see updates to your buddies&apos; statuses until you bring iChat to the front.</string>
+	<key>com.adiumX.adiumX</key>
+	<string>You will go offline and will not see updates to your buddies&apos; statuses until you bring Adium to the front.</string>
+	<key>fm.last.Last.fm</key>
+	<string>Pausing Last.fm will prevent it from scrobbling your iTunes tracks and playing radio in the background.</string>
+	<key>at.obdev.LaunchBar</key>
+	<string>LaunchBar&apos;s Quick Launch feature and hotkeys will not work when it is stopped.</string>
+	<key>com.plasq.skitch</key>
+	<string>You won&apos;t be able to take screen snapshots while Skitch is stopped.</string>
+	<key>com.smileonmymac.textexpander</key>
+	<string>TextExpander won&apos;t expand text when it is stopped - sort of defeats the purpose, doesn&apos;t it?</string>
+	<key>com.culturecode.things</key>
+	<string>If you stop Things in the background, its quick keys won&apos;t work unless it&apos;s the frontmost application. This is probably not what you want.</string>
+	<key>com.evernote.Evernote</key>
+	<string>Evernote&apos;s Control-C and Control-V keyboard shortcuts will not work if you stop it in the background.</string>
+	<key>com.stclairsoft.DefaultFolderX.dockRunner</key>
+	<string>Default Folder X will not work correctly if App Tamer stops it. It needs to be running in the backgound to provide its menu in the menu bar and to enhance Open and Save as dialogs.</string>
+	<key>com.stclairsoft.DefaultFolderX.helper</key>
+	<string>Default Folder X will not work correctly if App Tamer stops it. It needs to be running in the backgound to provide its menu in the menu bar and to enhance Open and Save as dialogs.</string>
+	<key>com.stclairsoft.DefaultFolderX5</key>
+	<string>Default Folder X will not work correctly if App Tamer stops it. It needs to be running in the backgound to provide its menu in the menu bar and to enhance Open and Save as dialogs.</string>
+	<key>com.atebits.tweetie-mac</key>
+	<string>If you stop Tweetie in the background, it won&apos;t update with new tweets until you bring it to the front.</string>
+	<key>com.parallels.desktop.console</key>
+	<string>Because of the way Parallels Desktop works, App Tamer can&apos;t pause the Parallels Desktop application. Instead, it will pause the Parallels virtual machine processes (named prl_vm_app) because they do all the real work and consume nearly all of the CPU time associated with Parallels Desktop.</string>
+	<key>jp.tmkk.XLD</key>
+	<string>You may want to slow XLD down in the background, but you probably don&apos;t want to stop it completely because that will keep it from ripping discs.</string>
+	<key>com.google.Chrome</key>
+	<string>Stopping Chrome can sometimes cause problems with sound or mouse click handling. If you encounter any issues, set it to slow to 2% instead of stopping completely.</string>
+	<key>com.hegenberg.BetterTouchTool</key>
+	<string>This may cause mouse and trackpad operation to become jerky or erratic. If that happens, increase or remove the CPU limit on BetterTouchTool.</string>
+</dict>
+</plist>
