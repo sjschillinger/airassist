@@ -3,41 +3,50 @@
 Dev-only document. NOT published to the public repo (see `scripts/publish.sh`
 allowlist). Checked into the private dev repo so nothing slips.
 
-Last updated: 2026-04-18 (post-feature-complete sync)
+Last updated: 2026-04-19 (post-integration-suite sync)
 
 ---
 
-## Remaining work (synced 2026-04-18)
+## Remaining work (synced 2026-04-19)
 
-All code-side v1.0 items are done. What remains is the pre-launch
-verification pass plus logistics. Grouped:
+All code-side v1.0 items done. Runtime-safety suite is now automated —
+`scripts/run-integration.sh` runs 10 tests in ~85s covering #16 #17
+#19 #34 #35 #36 #37 #38. What remains:
 
-**Runtime verification (needs running app on real hardware):**
- - #16 SIGSTOP lands — runbook ready
- - #17 Crash-recovery — runbook ready
- - #18 Sleep/wake — runbook ready (code done)
- - #19 PID-reuse — runbook ready (code done)
- - #34 Rule re-attach across relaunch
- - #35 Pause auto-resume expiry
- - #36 Stay Awake assertions — runbook ready
- - #37 Lid-close in displayThenSystem
- - #38 Force-quit clean — runbook ready
+**Runtime verification (automated, green):**
+ - [x] #16 SIGSTOP lands — `test_16_SIGSTOPLands`
+ - [x] #17 Crash-recovery — `test_17_CrashRecoveryResumesOrphaned`
+ - [x] #18 Sleep/wake — physically verified 2026-04-19 (SleepWakeObserver
+       logs confirmed willSleep release + didWake resume)
+ - [x] #19 PID-reuse — `test_19_ExitWatcherReleasesPromptly`
+ - [x] #34 Rule re-attach — `test_34_RuleReattachAfterRelaunch`
+ - [x] #35 Pause auto-resume — `test_35_PauseAutoResumes` +
+       `test_35_ExplicitResumeClearsPause`
+ - [x] #36 Stay Awake — `test_36_StayAwakeSystemAssertionRegistersWithPMSet`
+       + `test_36_StayAwakeDisplayAssertion`
+ - [x] #37 displayThenSystem downgrade — `test_37_DisplayThenSystemDowngrades`
+       (auto) + `verify-lid-close-displaythensystem.sh` (hinge)
+ - [x] #38 Force-quit clean — `test_38_SIGTERMResumesInflight`
+
+**Still needs physical hardware:**
+ - [ ] #37 lid-close portion — runbook ready
+       (`scripts/manual-tests/verify-lid-close-displaythensystem.sh`)
 
 **Profiling & a11y (Xcode-tool-driven):**
- - #14 Accessibility Inspector
- - #41 Keyboard nav
- - #48 TSan 30-min run
- - #49 Leaks 1-hour run
- - #50 Perf at 1000+ PIDs
+ - [ ] #14 Accessibility Inspector
+ - [ ] #41 Keyboard nav
+ - [ ] #48 TSan 30-min run
+ - [ ] #49 Leaks 1-hour run
+ - [ ] #50 Perf at 1000+ PIDs
 
 **Launch-day logistics (not code):**
- - #33 Notarization dry-run with the IOKit entitlement
- - #51 Pick one launch channel
- - Create public `homebrew-airassist` repo from template
- - Replace `TODO_USER` placeholders everywhere
+ - [ ] #51 Pick one launch channel
+ - [ ] Create public `homebrew-airassist` repo from template
+ - [ ] Replace `TODO_USER` placeholders everywhere
 
 **Explicitly deferred / accepted:**
  - #9 / #10 Icon and menu-bar legibility — accepted as shipping
+ - #33 Notarization — declined (see #1), not pre-launch work
  - Broader governor/engine unit coverage beyond current safety paths
 
 ---
@@ -153,24 +162,30 @@ scope" for what we're explicitly saying no to.
 
 ## 🛡️ Safety & correctness
 
-- [ ] **#16 Verify SIGSTOP actually lands on a real process** (runtime-only)
-  - Runbook: `./scripts/manual-tests/verify-sigstop-lands.sh`
-  - See `docs/engineering-references.md` §1 for SIGSTOP semantics
-    and §4 for `ps` STAT codes.
-- [ ] **#17 SafetyCoordinator crash-recovery live test** (runtime-only)
-  - Start throttling → `kill -9` AirAssist → verify target resumes
-  - Single most important behavior; if broken, launch is bad.
-  - Runbook: `./scripts/manual-tests/verify-crash-recovery.sh`
-- [x] **#18 Sleep/wake cycle handling** (code) —
+- [x] **#16 Verify SIGSTOP actually lands on a real process** —
+  automated: `test_16_SIGSTOPLands` seeds a rule, spawns `yes`, and
+  asserts `ps -o stat=` hits state `T` within 5s. Runbook
+  `verify-sigstop-lands.sh` retained for catastrophic cases the runner
+  can't script.
+- [x] **#17 SafetyCoordinator crash-recovery live test** —
+  automated: `test_17_CrashRecoveryResumesOrphaned` SIGKILLs AirAssist
+  mid-throttle and asserts the orphaned PID is SIGCONT'd on relaunch
+  via the dead-man's-switch inflight file.
+- [x] **#18 Sleep/wake cycle handling** —
   `SleepWakeObserver` listens on `NSWorkspace.shared.notificationCenter`
   for `.willSleep` / `.didWake`; policy is release-all on willSleep,
-  let engines re-converge on next tick after didWake.
-  - [ ] Runtime verification: `./scripts/manual-tests/verify-sleep-wake.sh`
-- [x] **#19 PID reuse / process-exit mid-throttle** (code) —
+  let engines re-converge on next tick after didWake. Physically
+  verified 2026-04-19: lid-close / wake cycle triggered
+  `willSleep — releasing throttled PIDs` + `didWake — resuming
+  engines` in os_log, and yes process was in state R post-wake.
+- [x] **#19 PID reuse / process-exit mid-throttle** —
   `ProcessThrottler.installExitWatcher(pid:)` registers a kqueue
   `EVFILT_PROC NOTE_EXIT` source per throttled PID; releases the
   tracking entry on exit before the kernel can recycle the PID.
-  - [ ] Runtime verification: `./scripts/manual-tests/verify-pid-reuse.sh`
+  Automated: `test_19_ExitWatcherReleasesPromptly` kills a throttled
+  target externally and asserts the throttler drops it within 2s.
+  Also flushed out a Swift 6 actor-isolation crash in the exit
+  handler (commit 00c1087).
 - [x] **#20 Thermal sensor read failure path** — `ReadState` enum + UI in popover & dashboard
 
 ---
@@ -218,9 +233,9 @@ scope" for what we're explicitly saying no to.
   loops), plus a one-paragraph HN/Reddit answer. Named products kept
   out per the pre-commit hook.
 - [x] **#32 Sandboxing decision — documented in README** — new Privacy + Sandboxing sections
-- [ ] **#33 Notarization dry-run with entitlement**
-  - Submit test build with `com.apple.security.temporary-exception.iokit-user-client-class`
-  - Don't discover on launch day that Apple rejects it
+- [x] **#33 Notarization dry-run with entitlement** — declined per #1
+  (AGPL OSS trust model, Homebrew cask strips quarantine). Not a
+  pre-launch item.
 
 ---
 
@@ -307,21 +322,26 @@ ship broken. Then the 4 remaining 🚨 blockers (#2, #3, #4, #29).
 Items surfaced while reviewing everything end-to-end. Some overlap with
 earlier entries — cross-references in parens.
 
-### Functional smoke tests (need explicit runs, not just code review)
-- [ ] **#34 Rule re-attach across app relaunch** (runtime-only) — add
-  per-app rule, kill target app, relaunch it, confirm new PID gets
-  throttled
-- [ ] **#35 Pause auto-resume** (runtime-only) — pause 15 min, wait for
-  expiry, confirm both governor + rules resume (extends #17)
-- [ ] **#36 Stay Awake assertion verification** (runtime-only) — each
-  mode, check `pmset -g assertions` shows the right
-  `PreventUserIdleSystemSleep` / `PreventUserIdleDisplaySleep` entries.
-  Runbook: `./scripts/manual-tests/verify-stay-awake.sh`
-- [ ] **#37 Lid-close with `displayThenSystem` mode** (runtime-only) —
-  display sleeps after timeout, system stays awake
-- [ ] **#38 Force-quit mid-throttle cleanup** (runtime-only) — next
-  launch has no stuck SIGSTOP'd processes (extends #17). Runbook:
-  `./scripts/manual-tests/verify-force-quit-clean.sh`
+### Functional smoke tests — automated via `scripts/run-integration.sh`
+- [x] **#34 Rule re-attach across app relaunch** —
+  `test_34_RuleReattachAfterRelaunch` seeds a rule, terminates the
+  app, relaunches, spawns a matching target, and asserts the engine
+  re-attaches.
+- [x] **#35 Pause auto-resume** — `test_35_PauseAutoResumes` (2s
+  pause) + `test_35_ExplicitResumeClearsPause` (forever + resume).
+- [x] **#36 Stay Awake assertion verification** —
+  `test_36_StayAwakeSystemAssertionRegistersWithPMSet` and
+  `test_36_StayAwakeDisplayAssertion` both shell out to
+  `pmset -g assertions` and grep for the expected assertion type.
+- [x] **#37 Lid-close with `displayThenSystem` mode** — timed
+  downgrade automated via `test_37_DisplayThenSystemDowngrades`
+  (~67s; uses the debug URL's 1-minute timer). Physical-hinge
+  clamshell portion: runbook at
+  `scripts/manual-tests/verify-lid-close-displaythensystem.sh`.
+- [x] **#38 Force-quit mid-throttle cleanup** —
+  `test_38_SIGTERMResumesInflight` seeds a rule, waits for throttle,
+  SIGTERMs AirAssist, and asserts the target ends up in a non-T
+  state (the sigaction handler SIGCONT'd it synchronously).
 
 ### UX polish (new since #11 landed)
 - [x] **#39 Onboarding sheet on first launch** — `OnboardingWindow`
