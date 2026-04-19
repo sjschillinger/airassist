@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		013379CDC05A0E33F89DFC0D /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C970827BF50EE6FAF9CE8CA /* UpdateService.swift */; };
 		07DEAE60DE866AE450B0D168 /* SensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05664AF6DD35210D50D4D873 /* SensorService.swift */; };
 		099815B841513BF03BC53F73 /* PauseAndStayAwakeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */; };
 		09BFDA5470EAD62D85A3E335 /* DiagnosticBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F43EF95D16B0D67D0FD9028 /* DiagnosticBundle.swift */; };
@@ -51,7 +52,9 @@
 		8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573E0D36375389574C26D88F /* ThrottlingPrefsView.swift */; };
 		8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */; };
 		8EDE88F52ED18CCF2EFC8CBD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C1EA66578373DFC8BB8830 /* AppDelegate.swift */; };
+		952832FB8387EBCEF926C744 /* MetricKitReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD32BF366F8E6D8B74D4EAB5 /* MetricKitReporter.swift */; };
 		96364AA71968BC08B8C14C16 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73665E744DF97F6A87703F65 /* DashboardView.swift */; };
+		99CCB4C7F83F69F150A2594D /* LaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EAD7FCA44F3E19EC9BC2BAD /* LaunchAtLoginService.swift */; };
 		9A5BE146B664C0F3E44DFADC /* AccessibilityAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58475359CEC0FD11EBF5424 /* AccessibilityAuditTests.swift */; };
 		9B4B56353080E959F327AC06 /* MenuBarGlyph.svg in Resources */ = {isa = PBXBuildFile; fileRef = A7B17DD0F122F70084C97529 /* MenuBarGlyph.svg */; };
 		A421ADB89070A8D476A827E9 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */; };
@@ -62,6 +65,7 @@
 		ACFABCECFECDF629B1105134 /* GovernorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */; };
 		B0A47662747C2867086D592B /* SensorsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD89C1534037D26554015A /* SensorsPrefsView.swift */; };
 		B183D1C124AAEE3F298C599F /* ThrottleIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */; };
+		B26180C3CE1796E04201A4D4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 7FE638BD3EBDB588B7913198 /* Sparkle */; };
 		B4BFE97F6E989309F39CEE60 /* SIGCONTFailureAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4375982E8251576076415A73 /* SIGCONTFailureAlert.swift */; };
 		B5FCBC00DE2EE807B11B27A0 /* SleepWakeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */; };
 		B77AD3CA5AE2AF1411D68173 /* SafetyCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */; };
@@ -71,6 +75,7 @@
 		C3AA7A3ED6914DB08A2F9D26 /* FirstRunDisclosure.swift in Sources */ = {isa = PBXBuildFile; fileRef = F39D53AA5D34F3BF9DC08F9F /* FirstRunDisclosure.swift */; };
 		C43FB882937BC5D2E7FACF2B /* HistoryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */; };
 		C4735116908FE32FCE703B10 /* RuleTemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5133C0DF592E205CF9E9D017 /* RuleTemplates.swift */; };
+		C4793AB490B9ED1DF6CAE031 /* MetricKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 593A4CFD558F099804B37A98 /* MetricKit.framework */; };
 		C731C152534FB6D04AA9863E /* ProcessThrottler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */; };
 		C99CE41C0148623FB418A91D /* HistoryLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */; };
 		CAB1687E2D8A71F55C3F50B5 /* ThermalEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */; };
@@ -124,6 +129,7 @@
 		02BA0BF3D6B9C098E7D51127 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		053C1F519C6EF5056C3BFC58 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		05664AF6DD35210D50D4D873 /* SensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorService.swift; sourceTree = "<group>"; };
+		0C970827BF50EE6FAF9CE8CA /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		0D2EA235795456EF4D733B04 /* MenuBarPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPrefs.swift; sourceTree = "<group>"; };
 		0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryReader.swift; sourceTree = "<group>"; };
 		16E8286BDB0C5E6AF90B6498 /* AirAssistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -139,6 +145,7 @@
 		33E14DCBD5EA4C7C5865E92A /* MenuBarIconRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIconRenderer.swift; sourceTree = "<group>"; };
 		3BFBE657DCEA969D7AC725E8 /* ProcessSnapshotPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessSnapshotPublisher.swift; sourceTree = "<group>"; };
 		3C357D4E2F6011390B682767 /* BatteryAwareMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryAwareMode.swift; sourceTree = "<group>"; };
+		3EAD7FCA44F3E19EC9BC2BAD /* LaunchAtLoginService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginService.swift; sourceTree = "<group>"; };
 		43403D677D51F2FAC26B14EA /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		4375982E8251576076415A73 /* SIGCONTFailureAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIGCONTFailureAlert.swift; sourceTree = "<group>"; };
 		4629A6D06B14E1E69D71A6E0 /* AppIcon-composed.svg */ = {isa = PBXFileReference; path = "AppIcon-composed.svg"; sourceTree = "<group>"; };
@@ -150,6 +157,7 @@
 		573E0D36375389574C26D88F /* ThrottlingPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottlingPrefsView.swift; sourceTree = "<group>"; };
 		586DB3B79D410ED45D4B6B80 /* AppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntents.swift; sourceTree = "<group>"; };
 		58CA07BBE53129D2A34A1589 /* Sensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sensor.swift; sourceTree = "<group>"; };
+		593A4CFD558F099804B37A98 /* MetricKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetricKit.framework; path = System/Library/Frameworks/MetricKit.framework; sourceTree = SDKROOT; };
 		5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleScheduleTests.swift; sourceTree = "<group>"; };
 		5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPrefsView.swift; sourceTree = "<group>"; };
 		5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitSensorReader.swift; sourceTree = "<group>"; };
@@ -207,6 +215,7 @@
 		F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayAwakeService.swift; sourceTree = "<group>"; };
 		FAE7B1E9B83D8BC64EA57633 /* IOKitBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOKitBridge.h; sourceTree = "<group>"; };
 		FB12A736A62BA39A609E7C19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FD32BF366F8E6D8B74D4EAB5 /* MetricKitReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricKitReporter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -217,6 +226,8 @@
 				704A38ED1043918BE5782CD2 /* IOKit.framework in Frameworks */,
 				EBE6C2163E1F9171F1E8F87E /* ServiceManagement.framework in Frameworks */,
 				DE977BF95BCAEC213B071E1B /* AppIntents.framework in Frameworks */,
+				C4793AB490B9ED1DF6CAE031 /* MetricKit.framework in Frameworks */,
+				B26180C3CE1796E04201A4D4 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,6 +266,7 @@
 			children = (
 				4B8F67C6B8D8B0CD7E191D3E /* AppIntents.framework */,
 				22B8A97982FB78D94D328FDB /* IOKit.framework */,
+				593A4CFD558F099804B37A98 /* MetricKit.framework */,
 				738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */,
 			);
 			name = Frameworks;
@@ -390,7 +402,9 @@
 				F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */,
 				0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */,
 				5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */,
+				3EAD7FCA44F3E19EC9BC2BAD /* LaunchAtLoginService.swift */,
 				94E3121354051F583FCBB426 /* MemoryWatchdog.swift */,
+				FD32BF366F8E6D8B74D4EAB5 /* MetricKitReporter.swift */,
 				6E9A77B36585950274F5A0C6 /* OnboardingWindow.swift */,
 				BEE7645B03DAEDE64CB56215 /* ProcessInspector.swift */,
 				3BFBE657DCEA969D7AC725E8 /* ProcessSnapshotPublisher.swift */,
@@ -403,6 +417,7 @@
 				F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */,
 				730102034F0141285957EA50 /* ThermalGovernor.swift */,
 				9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */,
+				0C970827BF50EE6FAF9CE8CA /* UpdateService.swift */,
 				EB3CE8E0F5867CC85E9AF30C /* URLSchemeHandler.swift */,
 				81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */,
 			);
@@ -483,6 +498,7 @@
 			);
 			name = AirAssist;
 			packageProductDependencies = (
+				7FE638BD3EBDB588B7913198 /* Sparkle */,
 			);
 			productName = AirAssist;
 			productReference = 1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */;
@@ -579,6 +595,9 @@
 			);
 			mainGroup = 2E24B3DBCD6DB64E93F0D5EE;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3AD541AC01A3321F4FEB4336 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E475C39220847B2C421D62B4 /* Products */;
 			projectDirPath = "";
@@ -706,6 +725,7 @@
 				C43FB882937BC5D2E7FACF2B /* HistoryReader.swift in Sources */,
 				FAB74801EE74233DE341FF9C /* HistoryView.swift in Sources */,
 				2E8787E468BA9D77080343A2 /* IOKitSensorReader.swift in Sources */,
+				99CCB4C7F83F69F150A2594D /* LaunchAtLoginService.swift in Sources */,
 				BCCAB1901E878170437146FF /* MemoryWatchdog.swift in Sources */,
 				C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */,
 				A5B74A36D44F389797534E71 /* MenuBarIconRenderer.swift in Sources */,
@@ -713,6 +733,7 @@
 				669F7ADA3EFC37AAD09B3AD2 /* MenuBarPrefs.swift in Sources */,
 				1A0F0707769B5E1104E65551 /* MenuBarPrefsView.swift in Sources */,
 				2C02FDC905DF81A8091E7AD3 /* MenuBarQuickMenu.swift in Sources */,
+				952832FB8387EBCEF926C744 /* MetricKitReporter.swift in Sources */,
 				E1372B68907BA9810AF17D34 /* OnboardingWindow.swift in Sources */,
 				24F6786F7227631D1C081DF9 /* PreferencesView.swift in Sources */,
 				1D99B043A174F61732F796F8 /* PreferencesWindowController.swift in Sources */,
@@ -742,6 +763,7 @@
 				8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */,
 				81EF92D16FD31086423E4B99 /* URLSchemeHandler+Debug.swift in Sources */,
 				D409F8F956BAF02BB00A41B5 /* URLSchemeHandler.swift in Sources */,
+				013379CDC05A0E33F89DFC0D /* UpdateService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1178,6 +1200,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3AD541AC01A3321F4FEB4336 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7FE638BD3EBDB588B7913198 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3AD541AC01A3321F4FEB4336 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F33C39F33672A17BC2A1E0D9 /* Project object */;
 }

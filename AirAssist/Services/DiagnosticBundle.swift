@@ -82,6 +82,10 @@ enum DiagnosticBundle {
         // bug reports are often "my app froze and I don't know why"
         // — without these, triage is blind.
         try copyRecentCrashLogs(to: stage.appendingPathComponent("crashlogs"))
+        // Tier 2: include MetricKit payloads. These cover hangs that the
+        // crash-reporter directory never has, plus structured JSON for
+        // crashes that's easier to parse than `.ips`.
+        try copyMetricKitPayloads(to: stage.appendingPathComponent("metrickit"))
         try writeReadme(to: stage.appendingPathComponent("README.txt"))
 
         // Remove any pre-existing file at destination — NSSavePanel already
@@ -272,6 +276,27 @@ enum DiagnosticBundle {
         }
     }
 
+    /// Copy any MetricKit payloads written by `MetricKitReporter` into the
+    /// bundle. Silent on missing directory (expected before any payload
+    /// has been delivered — MetricKit only fires on the launch *after*
+    /// the event).
+    private static func copyMetricKitPayloads(to destDir: URL) throws {
+        let fm = FileManager.default
+        let src = MetricKitReporter.storageDirectory
+        guard fm.fileExists(atPath: src.path) else { return }
+        let contents = (try? fm.contentsOfDirectory(
+            at: src,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        )) ?? []
+        guard !contents.isEmpty else { return }
+        try fm.createDirectory(at: destDir, withIntermediateDirectories: true)
+        for url in contents {
+            let dest = destDir.appendingPathComponent(url.lastPathComponent)
+            try? fm.copyItem(at: url, to: dest)
+        }
+    }
+
     private static func writeReadme(to url: URL) throws {
         let body = """
         Air Assist diagnostic bundle
@@ -289,6 +314,11 @@ enum DiagnosticBundle {
                                    7 days (.ips / .crash), copied from
                                    ~/Library/Logs/DiagnosticReports — empty
                                    or absent if no crashes recorded
+          metrickit/               structured JSON diagnostic payloads from
+                                   MetricKit — crashes, hangs, CPU exceptions.
+                                   Easier to parse than .ips and includes
+                                   hang telemetry the crashlog directory
+                                   doesn't capture
 
         Privacy note. Air Assist never uploads this file. It was written
         locally to the path you chose. Before attaching to a public issue

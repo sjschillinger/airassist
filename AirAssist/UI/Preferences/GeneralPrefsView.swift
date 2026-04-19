@@ -216,11 +216,14 @@ struct GeneralPrefsView: View {
         }
         .formStyle(.grouped)
         .onAppear {
-            loginStatus = SMAppService.mainApp.status
+            loginStatus = LaunchAtLoginService.shared.status
             hotkeyEnabled = GlobalHotkeyService.shared.isEnabled
             batteryAwareEnabled = store.batteryAware.isEnabled
             batteryAwareOnBattery = store.batteryAware.onBatteryPreset
             batteryAwareOnPowered = store.batteryAware.onPoweredPreset
+            // Re-read status on every appearance so the toggle reflects
+            // out-of-band changes the user made in System Settings.
+            LaunchAtLoginService.shared.refresh()
         }
     }
 
@@ -288,17 +291,11 @@ struct GeneralPrefsView: View {
         Binding(
             get: { loginStatus == .enabled },
             set: { enable in
-                do {
-                    if enable {
-                        try SMAppService.mainApp.register()
-                    } else {
-                        try SMAppService.mainApp.unregister()
-                    }
-                    loginStatus = SMAppService.mainApp.status
-                } catch {
-                    // Silently fails in debug builds run from DerivedData
-                    loginStatus = SMAppService.mainApp.status
-                }
+                // Route through LaunchAtLoginService so errors surface to the
+                // user and `.requiresApproval` opens System Settings. The
+                // service updates `loginStatus` via the observer registered
+                // in `.onAppear`.
+                loginStatus = LaunchAtLoginService.shared.setEnabled(enable)
             }
         )
     }

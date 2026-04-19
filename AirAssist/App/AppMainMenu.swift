@@ -39,6 +39,19 @@ enum AppMainMenu {
             action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
             keyEquivalent: ""
         ))
+
+        // "Check for Updates…" (Sparkle). Only installed when the build
+        // has a configured feed URL + public EdDSA key — see UpdateService
+        // for the gate. Hiding the item on unconfigured builds keeps us
+        // from advertising a feature that can't deliver.
+        if UpdateService.shouldShowMenuItem {
+            appMenu.addItem(NSMenuItem(
+                title: "Check for Updates…",
+                action: #selector(AppDelegate.checkForUpdatesFromMenu(_:)),
+                keyEquivalent: ""
+            ))
+        }
+
         appMenu.addItem(.separator())
 
         // Routed through AppDelegate (which owns the shared store).

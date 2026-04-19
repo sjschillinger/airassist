@@ -49,6 +49,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // pids frozen. Idempotent across relaunches; failure is non-fatal.
         RescueAgentRegistrar.registerIfNeeded()
 
+        // Tier 2: subscribe to MetricKit BEFORE any heavy work starts, so
+        // the subscriber is installed by the time macOS delivers the
+        // previous launch's diagnostic payload (delivery happens early in
+        // app lifecycle — miss it here and the payload is lost for good).
+        MetricKitReporter.shared.start()
+
+        // Tier 2: start Sparkle updater if the build is configured for
+        // updates (SUFeedURL + SUPublicEDKey populated, Developer ID
+        // signed). Personal / ad-hoc builds no-op silently — see
+        // UpdateService for the gate.
+        UpdateService.shared.startIfConfigured()
+
         // Minimal main menu (#41 keyboard-nav) — gives ⌘W / ⌘Q / ⌘,
         // and the standard Edit shortcuts on any key window.
         AppMainMenu.install()
@@ -158,11 +170,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DiagnosticBundle.exportInteractively(store: store)
     }
 
+    /// Action target for the "Check for Updates…" app-menu item. Installed
+    /// by `AppMainMenu.install()` only when `UpdateService.shouldShowMenuItem`
+    /// is true (the build has a configured feed + public key).
+    @MainActor
+    @objc func checkForUpdatesFromMenu(_ sender: Any?) {
+        UpdateService.shared.checkForUpdates(sender)
+    }
+
     @MainActor
     func applicationWillTerminate(_ notification: Notification) {
         GlobalHotkeyService.shared.stop()
         memoryWatchdog?.stop()
         memoryWatchdog = nil
+        MetricKitReporter.shared.stop()
         store.stop()
         menuBarController?.teardown()
         menuBarController = nil
