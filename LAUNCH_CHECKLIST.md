@@ -272,11 +272,17 @@ earlier entries — cross-references in parens.
 
 1. #16 / #17 Safety audit (watchdog + `T`-state verification)
 2. #39 Onboarding sheet
-3. #1 Notarize decision (stay free-tier or enroll)
-4. TODO_USER placeholder sweep
+3. #29 Name / trademark check (before we build public-repo mindshare
+   around a name that might have to change)
+4. TODO_USER placeholder sweep + create public `homebrew-airassist` repo
 5. #10 README screenshots (light + dark menu bar)
 
 Everything else slips to 0.1.1 without shame.
+
+**Note on notarization:** not in the top-5. The free-tier Homebrew cask
+pipeline (ad-hoc signed zip + `xattr -cr` on install) sidesteps
+Gatekeeper without requiring the $99/yr Apple Developer Program. See #1
+and `docs/releasing.md`. Revisit only if we enroll before 1.0.
 
 ---
 
