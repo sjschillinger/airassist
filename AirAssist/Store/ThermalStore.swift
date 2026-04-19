@@ -152,6 +152,13 @@ final class ThermalStore {
     func start() {
         safety.startWatchdog()
         frontmostObserver.start()
+        // Apply the user's saved poll interval before starting the service
+        // so the first poll respects the preference. UserDefaults.object(...)
+        // distinguishes "never set" (→ use SensorService's 1s default) from
+        // "explicitly set to some value".
+        if let saved = UserDefaults.standard.object(forKey: "updateInterval") as? Double {
+            sensorService.pollIntervalSeconds = saved
+        }
         sensorService.start()
         logger.pruneOldEntries()
         logTask = Task { @MainActor [weak self] in

@@ -5,7 +5,7 @@ struct GeneralPrefsView: View {
     @Bindable var store: ThermalStore
 
     @AppStorage("showDockIcon")    private var showDockIcon: Bool   = false
-    @AppStorage("updateInterval")  private var updateInterval: Double = 2.0
+    @AppStorage("updateInterval")  private var updateInterval: Double = 1.0
 
     // Stay Awake — stored as two halves so UserDefaults stays forward-
     // compatible if we add more mode variants. `stayAwake.mode` is the
