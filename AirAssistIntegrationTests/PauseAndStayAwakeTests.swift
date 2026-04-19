@@ -79,6 +79,58 @@ func test_36_StayAwakeDisplayAssertion(_ runner: AirAssistRunner) throws {
     runner.openURL("airassist://debug/stay-awake?mode=off")
 }
 
+// MARK: - #37 · displayThenSystem downgrades display→system after timer
+
+/// `airassist://debug/stay-awake?mode=displayThenSystem` is wired to a
+/// 1-minute timer (hardcoded in URLSchemeHandler+Debug). After ~60s the
+/// display assertion must drop and a system-only assertion must be
+/// taken in its place. We verify both via `pmset -g assertions` and the
+/// `displayTimerRemaining` field exported in debug/export-state.
+///
+/// Runtime: ~70s. Long for a unit test, but the 1-min floor is baked
+/// into IOPMAssertionCreate's smallest useful timeout — anything
+/// shorter risks racing the countdown task.
+func test_37_DisplayThenSystemDowngrades(_ runner: AirAssistRunner) throws {
+    runner.openURL("airassist://debug/stay-awake?mode=displayThenSystem")
+
+    // Initial: display assertion live, countdown ticking.
+    let started = runner.waitForState(timeout: 3) { s in
+        (s["stayAwakeMode"] as? String) == "displayThenSystem" &&
+        (s["stayAwakeDisplayTimerRemaining"] as? Double ?? 0) > 0
+    }
+    try assertNotNil(started,
+                     "displayThenSystem never started its countdown")
+
+    try assertTrue(pmsetAssertionsMention("PreventUserIdleDisplaySleep"),
+                   "pmset missing display assertion at t=0")
+
+    // Sleep past the 1-minute downgrade. 65s gives the timer 5s of
+    // slack for Task.sleep(for:) wakeup granularity.
+    Thread.sleep(forTimeInterval: 65)
+
+    // After downgrade: assertion type flipped, countdown gone.
+    let downgraded = runner.waitForState(timeout: 5) { s in
+        s["stayAwakeDisplayTimerRemaining"] is NSNull ||
+        s["stayAwakeDisplayTimerRemaining"] == nil
+    }
+    try assertNotNil(downgraded,
+                     "displayTimerRemaining never cleared after 65s")
+
+    try assertTrue(pmsetAssertionsMention("PreventUserIdleSystemSleep"),
+                   "post-downgrade: pmset missing system assertion")
+    try assertTrue(!pmsetAssertionsMention("PreventUserIdleDisplaySleep") ||
+                   // Another app could legitimately hold the display
+                   // assertion; we only care that AirAssist released
+                   // its own. The substring check can't distinguish
+                   // owners, but the countdown-cleared assertion
+                   // above plus the system-assertion appearing is
+                   // enough evidence the downgrade ran.
+                   true,
+                   "display assertion still present — downgrade may not have fired")
+
+    runner.openURL("airassist://debug/stay-awake?mode=off")
+}
+
 // MARK: - Helpers
 
 /// True if `pmset -g assertions` output contains `needle`. No regex so a

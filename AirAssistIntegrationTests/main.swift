@@ -36,6 +36,7 @@ let allTests: [(String, TestFn)] = [
     ("test_36_StayAwakeSystemAssertionRegistersWithPMSet",
         test_36_StayAwakeSystemAssertionRegistersWithPMSet),
     ("test_36_StayAwakeDisplayAssertion",            test_36_StayAwakeDisplayAssertion),
+    ("test_37_DisplayThenSystemDowngrades",          test_37_DisplayThenSystemDowngrades),
 ]
 
 // MARK: - Arg parsing
@@ -81,7 +82,7 @@ for (name, fn) in selected {
         // Stay-Awake tests need an off-reset even if they fail midway, so
         // the IOPMAssertion doesn't leak into the next test.
         defer {
-            if name.hasPrefix("test_36_") {
+            if name.hasPrefix("test_36_") || name.hasPrefix("test_37_") {
                 runner.openURL("airassist://debug/stay-awake?mode=off")
             }
             runner.tearDown()

@@ -137,6 +137,10 @@ enum URLSchemeDebugHandler {
             "rulesEngineEnabled": rulesCfg.enabled,
             "rules":             rules,
             "stayAwakeMode":     stayAwakeTag(store.stayAwake.currentMode),
+            // Use NSNull for the "no timer" case — JSONSerialization balks
+            // at bare Swift Optionals even cast to Any.
+            "stayAwakeDisplayTimerRemaining":
+                (store.stayAwake.displayTimerRemaining as Any?) ?? NSNull(),
         ]
         if let data = try? JSONSerialization.data(
             withJSONObject: state,
