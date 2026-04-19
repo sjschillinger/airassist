@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		07DEAE60DE866AE450B0D168 /* SensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05664AF6DD35210D50D4D873 /* SensorService.swift */; };
+		09BFDA5470EAD62D85A3E335 /* DiagnosticBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F43EF95D16B0D67D0FD9028 /* DiagnosticBundle.swift */; };
 		0A04AF5B11A0831917ADD356 /* SensorListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B85179E897A875693EE50AD /* SensorListView.swift */; };
 		0F4EDC318F405B7E520BF6C5 /* FrontmostAppObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E79F9D9CEB95EE90B4F21 /* FrontmostAppObserver.swift */; };
 		133CBE6FAE9AA07D61B348B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0C523C9176A233CA7DDF721 /* Assets.xcassets */; };
@@ -111,6 +112,7 @@
 		68ECE41B669EE247996A79BF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		6D27DC050DA4ABA3EB9D1484 /* URLSchemeHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandlerTests.swift; sourceTree = "<group>"; };
 		6E9A77B36585950274F5A0C6 /* OnboardingWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindow.swift; sourceTree = "<group>"; };
+		6F43EF95D16B0D67D0FD9028 /* DiagnosticBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticBundle.swift; sourceTree = "<group>"; };
 		730102034F0141285957EA50 /* ThermalGovernor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalGovernor.swift; sourceTree = "<group>"; };
 		73665E744DF97F6A87703F65 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
@@ -288,6 +290,7 @@
 			children = (
 				586DB3B79D410ED45D4B6B80 /* AppIntents.swift */,
 				3C357D4E2F6011390B682767 /* BatteryAwareMode.swift */,
+				6F43EF95D16B0D67D0FD9028 /* DiagnosticBundle.swift */,
 				E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */,
 				F39D53AA5D34F3BF9DC08F9F /* FirstRunDisclosure.swift */,
 				BF7E79F9D9CEB95EE90B4F21 /* FrontmostAppObserver.swift */,
@@ -455,6 +458,7 @@
 				EB79F540BA6F71D092CAA211 /* DashboardContainerView.swift in Sources */,
 				96364AA71968BC08B8C14C16 /* DashboardView.swift in Sources */,
 				3C53C4BE5E248A344EB5EFBF /* DashboardWindowController.swift in Sources */,
+				09BFDA5470EAD62D85A3E335 /* DiagnosticBundle.swift in Sources */,
 				8B1F31EC477E96E3DD53D9EB /* FirstLaunchSeeder.swift in Sources */,
 				C3AA7A3ED6914DB08A2F9D26 /* FirstRunDisclosure.swift in Sources */,
 				0F4EDC318F405B7E520BF6C5 /* FrontmostAppObserver.swift in Sources */,

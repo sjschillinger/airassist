@@ -56,9 +56,11 @@ struct GeneralPrefsView: View {
                     LabeledContent("Pause for") {
                         HStack(spacing: 6) {
                             Button("15 min")         { store.pauseThrottling(for: 15 * 60) }
+                                .help("Release every throttled PID and hold off for 15 minutes. Governor and rules resume automatically when the timer expires.")
                             Button("1 hour")         { store.pauseThrottling(for: 60 * 60) }
                             Button("4 hours")        { store.pauseThrottling(for: 4 * 60 * 60) }
                             Button("Until quit")     { store.pauseThrottling(for: nil) }
+                                .help("Pause indefinitely — until you click Resume, or relaunch the app.")
                         }
                         .controlSize(.small)
                     }
@@ -72,8 +74,11 @@ struct GeneralPrefsView: View {
                     Picker("", selection: stayAwakeModeBinding) {
                         Text("Off").tag(StayAwakeMode.off)
                         Text("Keep system awake").tag(StayAwakeMode.system)
+                            .help("Prevents idle sleep. Display follows its normal schedule. Like `caffeinate -i`.")
                         Text("Keep system & display awake").tag(StayAwakeMode.display)
+                            .help("Prevents both system and display sleep. Like `caffeinate -id`.")
                         Text("Display on, then system only").tag(StayAwakeMode.displayThenSystem)
+                            .help("Holds the display awake for the configured minutes, then lets it sleep while the system itself stays up for background work.")
                     }
                     .labelsHidden()
                     .frame(width: 260)
@@ -123,6 +128,16 @@ struct GeneralPrefsView: View {
                     .labelsHidden()
                     .frame(width: 120)
                 }
+            }
+
+            Section("Support") {
+                LabeledContent("Diagnostics") {
+                    Button("Export Diagnostic Bundle…") {
+                        DiagnosticBundle.exportInteractively(store: store)
+                    }
+                }
+                Text("Bundles your current configuration, live throttle state, and recent thermal history into a single .zip you can attach to a GitHub issue. Nothing is uploaded — the file is saved locally.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
