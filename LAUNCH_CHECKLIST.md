@@ -29,7 +29,6 @@ verification pass plus logistics. Grouped:
  - #48 TSan 30-min run
  - #49 Leaks 1-hour run
  - #50 Perf at 1000+ PIDs
- - #10 Menu-bar icon legibility in light + dark
 
 **Launch-day logistics (not code):**
  - #33 Notarization dry-run with the IOKit entitlement
@@ -38,7 +37,7 @@ verification pass plus logistics. Grouped:
  - Replace `TODO_USER` placeholders everywhere
 
 **Explicitly deferred / accepted:**
- - #9 Icon modernization pass (ship-acceptable; revisit pre-1.0)
+ - #9 / #10 Icon and menu-bar legibility — accepted as shipping
  - Broader governor/engine unit coverage beyond current safety paths
 
 ---
@@ -131,14 +130,12 @@ scope" for what we're explicitly saying no to.
   with >5 sensors on first sight; shows hottest value + count when
   collapsed. User collapse/expand choices persist across launches.
   Resolved this session.
-- [~] **#9 App icon quality check** — bespoke, not placeholder, but
-  dated. Thermometer + air-flow metaphor on a blue→red gradient. Uses
-  glossy top highlight (Big Sur+ moved to matte). Ship-acceptable for
-  0.1.0; consider a modernization pass (matte finish, subtle depth,
-  drop the glossy highlight) or a paid designer before 1.0.
-- [ ] **#10 Menu bar icon legibility (light + dark menu bar)**
-  - Screenshot on light wallpaper + dark wallpaper
-  - Pulse minAlpha 0.35 may wash out on light bars
+- [x] **#9 App icon** — accepted as shipping (owner call, 2026-04-18).
+  Thermometer + air-flow metaphor on a blue→red gradient. No
+  modernization pass planned for v1.0.
+- [x] **#10 Menu bar icon legibility** — accepted as shipping
+  (owner call, 2026-04-18). Light/dark screenshot pass deferred
+  indefinitely; revisit only if a user reports it's unreadable.
 - [x] **#11 First-launch experience** — `FirstLaunchSeeder` runs once
   after initial sensor discovery. Hides `CPU Die 5..N` + the `Other`
   category (PMIC/rails) by default; keeps SoC, GPU, Battery, Storage,
