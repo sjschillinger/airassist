@@ -31,8 +31,11 @@ enum OnboardingWindow {
     /// Explicit open (from a future "Show welcome again" menu entry).
     static func present(store: ThermalStore, markSeen: Bool) {
         if let wc = windowController, let w = wc.window {
-            w.makeKeyAndOrderFront(nil)
+            // Activate first so the window actually comes to the front
+            // on an LSUIElement app — see PreferencesWindowController
+            // for rationale.
             NSApp.activate(ignoringOtherApps: true)
+            w.makeKeyAndOrderFront(nil)
             return
         }
         let view = OnboardingView(store: store, onDone: {
@@ -54,8 +57,8 @@ enum OnboardingWindow {
         window.isReleasedWhenClosed = false
         window.center()
         let wc = NSWindowController(window: window)
-        wc.showWindow(nil)
         NSApp.activate(ignoringOtherApps: true)
+        wc.showWindow(nil)
         windowController = wc
     }
 }

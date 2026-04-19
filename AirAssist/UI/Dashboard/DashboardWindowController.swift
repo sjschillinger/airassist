@@ -36,7 +36,9 @@ final class DashboardWindowController: NSWindowController {
            UserDefaults.standard.string(forKey: "NSWindow Frame AirAssist.Dashboard") == nil {
             window?.center()
         }
-        showWindow(nil)
+        // Activate BEFORE showing — see PreferencesWindowController.show()
+        // for rationale.
         NSApp.activate(ignoringOtherApps: true)
+        showWindow(nil)
     }
 }

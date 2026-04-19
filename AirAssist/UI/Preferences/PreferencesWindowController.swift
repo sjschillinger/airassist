@@ -38,7 +38,12 @@ final class PreferencesWindowController: NSWindowController {
            UserDefaults.standard.string(forKey: "NSWindow Frame AirAssist.Preferences") == nil {
             window?.center()
         }
-        showWindow(nil)
+        // Activate BEFORE showing — for LSUIElement apps, doing this
+        // in the other order can leave the window behind whatever app
+        // currently holds focus. Not a bug we've hit in the wild, but
+        // the skill reference flags it as a known pattern and costs
+        // nothing to get right.
         NSApp.activate(ignoringOtherApps: true)
+        showWindow(nil)
     }
 }
