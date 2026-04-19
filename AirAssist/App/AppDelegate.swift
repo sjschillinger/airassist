@@ -43,6 +43,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SafetyCoordinator.recoverOnLaunch()
         SafetyCoordinator.installSignalHandlers()
 
+        // Tier 1: register the bundled rescue LaunchAgent so
+        // `airassist-rescue` runs once per login even if the app itself is
+        // never re-opened. Defense in depth against crashes that leave
+        // pids frozen. Idempotent across relaunches; failure is non-fatal.
+        RescueAgentRegistrar.registerIfNeeded()
+
         // Minimal main menu (#41 keyboard-nav) — gives ⌘W / ⌘Q / ⌘,
         // and the standard Edit shortcuts on any key window.
         AppMainMenu.install()

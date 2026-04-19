@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    Air Assist rescue agent.
+
+    Runs `airassist-rescue` once at login. That binary reads any
+    inflight.json left behind by a previous crashed session and
+    SIGCONTs every pid listed there, closing the window where an
+    ungraceful AirAssist exit would leave the user's processes frozen
+    until they manually relaunch the app.
+
+    Registered dynamically by the app at first launch via
+    SMAppService.agent(plistName:), which loads this plist from
+    Contents/Library/LaunchAgents/ of the signed app bundle. The
+    user can disable it at any time via System Settings → General →
+    Login Items & Extensions → Open at Login.
+
+    `BundleProgram` resolves to the airassist-rescue executable inside
+    the *same* .app bundle, so the agent always calls the copy that
+    shipped with the currently-installed app — never a stale path
+    from a deleted previous version.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.sjschillinger.airassist.rescue</string>
+    <key>BundleProgram</key>
+    <string>Contents/MacOS/airassist-rescue</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/airassist-rescue.log</string>
+    <key>StandardOutPath</key>
+    <string>/tmp/airassist-rescue.log</string>
+</dict>
+</plist>

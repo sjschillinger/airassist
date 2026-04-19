@@ -17,6 +17,7 @@ schemes:
       targets:
         AirAssist: all
         AirAssistIntegrationRunner: all
+        AirAssistRescue: all
     test:
       targets:
         - AirAssistTests
@@ -135,6 +136,27 @@ targets:
         SWIFT_STRICT_CONCURRENCY: minimal
         TEST_TARGET_NAME: AirAssist
 
+  AirAssistRescue:
+    # Tiny standalone CLI (~30KB) that SIGCONTs every pid in
+    # ~/Library/Application Support/AirAssist/inflight.json. Bundled at
+    # Contents/MacOS/airassist-rescue in the app and wired to a LaunchAgent
+    # (Contents/Library/LaunchAgents/com.sjschillinger.airassist.rescue.plist)
+    # that runs it once per login. Catches the case where AirAssist
+    # crashed with processes SIGSTOP'd and the user never relaunched.
+    # See AirAssistRescue/main.swift for the rationale.
+    type: tool
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistRescue
+    settings:
+      base:
+        PRODUCT_NAME: airassist-rescue
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        SKIP_INSTALL: NO
+        INSTALL_PATH: "$(LOCAL_LIBRARY_DIR)/AirAssistRescue"
+
   AirAssist:
     type: application
     platform: macOS
@@ -143,12 +165,57 @@ targets:
       - path: AirAssist
         excludes:
           - "**/.DS_Store"
+          - "Resources/LaunchAgents/**"
+          # LaunchAgents plist is copied into Contents/Library/LaunchAgents/
+          # by the post-compile script below, not Contents/Resources/.
     resources:
       - path: AirAssist/Assets.xcassets
     dependencies:
+      - target: AirAssistRescue
       - sdk: IOKit.framework
       - sdk: ServiceManagement.framework
       - sdk: AppIntents.framework
+    postCompileScripts:
+      - name: "Embed airassist-rescue into Contents/MacOS/"
+        # xcodegen's `embed: true` on a tool dependency doesn't land the
+        # binary in Contents/MacOS — it goes to Contents/Frameworks or
+        # nowhere at all depending on the phase. We need it at exactly
+        # Contents/MacOS/airassist-rescue because the LaunchAgent's
+        # `BundleProgram` key is hard-coded to that relative path (the
+        # plist ships signed inside the app bundle, so the path can't
+        # be a build-time template). Copy + re-sign via ad-hoc identity
+        # to keep the hardened runtime happy.
+        script: |
+          set -e
+          TOOL_SRC="${BUILT_PRODUCTS_DIR}/airassist-rescue"
+          TOOL_DEST="${CODESIGNING_FOLDER_PATH}/Contents/MacOS/airassist-rescue"
+          if [ ! -f "$TOOL_SRC" ]; then
+              echo "error: airassist-rescue not built at $TOOL_SRC" >&2
+              exit 1
+          fi
+          mkdir -p "$(dirname "$TOOL_DEST")"
+          cp -f "$TOOL_SRC" "$TOOL_DEST"
+          chmod +x "$TOOL_DEST"
+          # Ad-hoc signature so the hardened-runtime app can invoke it.
+          /usr/bin/codesign --force --sign - --preserve-metadata=entitlements "$TOOL_DEST" 2>/dev/null || \
+              /usr/bin/codesign --force --sign - "$TOOL_DEST"
+        outputFiles:
+          - "$(CODESIGNING_FOLDER_PATH)/Contents/MacOS/airassist-rescue"
+      - name: "Bundle LaunchAgent plist at Contents/Library/LaunchAgents/"
+        # SMAppService.agent(plistName:) reads from exactly this path
+        # inside the bundle. The plist is not a standard Resource —
+        # putting it in Contents/Resources/ makes SMAppService report
+        # `.notFound`, which silently disables the rescue agent.
+        script: |
+          set -e
+          SRC="${SRCROOT}/AirAssist/Resources/LaunchAgents/com.sjschillinger.airassist.rescue.plist"
+          DEST_DIR="${CODESIGNING_FOLDER_PATH}/Contents/Library/LaunchAgents"
+          mkdir -p "$DEST_DIR"
+          cp -f "$SRC" "$DEST_DIR/"
+        inputFiles:
+          - "$(SRCROOT)/AirAssist/Resources/LaunchAgents/com.sjschillinger.airassist.rescue.plist"
+        outputFiles:
+          - "$(CODESIGNING_FOLDER_PATH)/Contents/Library/LaunchAgents/com.sjschillinger.airassist.rescue.plist"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sjschillinger.airassist
