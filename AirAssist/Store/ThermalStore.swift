@@ -248,15 +248,29 @@ final class ThermalStore {
     /// Resolves a temperature from the two-part slot encoding stored in UserDefaults.
     /// - category: "none" | "highest" | "average" | "individual"
     /// - value:    "overall" | "all" | SensorCategory.rawValue | sensor.id
+    ///
+    /// Category-specific lookups fall back to hottest/average across all
+    /// enabled sensors when the requested category is empty. This matters
+    /// on hardware where `SensorCategorizer`'s heuristics didn't match any
+    /// names (future SoC rev, MacBook Neo) and every sensor landed in
+    /// `.other` — users with "Highest · CPU" as their default slot would
+    /// otherwise see a blank menu bar. The fallback keeps the slot useful
+    /// without silently lying: the highest-overall reading is still a
+    /// meaningful number, just not category-filtered.
     func temperature(category: String, value: String) -> Double? {
         switch category {
         case "highest":
             if value == "overall" { return enabledSensors.compactMap(\.currentValue).max() }
-            if let cat = SensorCategory(rawValue: value) { return highestTemp(in: cat) }
+            if let cat = SensorCategory(rawValue: value) {
+                return highestTemp(in: cat)
+                    ?? enabledSensors.compactMap(\.currentValue).max()
+            }
             return nil
         case "average":
             if value == "all" { return averageTemp() }
-            if let cat = SensorCategory(rawValue: value) { return averageTemp(in: cat) }
+            if let cat = SensorCategory(rawValue: value) {
+                return averageTemp(in: cat) ?? averageTemp()
+            }
             return nil
         case "individual":
             return enabledSensors.first { $0.id == value }?.currentValue
