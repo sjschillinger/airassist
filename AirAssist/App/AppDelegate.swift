@@ -9,6 +9,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     nonisolated(unsafe) private var memoryWatchdog: MemoryWatchdog?
 
     nonisolated static func main() {
+        // Single-instance guard. Two AirAssist instances racing on the same
+        // PIDs is catastrophic — both would fight over the inflight file and
+        // could SIGSTOP each other's targets with no coordination. If another
+        // instance is already running, bring it forward and exit silently.
+        //
+        // Using bundle-ID lookup rather than a lockfile means this self-heals
+        // across unclean terminations (no stale lock to clean up).
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.sjschillinger.airassist"
+        let myPID = ProcessInfo.processInfo.processIdentifier
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+            .filter { $0.processIdentifier != myPID }
+        if let existing = others.first {
+            existing.activate(options: [])
+            FileHandle.standardError.write(Data(
+                "AirAssist is already running (pid=\(existing.processIdentifier)); exiting.\n".utf8
+            ))
+            exit(0)
+        }
+
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate
@@ -66,6 +85,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// browser, Shortcuts, Raycast, a shell (`open airassist://pause`), etc.
     @MainActor
     func application(_ application: NSApplication, open urls: [URL]) {
+        // `application(_:open:)` can fire before `applicationDidFinishLaunching`
+        // on a cold launch triggered by `open airassist://...`. `store` is an
+        // IUO that crashes on unwrap if not yet assigned. Drop URLs that arrive
+        // early; the user can re-trigger them once the app is up.
+        guard store != nil else { return }
         for url in urls {
             URLSchemeHandler.handle(url, store: store)
         }

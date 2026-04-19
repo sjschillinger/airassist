@@ -150,14 +150,40 @@ final class ProcessThrottler {
             return
         }
 
-        // Spawn a new cycler with this source's request as the initial entry.
+        // SAFETY ORDERING — persist intent BEFORE spawning the cycler.
+        //
+        // The cycler may SIGSTOP this pid within its first ~1ms of dispatch.
+        // If we spawn the task first and write the inflight file second, a
+        // crash in that window leaves a process SIGSTOP'd with no record on
+        // disk — `recoverOnLaunch` won't SIGCONT it next launch, and the
+        // user's process is frozen forever. Publishing inflight first means
+        // the worst case is: we record a pid we never actually stopped →
+        // `recoverOnLaunch` sends a redundant SIGCONT to a running process,
+        // which is a no-op.
+        //
+        // We stage the Entry with a placeholder task, publish, then install
+        // the real cycler. Exit watcher is installed before the cycler runs
+        // so pid reuse cannot race us.
+        let placeholder = Task<Void, Never> { }
+        active[pid] = Entry(sources: [source: duty], name: name, task: placeholder)
+        installExitWatcher(pid: pid)
+        publishInflight() // <-- inflight file is fsync'd before cycler can SIGSTOP
+
         let task = Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
             await self.runCycle(pid: pid)
         }
-        active[pid] = Entry(sources: [source: duty], name: name, task: task)
-        installExitWatcher(pid: pid)
-        publishInflight()
+        // Replace the placeholder with the real cycler task. Cycler reads
+        // duty via `await MainActor.run { active[pid] }` so it won't start
+        // SIGSTOP'ing until this main-actor mutation has landed.
+        if var e = active[pid] {
+            e.task = task
+            active[pid] = e
+        } else {
+            // Released between publish and here (extremely rare main-actor
+            // reentrancy). Cancel the cycler we just spawned.
+            task.cancel()
+        }
     }
 
     /// Register a one-shot kqueue process source that fires the instant the
@@ -237,7 +263,7 @@ final class ProcessThrottler {
     func release(pid: pid_t) {
         guard let entry = active.removeValue(forKey: pid) else { return }
         entry.task.cancel()
-        _ = kill(pid, SIGCONT)
+        resumeWithRetry(pid: pid, name: entry.name)
         cancelExitWatcher(pid: pid)
         safety?.noteContinued(pid: pid)
         publishInflight()
@@ -245,17 +271,46 @@ final class ProcessThrottler {
 
     /// Release everything. Call on teardown / when the rule engine disables.
     func releaseAll() {
-        for (_, entry) in active {
-            entry.task.cancel()
-        }
-        for (pid, _) in active {
-            _ = kill(pid, SIGCONT)
-        }
+        // Snapshot before mutating so retry tasks capture stable pid/name
+        // pairs even if `active` is mutated by main-actor reentrancy mid-loop.
+        let snapshot = active.map { (pid: $0.key, name: $0.value.name, task: $0.value.task) }
+        for item in snapshot { item.task.cancel() }
         active.removeAll()
+        for item in snapshot {
+            resumeWithRetry(pid: item.pid, name: item.name)
+        }
         for (_, src) in exitWatchers { src.cancel() }
         exitWatchers.removeAll()
         safety?.resetStopTimestamps()
         publishInflight()
+    }
+
+    /// Send SIGCONT with retry on EPERM and user-visible alert on final
+    /// failure. ESRCH (process already gone) is not a failure. Any other
+    /// error gets up to 3 retries on a background task with 50ms spacing;
+    /// if all fail, surface an alert so the user knows a process may be
+    /// stuck in `T` state and has a one-click path to Activity Monitor.
+    ///
+    /// Silently accepting EPERM on SIGCONT was the single highest-severity
+    /// failure mode in the codebase: any sandbox/TCC regression = a
+    /// permanently-frozen user process with no feedback whatsoever.
+    private func resumeWithRetry(pid: pid_t, name: String) {
+        let immediate = kill(pid, SIGCONT)
+        if immediate == 0 { return }
+        let err = errno
+        if err == ESRCH { return }
+        // Retry on a detached task so we don't block the main actor.
+        Task.detached(priority: .utility) {
+            for _ in 0..<3 {
+                try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+                if kill(pid, SIGCONT) == 0 { return }
+                if errno == ESRCH { return }
+            }
+            let finalErrno = errno
+            await MainActor.run {
+                SIGCONTFailureAlert.report(pid: pid, name: name, errno: finalErrno)
+            }
+        }
     }
 
     /// Push the current set of throttled PIDs to the safety layer so the

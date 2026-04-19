@@ -75,7 +75,42 @@ final class SleepWakeObserver {
                 self.onDidWake()
             }
         }
-        tokens = [willSleep, didWake]
+
+        // Screen sleep = lid close with an external display attached
+        // (clamshell mode). On that path the system itself does NOT sleep,
+        // so `willSleepNotification` never fires — but the user's
+        // expectations still match sleep: no surprises, no frozen
+        // background processes. We treat it the same as system sleep:
+        // release all throttled pids, pause engines. `screensDidWake` is
+        // the inverse.
+        //
+        // The display can also sleep under other conditions (idle timer,
+        // Hot Corners, manual screen lock). Treating those as full-sleep
+        // is a tiny bit over-aggressive (a screen lock on battery keeps
+        // the machine running), but the failure mode is "throttle
+        // resumes 2s later than it could have" — strictly safer than
+        // "user's Chrome is frozen on the lock screen."
+        let screensSleep = center.addObserver(
+            forName: NSWorkspace.screensDidSleepNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            MainActor.assumeIsolated {
+                self.logger.info("screensDidSleep — releasing throttled PIDs (clamshell / lock)")
+                self.onWillSleep()
+            }
+        }
+        let screensWake = center.addObserver(
+            forName: NSWorkspace.screensDidWakeNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            MainActor.assumeIsolated {
+                self.logger.info("screensDidWake — resuming engines")
+                self.onDidWake()
+            }
+        }
+        tokens = [willSleep, didWake, screensSleep, screensWake]
     }
 
     func stop() {

@@ -1,5 +1,6 @@
 import Foundation
 import Darwin
+import os
 
 /// Safety layer for the SIGSTOP-based throttler. Three jobs:
 ///
@@ -12,12 +13,16 @@ import Darwin
 /// 2. **Signal handlers.** Install handlers for SIGTERM/SIGINT/SIGHUP/SIGQUIT
 ///    that synchronously SIGCONT every in-flight PID, then re-raise with the
 ///    default handler so the process exits normally. `kill(2)` is
-///    async-signal-safe; the inflight list lives in a C array specifically so
-///    the handler can read it without locking.
+///    async-signal-safe; the inflight list lives in a fixed-capacity C buffer
+///    specifically so the handler can read it without locking or allocation.
 ///
-/// 3. **Watchdog.** 1Hz main-actor task; if any PID has been continuously
-///    SIGSTOP'd for longer than `maxPauseMs` (default 500ms), force SIGCONT.
-///    Protects against a stuck cycler loop or runaway duty-cycle error.
+/// 3. **Watchdog.** ~4Hz **off-main-actor** task; if any PID has been
+///    continuously SIGSTOP'd for longer than `maxPauseMs` (default 1.5s),
+///    force SIGCONT. Runs on a detached task with its own unfair-lock-guarded
+///    timestamp store so a stalled main actor (the exact failure mode we're
+///    protecting against) cannot disable the safety net. Protects against a
+///    stuck cycler loop, runaway duty-cycle error, or UI hang that's keeping
+///    the main actor from ticking.
 ///
 /// Own-process-tree protection lives inline in `ProcessThrottler.setDuty`
 /// via `SafetyCoordinator.isAncestorOrSelf(pid:)`.
@@ -33,9 +38,15 @@ final class SafetyCoordinator {
     /// (Xcode Instruments attached, large sensor poll, etc.) and the
     /// cycler's `await MainActor.run` hops get delayed — forcing SIGCONT
     /// then wastes the cycle's stop phase.
-    static let watchdogMaxPauseMs: Int = 1_500
+    nonisolated static let watchdogMaxPauseMs: Int = 1_500
     /// Watchdog tick period.
-    static let watchdogTickMs: Int = 250
+    nonisolated static let watchdogTickMs: Int = 250
+
+    // Nonisolated so the detached watchdog task can call logger.error without
+    // a main-actor hop — the hop would defeat the purpose of this being
+    // off-main. Logger itself is Sendable.
+    nonisolated private static let logger = Logger(subsystem: "com.sjschillinger.airassist",
+                                                   category: "Safety")
 
     // MARK: - Dead-man's-switch file
 
@@ -59,7 +70,16 @@ final class SafetyCoordinator {
         var writtenAt: Date
     }
 
-    /// Called on every throttler mutation. Rewrites the inflight file.
+    /// Called on every throttler mutation. Rewrites the inflight file with
+    /// `fsync` semantics before updating the in-memory signal-handler buffer
+    /// so a crash between the two leaves behind a *safe* state: the file on
+    /// disk is already the authoritative record.
+    ///
+    /// Ordering is critical: we persist INTENT first, then update the runtime
+    /// structures. If we crash mid-write, `recoverOnLaunch` sees either the
+    /// old file (we un-freeze yesterday's pids — harmless: they've been gone
+    /// since reboot) or the new file (we un-freeze the pids we were about to
+    /// SIGSTOP — also harmless, they're in a run-slice anyway).
     static func writeInflight(pids: [pid_t]) {
         let url = inflightFileURL
         if pids.isEmpty {
@@ -69,27 +89,73 @@ final class SafetyCoordinator {
         }
         let rec = InflightRecord(pids: pids.map { Int32($0) }, writtenAt: Date())
         if let data = try? JSONEncoder().encode(rec) {
-            try? data.write(to: url, options: .atomic)
+            writeAtomicWithFsync(data: data, to: url)
         }
         updateSignalHandlerPIDs(pids)
     }
 
-    /// Call very early in app launch (before starting any throttler). Reads
-    /// the inflight file left by a previous session, SIGCONTs every PID,
-    /// then deletes the file. Safe to call if the file doesn't exist.
-    static func recoverOnLaunch() {
-        let url = inflightFileURL
-        guard let data = try? Data(contentsOf: url),
-              let rec  = try? JSONDecoder().decode(InflightRecord.self, from: data)
-        else {
-            try? FileManager.default.removeItem(at: url)
+    /// Atomic write + fsync. `Data.write(to:options:.atomic)` uses rename-atomic
+    /// which survives a crash between tmp-write and rename, but the tmp-write
+    /// itself is not guaranteed flushed to disk before rename — a kernel panic
+    /// within milliseconds of rename can leave the rename on disk but the file
+    /// contents empty. `fsync` closes that window.
+    private static func writeAtomicWithFsync(data: Data, to url: URL) {
+        let tmp = url.appendingPathExtension("tmp-\(UUID().uuidString.prefix(8))")
+        let path = tmp.path
+        let fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0o600)
+        guard fd >= 0 else {
+            // Fall back to non-fsync path rather than drop the write entirely.
+            try? data.write(to: url, options: .atomic)
             return
         }
-        for pid in rec.pids {
-            // kill() returns ESRCH if pid is gone — fine, move on.
-            _ = kill(pid_t(pid), SIGCONT)
+        defer { close(fd) }
+        let written = data.withUnsafeBytes { buf -> Int in
+            guard let base = buf.baseAddress else { return 0 }
+            return Darwin.write(fd, base, buf.count)
         }
-        try? FileManager.default.removeItem(at: url)
+        guard written == data.count else {
+            unlink(path)
+            return
+        }
+        _ = fsync(fd)
+        // Rename is atomic on HFS+/APFS.
+        _ = rename(path, url.path)
+    }
+
+    /// Call very early in app launch (before starting any throttler). Reads
+    /// the inflight file left by a previous session, SIGCONTs every PID,
+    /// then deletes the file.
+    ///
+    /// Hardened against corruption (empty file, truncated, wrong schema,
+    /// non-JSON garbage, wrong types for pids, absurd pid values). A junk
+    /// file must not crash the app or prevent launch — the file is removed
+    /// in every path so a bad file self-heals on the next boot.
+    static func recoverOnLaunch() {
+        let url = inflightFileURL
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        guard FileManager.default.fileExists(atPath: url.path),
+              let data = try? Data(contentsOf: url),
+              !data.isEmpty,
+              let rec = try? JSONDecoder().decode(InflightRecord.self, from: data)
+        else {
+            return
+        }
+        var recovered = 0
+        for raw in rec.pids {
+            // Reject absurd / malicious pid values before handing them to kill(2).
+            // pid_t is 32-bit signed; legitimate pids are 1…~99999 on Darwin.
+            guard raw > 1, raw < 1_000_000 else { continue }
+            let pid = pid_t(raw)
+            // kill() returns ESRCH if pid is gone — fine, move on. Don't
+            // race-check: by the time recoverOnLaunch runs, pid reuse would
+            // require something to have spawned *and* matched this pid in
+            // the microseconds since reboot, which is a corner of a corner.
+            if kill(pid, SIGCONT) == 0 { recovered += 1 }
+        }
+        if recovered > 0 || !rec.pids.isEmpty {
+            logger.info("recoverOnLaunch: released \(recovered) of \(rec.pids.count) pids from inflight file")
+        }
     }
 
     // MARK: - Signal handlers
@@ -107,26 +173,40 @@ final class SafetyCoordinator {
         }
     }
 
-    // MARK: - Watchdog
+    // MARK: - Watchdog (runs OFF main actor)
 
     private var watchdogTask: Task<Void, Never>?
-    private var stopTimestamps: [pid_t: Date] = [:]
+    /// Lock-protected stop-timestamp store. Lives outside the main actor so
+    /// the watchdog task can read it even when the main actor is hung — the
+    /// watchdog is the last line of defense against a main-actor hang that
+    /// leaves a process SIGSTOP'd, so it cannot itself depend on the main
+    /// actor being responsive.
+    nonisolated private let watchdogState = OSAllocatedUnfairLock<WatchdogState>(initialState: .init())
 
-    /// Report that the cycler just issued SIGSTOP for a pid. Called from
-    /// `ProcessThrottler` — updates the "last paused at" time used by the
-    /// watchdog.
-    func noteStopped(pid: pid_t) {
-        stopTimestamps[pid] = Date()
+    private struct WatchdogState {
+        var stopTimestamps: [pid_t: Date] = [:]
+    }
+
+    /// Report that the cycler just issued SIGSTOP for a pid. Nonisolated so
+    /// it can be called from the cycler's detached task directly (no main-actor
+    /// hop required), keeping the safety net honest when main is slow.
+    nonisolated func noteStopped(pid: pid_t) {
+        watchdogState.withLock { $0.stopTimestamps[pid] = Date() }
     }
 
     /// Report that the cycler just issued SIGCONT for a pid.
-    func noteContinued(pid: pid_t) {
-        stopTimestamps.removeValue(forKey: pid)
+    nonisolated func noteContinued(pid: pid_t) {
+        watchdogState.withLock { state in
+            state.stopTimestamps.removeValue(forKey: pid)
+            // ^ returns the removed Date, but we don't care about it.
+            // Explicitly discard so the lock's return value is Void.
+            return
+        }
     }
 
     /// Clear all stop timestamps (called on releaseAll).
-    func resetStopTimestamps() {
-        stopTimestamps.removeAll()
+    nonisolated func resetStopTimestamps() {
+        watchdogState.withLock { $0.stopTimestamps.removeAll() }
     }
 
     /// Called by `ProcessThrottler` after any mutation to the active set.
@@ -138,20 +218,31 @@ final class SafetyCoordinator {
 
     func startWatchdog() {
         watchdogTask?.cancel()
-        watchdogTask = Task { @MainActor [weak self] in
-            let period: UInt64 = UInt64(Self.watchdogTickMs) * 1_000_000
-            let limit = TimeInterval(Self.watchdogMaxPauseMs) / 1000.0
+        let state = watchdogState
+        let tickMs = Self.watchdogTickMs
+        let limit = TimeInterval(Self.watchdogMaxPauseMs) / 1000.0
+        // Detached, .utility QoS: does not inherit the main actor, does not
+        // yield cooperatively to main-actor-blocked code. The whole point of
+        // this task is to fire when main is stuck.
+        watchdogTask = Task.detached(priority: .utility) {
+            let period: UInt64 = UInt64(tickMs) * 1_000_000
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: period)
-                guard let self else { return }
                 let now = Date()
-                for (pid, stoppedAt) in self.stopTimestamps
-                where now.timeIntervalSince(stoppedAt) > limit {
-                    // Stuck — force-continue and forget. Cycler will re-stop
-                    // it on the next iteration if still applicable; meanwhile
-                    // the process is not locked up.
+                let stuck: [pid_t] = state.withLock { inner in
+                    let overdue = inner.stopTimestamps
+                        .filter { now.timeIntervalSince($0.value) > limit }
+                        .map(\.key)
+                    for pid in overdue { inner.stopTimestamps.removeValue(forKey: pid) }
+                    return overdue
+                }
+                for pid in stuck {
+                    // Force-continue and forget. Cycler will re-stop it on
+                    // the next iteration if still applicable; meanwhile the
+                    // process is not locked up. kill() is async-signal-safe
+                    // and does not require main-actor context.
                     _ = kill(pid, SIGCONT)
-                    self.stopTimestamps.removeValue(forKey: pid)
+                    Self.logger.error("watchdog force-SIGCONT pid=\(pid) (exceeded \(Self.watchdogMaxPauseMs)ms stop budget)")
                 }
             }
         }
@@ -193,20 +284,47 @@ final class SafetyCoordinator {
 // MARK: - C signal plumbing
 //
 // Signal handlers cannot call Swift methods or allocate. We keep the list of
-// in-flight PIDs in a plain C array updated from the main actor; the handler
-// just iterates and sends SIGCONT. `kill(2)` is async-signal-safe.
+// in-flight PIDs in a fixed-capacity heap buffer (allocated once at first
+// use, never reallocated) and a count. Writes are ordered so the handler
+// sees either the old or the new state but never a torn one:
+//
+//   * Shrinking (n < old): write count FIRST, then write new pids. Handler
+//     reads smaller count and iterates only slots we haven't touched yet.
+//   * Growing (n >= old):  write new pids FIRST, then write count. Handler
+//     either sees old count (skips new entries — safe) or new count (the
+//     new slots are already populated — also safe).
+//
+// The previous implementation used a Swift `Array<pid_t>` global, which can
+// be reallocated under ARC/COW; a signal firing mid-reallocation could read
+// a dangling buffer. A fixed heap buffer with direct pointer stores closes
+// that class of bug entirely.
 
 private let kInflightCapacity: Int = 256
-nonisolated(unsafe) private var gInflightPIDs  = [pid_t](repeating: 0, count: kInflightCapacity)
-nonisolated(unsafe) private var gInflightCount: Int = 0
+nonisolated(unsafe) private let gInflightPIDs: UnsafeMutablePointer<pid_t> = {
+    let p = UnsafeMutablePointer<pid_t>.allocate(capacity: kInflightCapacity)
+    p.initialize(repeating: 0, count: kInflightCapacity)
+    return p
+}()
+nonisolated(unsafe) private var gInflightCount: Int32 = 0
 
-/// Update the signal-handler-visible PID list. Runs on the main actor from
-/// `writeInflight`; the signal handler reads without locking (benign race —
-/// worst case we miss or double-send SIGCONT, both harmless).
+/// Update the signal-handler-visible PID list. Called from `writeInflight`
+/// on the main actor; the signal handler reads without locking.
 fileprivate func updateSignalHandlerPIDs(_ pids: [pid_t]) {
     let n = min(pids.count, kInflightCapacity)
-    for i in 0..<n { gInflightPIDs[i] = pids[i] }
-    gInflightCount = n
+    let old = Int(gInflightCount)
+    if n < old {
+        // Shrink: publish smaller count first, then rewrite slots. The
+        // handler won't read past the new count so stale data in slots
+        // [n..<old] is invisible.
+        gInflightCount = Int32(n)
+        for i in 0..<n { gInflightPIDs[i] = pids[i] }
+    } else {
+        // Grow / equal: fill slots first, publish count last. The handler
+        // sees either the old count (fewer pids, all still valid) or the
+        // new count (all new pids already in place).
+        for i in 0..<n { gInflightPIDs[i] = pids[i] }
+        gInflightCount = Int32(n)
+    }
 }
 
 /// C-compatible signal handler. Releases every pid then re-raises with
@@ -217,7 +335,10 @@ fileprivate func updateSignalHandlerPIDs(_ pids: [pid_t]) {
 /// calls.
 @_cdecl("airAssistSignalHandler")
 fileprivate func airAssistSignalHandler(_ sig: Int32) {
-    let count = gInflightCount
+    // Snapshot count once — if a concurrent writer bumps it after we read,
+    // we just miss the newly-added pid (which is also in-flight in the
+    // writer's Task.detached path and will be SIGCONT'd there on unwind).
+    let count = Int(gInflightCount)
     var i = 0
     while i < count && i < kInflightCapacity {
         _ = kill(gInflightPIDs[i], SIGCONT)

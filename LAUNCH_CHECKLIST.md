@@ -649,3 +649,27 @@ perf issue that needs architectural work.
   wrote `docs/releasing.md`, updated README install section.
 - ✅ Blocker batch (8 items): #2, #3, #4, #5, #11, #21, #29 search, #9
   inspection, publish allowlist extension.
+- ✅ **Tier 0 safety boundary hardening** (2026-04-19): watchdog moved
+  off the main actor onto a detached Task with `OSAllocatedUnfairLock`
+  so a main-actor hang cannot disable the safety net it's supposed to
+  protect against. Inflight dead-man's-switch file now written with
+  explicit `fsync` before the SIGSTOP cycler Task is spawned, closing
+  the window where a crash between "decided to stop" and "persisted
+  intent" would leave a process frozen forever. SIGCONT failures on
+  release now retry 3× on a background task and surface a one-click
+  "Open Activity Monitor" alert on final failure (was: silently
+  swallowed). Signal-handler pid list moved from a Swift
+  `Array<pid_t>` (reallocatable under ARC — risked dangling-buffer
+  reads from the handler) to a fixed-capacity heap buffer with
+  write-order-aware updates so the handler always observes either the
+  old or new state, never a torn one. Single-instance launch guard via
+  `NSRunningApplication` bundle-ID check (two throttlers racing over
+  the same pids = catastrophic). Force-unwraps removed from
+  `SensorCardView` sparkline (NaN-poison crash fix) and hardened
+  IOKit sensor path. Sensor readings outside `[-20°C, 125°C]` and
+  NaN/Inf values dropped at the source (a NaN reading otherwise
+  silently disabled the thermal protection since `NaN > threshold`
+  is always false). Clamshell / screen-sleep observers added to
+  `SleepWakeObserver` so lid-close-with-external-display releases
+  throttled pids the same as full system sleep. URL-scheme handler
+  guarded against cold-launch before `didFinishLaunching`.

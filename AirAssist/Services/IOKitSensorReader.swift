@@ -28,10 +28,26 @@ enum IOKitSensorReader {
     }
     private static let box = ClientBox()
 
+    /// Plausible temperature range for any AirAssist-tracked sensor.
+    /// Apple Silicon SMC / HID sensors read in Celsius; anything outside
+    /// this window is a driver hiccup, a NaN-propagating garbage read, or
+    /// a sensor that's physically impossible for a consumer Mac (LN2
+    /// cooling, datacenter failure). Filtering at the source prevents
+    /// these poison values from ever reaching the governor's comparisons,
+    /// the sparkline's min/max, or the on-disk history.
+    private static let minPlausibleC: Double = -20.0
+    private static let maxPlausibleC: Double = 125.0
+
     /// Call once at app startup (from SensorService.start) to create the persistent
     /// IOHIDEventSystemClient. Keeping a single long-lived client avoids the
     /// "[C:1] Error received: Connection interrupted." XPC noise that occurs when
     /// a new client is created and destroyed on every poll cycle.
+    ///
+    /// Note: `as!` to CoreFoundation types is compile-time-guaranteed by the
+    /// Swift compiler (CFTypeRef bridging to the concrete CF type is total),
+    /// so there is no runtime failure surface here. The real resilience
+    /// lives in `readAllSensors` where individual readings are filtered for
+    /// NaN/Inf/out-of-range before being returned.
     static func setup() {
         guard box.client == nil,
               let client = IOHIDEventSystemClientCreate(kCFAllocatorDefault) else { return }
@@ -39,11 +55,6 @@ enum IOKitSensorReader {
                                   "PrimaryUsage":     kUsage] as CFDictionary] as CFArray
         IOHIDEventSystemClientSetMatchingMultiple(client, matching)
         box.client = client
-        // Fetch services once — each holds a long-lived IOKit user-client connection.
-        // We reuse the same service refs on every poll to avoid XPC teardown spam.
-        // SDK 15 exposes IOHIDEventSystemClientCopyServices with a typed ref;
-        // force-cast is safe because our CFTypeRef was produced by the
-        // matching Create call.
         box.services = IOHIDEventSystemClientCopyServices(client as! IOHIDEventSystemClient)
     }
 
@@ -56,8 +67,6 @@ enum IOKitSensorReader {
         for i in 0..<count {
             guard let rawPtr = CFArrayGetValueAtIndex(services, i) else { continue }
             let service: AnyObject = unsafeBitCast(rawPtr, to: AnyObject.self)
-            // In SDK 15+ the public typed ref is IOHIDServiceClient; the
-            // `as!` is safe because the array came from IOHIDEventSystemClient.
             let typedService = service as! IOHIDServiceClient
 
             guard let nameRef = IOHIDServiceClientCopyProperty(typedService, "Product" as CFString),
@@ -66,7 +75,15 @@ enum IOKitSensorReader {
             guard let event = IOHIDServiceClientCopyEvent(service, kTempEventType, 0, 0) else { continue }
             let tempC = IOHIDEventGetFloatValue(event, kTempField)
 
-            guard tempC > 0 else { continue }
+            // Reject NaN / Inf / obviously-wrong values at the source. A
+            // NaN reading passed through to the governor's comparisons
+            // would silently evaluate every threshold to false (NaN > x
+            // is always false) — the thermal protection just stops
+            // working. Better to drop the reading and let the sensor
+            // recover next poll.
+            guard tempC.isFinite,
+                  tempC >= minPlausibleC,
+                  tempC <= maxPlausibleC else { continue }
 
             let registryID = AirAssist_IOHIDServiceClientGetRegistryID(service)
             let id = String(format: "%016llx", registryID)

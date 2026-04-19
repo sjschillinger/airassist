@@ -97,24 +97,31 @@ private struct Sparkline: View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height
-            if samples.count < 2 {
+            // Force-unwraps on samples.min()/max() removed — if `samples`
+            // mutates between the count check and the min/max calls (or
+            // contains NaN / Inf, for which min/max return nil or propagate
+            // a poison value), the force unwrap crashes the Dashboard.
+            // Compute min/max defensively; fall back to the dashed
+            // placeholder for any degenerate input.
+            let finite = samples.filter { $0.isFinite }
+            let minV = finite.min()
+            let maxV = finite.max()
+            if finite.count < 2 || minV == nil || maxV == nil {
                 Path { path in
                     let y = h / 2
                     path.move(to: CGPoint(x: 0, y: y))
                     path.addLine(to: CGPoint(x: w, y: y))
                 }
                 .stroke(tint.opacity(0.25), style: StrokeStyle(lineWidth: 1.2, dash: [2, 3]))
-            } else {
-                let minV = samples.min()!
-                let maxV = samples.max()!
+            } else if let minV, let maxV {
                 // Pad range so a flat-ish line doesn't hug the top/bottom.
                 let span = max(maxV - minV, 1.0)
                 let lo = minV - span * 0.15
                 let hi = maxV + span * 0.15
                 let range = hi - lo
 
-                let step = w / CGFloat(samples.count - 1)
-                let points = samples.enumerated().map { (i, v) in
+                let step = w / CGFloat(finite.count - 1)
+                let points = finite.enumerated().map { (i, v) in
                     CGPoint(
                         x: step * CGFloat(i),
                         y: h - (CGFloat((v - lo) / range) * h)
