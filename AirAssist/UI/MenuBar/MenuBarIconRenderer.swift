@@ -116,7 +116,7 @@ enum MenuBarIconRenderer {
         // The tight-cropped menu-bar glyph still has a touch of margin inside
         // its viewBox, so draw it a bit larger than the SF-Symbol baseline to
         // match the visual weight of neighbouring system icons.
-        let glyphScale: CGFloat = 1.18
+        let glyphScale: CGFloat = 1.35
         let baseIcon: NSImage? = {
             guard showIcon else { return nil }
             if let glyph = NSImage(named: "MenuBarGlyph") {
