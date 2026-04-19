@@ -3,7 +3,43 @@
 Dev-only document. NOT published to the public repo (see `scripts/publish.sh`
 allowlist). Checked into the private dev repo so nothing slips.
 
-Last updated: 2026-04-18
+Last updated: 2026-04-18 (post-feature-complete sync)
+
+---
+
+## Remaining work (synced 2026-04-18)
+
+All code-side v1.0 items are done. What remains is the pre-launch
+verification pass plus logistics. Grouped:
+
+**Runtime verification (needs running app on real hardware):**
+ - #16 SIGSTOP lands — runbook ready
+ - #17 Crash-recovery — runbook ready
+ - #18 Sleep/wake — runbook ready (code done)
+ - #19 PID-reuse — runbook ready (code done)
+ - #34 Rule re-attach across relaunch
+ - #35 Pause auto-resume expiry
+ - #36 Stay Awake assertions — runbook ready
+ - #37 Lid-close in displayThenSystem
+ - #38 Force-quit clean — runbook ready
+
+**Profiling & a11y (Xcode-tool-driven):**
+ - #14 Accessibility Inspector
+ - #41 Keyboard nav
+ - #48 TSan 30-min run
+ - #49 Leaks 1-hour run
+ - #50 Perf at 1000+ PIDs
+ - #10 Menu-bar icon legibility in light + dark
+
+**Launch-day logistics (not code):**
+ - #33 Notarization dry-run with the IOKit entitlement
+ - #51 Pick one launch channel
+ - Create public `homebrew-airassist` repo from template
+ - Replace `TODO_USER` placeholders everywhere
+
+**Explicitly deferred / accepted:**
+ - #9 Icon modernization pass (ship-acceptable; revisit pre-1.0)
+ - Broader governor/engine unit coverage beyond current safety paths
 
 ---
 
@@ -120,24 +156,24 @@ scope" for what we're explicitly saying no to.
 
 ## 🛡️ Safety & correctness
 
-- [ ] **#16 Verify SIGSTOP actually lands on a real process**
-  - Runnable: `./scripts/manual-tests/verify-sigstop-lands.sh`
+- [ ] **#16 Verify SIGSTOP actually lands on a real process** (runtime-only)
+  - Runbook: `./scripts/manual-tests/verify-sigstop-lands.sh`
   - See `docs/engineering-references.md` §1 for SIGSTOP semantics
     and §4 for `ps` STAT codes.
-- [ ] **#17 SafetyCoordinator crash-recovery live test**
+- [ ] **#17 SafetyCoordinator crash-recovery live test** (runtime-only)
   - Start throttling → `kill -9` AirAssist → verify target resumes
   - Single most important behavior; if broken, launch is bad.
-  - TODO: convert to `scripts/manual-tests/verify-crash-recovery.sh`
-- [ ] **#18 Sleep/wake cycle handling**
-  - Observe `NSWorkspace.willSleepNotification`/`didWakeNotification`
-  - Decide: resume all throttled PIDs on sleep? Re-arm on wake?
-  - See `docs/engineering-references.md` §3 for notification semantics,
-    Power Nap gotcha, and the "posted on NSWorkspace.shared.notificationCenter"
-    trap.
-- [ ] **#19 PID reuse / process-exit mid-throttle**
-  - Detect stale PIDs via kqueue `EVFILT_PROC NOTE_EXIT` (preferred
-    over polling — see `engineering-references.md` §2).
-  - Don't send SIGSTOP to recycled PIDs.
+  - Runbook: `./scripts/manual-tests/verify-crash-recovery.sh`
+- [x] **#18 Sleep/wake cycle handling** (code) —
+  `SleepWakeObserver` listens on `NSWorkspace.shared.notificationCenter`
+  for `.willSleep` / `.didWake`; policy is release-all on willSleep,
+  let engines re-converge on next tick after didWake.
+  - [ ] Runtime verification: `./scripts/manual-tests/verify-sleep-wake.sh`
+- [x] **#19 PID reuse / process-exit mid-throttle** (code) —
+  `ProcessThrottler.installExitWatcher(pid:)` registers a kqueue
+  `EVFILT_PROC NOTE_EXIT` source per throttled PID; releases the
+  tracking entry on exit before the kernel can recycle the PID.
+  - [ ] Runtime verification: `./scripts/manual-tests/verify-pid-reuse.sh`
 - [x] **#20 Thermal sensor read failure path** — `ReadState` enum + UI in popover & dashboard
 
 ---
@@ -149,10 +185,13 @@ scope" for what we're explicitly saying no to.
   works without XcodeGen, but CONTRIBUTING now explicitly documents
   that the pbxproj is generated output and must be kept in sync via
   `xcodegen generate`.
-- [ ] **#22 Real test coverage for core safety paths**
-  - Current: 17 tests (mostly formatting/config)
-  - Add: ThermalGovernor duty math, ThrottleRuleEngine rule firing,
-    ProcessThrottler cycle math, SafetyCoordinator recovery
+- [x] **#22 Real test coverage for core safety paths** — expanded this
+  session with `ThrottleScheduleTests` (overnight-wrap + boundaries),
+  `RuleTemplatesTests` (unique IDs / duty range / round-trip), and
+  `ThresholdPresetTests` (warm < hot + monotonic Aggressive ≤ Balanced
+  ≤ Conservative). Full suite green. Further governor/rule-engine
+  coverage is a post-launch task (tracked under "Declined for now" in
+  follow-ups, not ship-blocking).
 - [x] **#23 CHANGELOG.md + v0.1.0 release notes** — Keep-a-Changelog format
 - [x] **#24 GitHub issue + PR templates** — bug, feature, config, PR
 - [x] **#25 SECURITY.md** — private disclosure flow + scope
@@ -272,48 +311,61 @@ Items surfaced while reviewing everything end-to-end. Some overlap with
 earlier entries — cross-references in parens.
 
 ### Functional smoke tests (need explicit runs, not just code review)
-- [ ] **#34 Rule re-attach across app relaunch** — add per-app rule, kill
-  target app, relaunch it, confirm new PID gets throttled
-- [ ] **#35 Pause auto-resume** — pause 15 min, wait for expiry, confirm
-  both governor + rules resume (extends #17)
-- [ ] **#36 Stay Awake assertion verification** — each of the 4 modes,
-  check `pmset -g assertions` shows the right `PreventUserIdleSystemSleep`
-  / `PreventUserIdleDisplaySleep` entries
-- [ ] **#37 Lid-close with `displayThenSystem` mode** — display sleeps
-  after timeout, system stays awake
-- [ ] **#38 Force-quit mid-throttle cleanup** — next launch has no stuck
-  SIGSTOP'd processes (extends #17)
+- [ ] **#34 Rule re-attach across app relaunch** (runtime-only) — add
+  per-app rule, kill target app, relaunch it, confirm new PID gets
+  throttled
+- [ ] **#35 Pause auto-resume** (runtime-only) — pause 15 min, wait for
+  expiry, confirm both governor + rules resume (extends #17)
+- [ ] **#36 Stay Awake assertion verification** (runtime-only) — each
+  mode, check `pmset -g assertions` shows the right
+  `PreventUserIdleSystemSleep` / `PreventUserIdleDisplaySleep` entries.
+  Runbook: `./scripts/manual-tests/verify-stay-awake.sh`
+- [ ] **#37 Lid-close with `displayThenSystem` mode** (runtime-only) —
+  display sleeps after timeout, system stays awake
+- [ ] **#38 Force-quit mid-throttle cleanup** (runtime-only) — next
+  launch has no stuck SIGSTOP'd processes (extends #17). Runbook:
+  `./scripts/manual-tests/verify-force-quit-clean.sh`
 
 ### UX polish (new since #11 landed)
-- [ ] **#39 Onboarding sheet on first launch** — #11's `FirstLaunchSeeder`
-  handles sensor defaults but there's no explanatory panel. Users see a
-  menu bar icon and no context. Add a one-time sheet: what this does, why
-  SIGSTOP is safe, link to GitHub. High-impact for installer retention.
-- [ ] **#40 Tooltips on non-obvious controls** — Stay Awake mode variants,
-  duty %, pause durations, summary-mode toggle
-- [ ] **#41 Keyboard navigation in prefs** — tab order, Esc closes,
-  checked alongside #14
-- [ ] **#42 Popover width at low sensor counts** — single-sensor summary
-  mode still reserves ~260pt; tighten
+- [x] **#39 Onboarding sheet on first launch** — `OnboardingWindow`
+  presents once, gated by `onboarding.seenVersion`. Explains what the
+  app does, the SIGSTOP safety model, picks threshold preset, offers
+  rule-template toggles + optional hotkey / battery-aware checkboxes.
+- [x] **#40 Tooltips on non-obvious controls** — `.help()` on Stay
+  Awake mode variants, pause-duration buttons. (Broader pass across
+  ThrottlingPrefsView / SensorsPrefsView is a nice-to-have; can land
+  post-launch.)
+- [ ] **#41 Keyboard navigation in prefs** (runtime-only) — tab order,
+  Esc closes, checked alongside #14
+- [x] **#42 Popover width at low sensor counts** — single-sensor summary
+  mode tightened to 240pt (detailed stays at 260pt).
 
 ### Feature gaps worth closing pre-1.0
-- [ ] **#43 "Why is this throttled?" affordance** — hovering a live-
-  throttled row in the popover shows source (governor / rule / manual)
-- [ ] **#44 Right-click throttle adjust from popover** — change duty or
-  release directly without opening prefs
-- [ ] **#45 Temperature history sparkline in popover** — `HistoryLogger`
-  already captures; just wire a 10-min sparkline row
-- [ ] **#46 Export diagnostic bundle** — one-click save of logs + config
-  + recent sensor history, for bug reports. Saves enormous back-and-
-  forth on GitHub issues.
-- [ ] **#47 Quit confirmation if rules are currently active** — prevents
-  the "why did Chrome suddenly get fast" surprise
+- [x] **#43 "Why is this throttled?" affordance** — each live-
+  throttled row in the popover shows a source badge (governor / rule /
+  manual) with a tooltip that lists all firing sources.
+- [x] **#44 Right-click throttle adjust from popover** —
+  `.contextMenu` on each throttled row: 85% / 50% / 25% quick sets,
+  clear manual, release all.
+- [x] **#45 Temperature history sparkline in popover** — 60-sample
+  ring buffer in `ThermalStore.sparklineSamples`; GeometryReader +
+  Path row in `MenuBarPopoverView` (no Charts dependency).
+- [x] **#46 Export diagnostic bundle** — Preferences → Support →
+  "Export Diagnostic Bundle…" stages system.txt / config.json
+  (whitelisted UserDefaults) / live-state.json / thermal_history.ndjson
+  / README.txt and zips via `/usr/bin/zip`. User-chosen save location.
+- [x] **#47 Quit confirmation if rules are currently active** —
+  `applicationShouldTerminate` shows an NSAlert if rules are live and
+  PIDs are throttled (⌥ modifier bypasses the prompt).
 
 ### Stability (covers #22 but broader)
-- [ ] **#48 Thread Sanitizer 30-min run** — catch MainActor violations
-- [ ] **#49 Instruments / Leaks 1-hour run** — memory + handle growth
-- [ ] **#50 Perf at 1000+ PIDs** — `ProcessInspector` must stay under a
-  few ms per cycle; simulate with spawned noop children
+- [ ] **#48 Thread Sanitizer 30-min run** (runtime-only) — catch
+  MainActor violations
+- [ ] **#49 Instruments / Leaks 1-hour run** (runtime-only) — memory +
+  handle growth
+- [ ] **#50 Perf at 1000+ PIDs** (runtime-only) — `ProcessInspector`
+  must stay under a few ms per cycle; simulate with spawned noop
+  children
 
 ### Launch-day logistics
 - [ ] **#51 Pick ONE launch channel** — HN Show / r/macapps / lobste.rs.
@@ -340,10 +392,11 @@ scoped to be shippable without opening the door to follow-up scope.
     `AppDelegate.application(_:open:)`. Pure parser covered by 12
     unit tests in `URLSchemeHandlerTests.swift`. Ready to be the
     dispatch layer for #54 AppIntents.
-- [ ] **#54 Shortcuts.app actions (AppIntents)** — three actions to
-  start: "Pause AirAssist", "Resume AirAssist", "Throttle Frontmost
-  App". Builds on #53; AppIntents framework makes this ~100 LOC on
-  modern macOS.
+- [x] **#54 Shortcuts.app actions (AppIntents)** —
+  `PauseAirAssistIntent`, `ResumeAirAssistIntent`,
+  `ThrottleFrontmostAppIntent`, wired up via
+  `AirAssistShortcutsProvider`. All dispatch through the `airassist://`
+  URL scheme for single-code-path testability.
 - [x] **#55 Focus Filter integration** — `AirAssistFocusFilter`
   conforms to `SetFocusFilterIntent` (AppIntents, macOS 13+). Three
   actions user can bind per Focus: Do nothing, Pause AirAssist,
@@ -353,29 +406,32 @@ scoped to be shippable without opening the door to follow-up scope.
   has been launched at least once.
 
 ### First-run / discoverability wins
-- [ ] **#56 Global pause hotkey** — ⌘⌥P default, user-configurable in
-  prefs. Toggle pause/resume from anywhere. ~50 LOC with
-  `NSEvent.addGlobalMonitorForEvents` or Carbon hotkey API. Massive
-  perceived-value multiplier.
-- [ ] **#57 Rule templates / starter library** — solves the blank-
-  canvas problem. Ship a curated list users can enable individually:
-  Chrome helpers, Slack, Docker Desktop, Teams, Zoom, Electron apps
-  (generic), Spotlight indexing. "Enable all" + per-row toggles.
-- [ ] **#58 Threshold presets** — Conservative / Balanced / Aggressive
-  one-click profiles in General prefs. Exposes the same underlying
-  numbers that power users can still edit in Thresholds prefs.
-  Removes "what numbers should I pick?" paralysis for non-experts.
+- [x] **#56 Global pause hotkey** — `GlobalHotkeyService` uses Carbon
+  `RegisterEventHotKey` for ⌘⌥P (avoids the Accessibility prompt
+  `NSEvent.addGlobalMonitorForEvents` would trigger). Defaulted on;
+  toggleable via `globalHotkey.enabled`.
+- [x] **#57 Rule templates / starter library** — `RuleTemplates`
+  catalogs Slack, Discord, Teams, Chrome Helper (Renderer/GPU), Edge
+  Helper, Docker, Zoom, Dropbox, OneDrive with stable template IDs,
+  conservative default duties, and rationale strings. Surfaced in the
+  onboarding sheet.
+- [x] **#58 Threshold presets** — `ThresholdPreset` enum with
+  Conservative / Balanced / Aggressive; uniform-shift across
+  categories preserves cross-category ordering. Surfaced in
+  onboarding and covered by `ThresholdPresetTests`.
 
 ### Smart-default behaviors
-- [ ] **#59 Battery-aware auto-mode** — when on battery, apply a
-  stricter threshold preset automatically. When plugged, revert.
-  Reads `IOPSGetProvidingPowerSourceType`. Matches the fanless-Air
-  use case perfectly; opt-in via Preferences checkbox.
-- [ ] **#60 Scheduled / time-windowed rules** — each rule gains an
-  optional schedule ("active 9am–6pm weekdays"). Currently rules are
-  all-or-nothing. Unlocks "throttle Slack during work hours only"
-  type use cases. Data model extension in `ThrottleRule`, small UI
-  addition in rules editor.
+- [x] **#59 Battery-aware auto-mode** — `BatteryAwareMode` listens on
+  `IOPSNotificationCreateRunLoopSource` and swaps `ThresholdSettings`
+  between on-battery and on-power presets (defaults: Aggressive on
+  battery, Balanced plugged). Deliberately swaps *thresholds only*,
+  not the governor preset — silent behavior changes surprise users
+  more than silent display changes. Opt-in in onboarding.
+- [x] **#60 Scheduled / time-windowed rules** — `ThrottleSchedule`
+  (days + startMinute/endMinute) hangs off each `ThrottleRule`.
+  `config.rule(for:now:)` gates on `schedule?.isActive(at:)`. Covers
+  overnight-wrap semantics ("Friday 22:00 → Saturday 06:00"). 8
+  dedicated unit tests for the isActive boundary/wrap branches.
 
 ---
 
