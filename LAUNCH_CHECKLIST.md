@@ -344,11 +344,13 @@ scoped to be shippable without opening the door to follow-up scope.
   start: "Pause AirAssist", "Resume AirAssist", "Throttle Frontmost
   App". Builds on #53; AppIntents framework makes this ~100 LOC on
   modern macOS.
-- [ ] **#55 Focus Filter integration** — app appears in Settings →
-  Focus → app-specific filters. User picks pause/preset per Focus
-  mode (Work → Aggressive, Personal → Off, etc.). Uses
-  `INFocusFilter` API. Native-feeling integration users expect in a
-  v1.0 Mac app.
+- [x] **#55 Focus Filter integration** — `AirAssistFocusFilter`
+  conforms to `SetFocusFilterIntent` (AppIntents, macOS 13+). Three
+  actions user can bind per Focus: Do nothing, Pause AirAssist,
+  Resume AirAssist. Like the other intents, dispatches via the
+  `airassist://` URL scheme so there's one tested code path. Shows
+  up under Settings → Focus → <focus> → Focus Filters once the app
+  has been launched at least once.
 
 ### First-run / discoverability wins
 - [ ] **#56 Global pause hotkey** — ⌘⌥P default, user-configurable in

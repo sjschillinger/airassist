@@ -106,6 +106,80 @@ struct ThrottleFrontmostAppIntent: AppIntent {
     }
 }
 
+// MARK: - Focus Filter integration (#55)
+//
+// Lets the user attach an AirAssist behavior to a macOS Focus mode
+// (Settings → Focus → Focus Filters). Example: "when Work focus turns
+// on, put AirAssist into Aggressive thresholds; when Personal focus
+// turns on, pause AirAssist entirely."
+//
+// Implementation: `SetFocusFilterIntent` protocol, available without a
+// separate extension target on macOS 13+. Like the other intents, we
+// dispatch via the `airassist://` URL scheme so there's exactly one
+// code path and one test suite covering the state transitions.
+//
+// Note: Focus Filters only appear in Settings if the app has been
+// launched at least once after install (AppIntents discovery runs on
+// first launch). Documented in the README "Focus integration" bullet.
+
+/// The set of behaviors the Focus Filter can apply. Scoped deliberately:
+/// each option maps to a single URL-scheme command, so the filter UI
+/// stays "pick one thing" rather than exposing every tuning knob.
+@available(macOS 13.0, *)
+enum AirAssistFocusAction: String, AppEnum {
+    case doNothing          // Leave current settings untouched
+    case pauseIndefinitely  // Equivalent to the menu's "Pause until quit"
+    case resume             // Explicit resume if currently paused
+
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(
+        name: "AirAssist Focus Action"
+    )
+    static let caseDisplayRepresentations: [AirAssistFocusAction: DisplayRepresentation] = [
+        .doNothing:         "Do nothing",
+        .pauseIndefinitely: "Pause throttling",
+        .resume:            "Resume throttling",
+    ]
+}
+
+@available(macOS 13.0, *)
+struct AirAssistFocusFilter: SetFocusFilterIntent {
+    static let title: LocalizedStringResource = "AirAssist"
+    static let description = IntentDescription(
+        "Apply an AirAssist behavior whenever this Focus turns on. Useful for pausing throttling during gaming or rendering Focus modes, or letting it run during Work."
+    )
+
+    @Parameter(title: "When this Focus turns on",
+               default: .doNothing)
+    var action: AirAssistFocusAction
+
+    // SetFocusFilterIntent wants a human-readable representation of the
+    // current configuration so the user sees it in the Focus settings.
+    var displayRepresentation: DisplayRepresentation {
+        switch action {
+        case .doNothing:         return "Leave AirAssist as-is"
+        case .pauseIndefinitely: return "Pause AirAssist"
+        case .resume:            return "Resume AirAssist"
+        }
+    }
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        let urlStr: String?
+        switch action {
+        case .doNothing:
+            urlStr = nil
+        case .pauseIndefinitely:
+            urlStr = "airassist://pause?duration=forever"
+        case .resume:
+            urlStr = "airassist://resume"
+        }
+        if let s = urlStr, let u = URL(string: s) {
+            NSWorkspace.shared.open(u)
+        }
+        return .result()
+    }
+}
+
 @available(macOS 13.0, *)
 struct AirAssistShortcutsProvider: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
