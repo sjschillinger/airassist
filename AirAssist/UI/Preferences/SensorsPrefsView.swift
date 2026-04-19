@@ -86,14 +86,15 @@ struct SensorsPrefsView: View {
     ) -> some View {
         HStack {
             Text(label).frame(maxWidth: .infinity, alignment: .leading)
-            thresholdField(path: warmPath, tint: .orange)
-            thresholdField(path: hotPath,  tint: .red)
+            thresholdField(path: warmPath, tint: .orange, a11y: "\(label) warm threshold in degrees")
+            thresholdField(path: hotPath,  tint: .red,    a11y: "\(label) hot threshold in degrees")
         }
     }
 
     private func thresholdField(
         path: WritableKeyPath<ThresholdSettings, Double>,
-        tint: Color
+        tint: Color,
+        a11y: String
     ) -> some View {
         let binding = Binding<Double>(
             get: { store.thresholds[keyPath: path] },
@@ -108,6 +109,7 @@ struct SensorsPrefsView: View {
                 .multilineTextAlignment(.trailing)
                 .frame(width: 56)
                 .textFieldStyle(.roundedBorder)
+                .accessibilityLabel(a11y)
         }
         .frame(width: 72)
     }

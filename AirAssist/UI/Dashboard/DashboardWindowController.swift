@@ -22,7 +22,14 @@ final class DashboardWindowController: NSWindowController {
         window.title = AppStrings.Dashboard.title
         window.minSize = NSSize(width: 520, height: 380)
         window.setFrameAutosaveName("AirAssist.Dashboard")
-        window.contentViewController = NSHostingController(rootView: DashboardContainerView(store: store))
+        let hostingController = NSHostingController(rootView: DashboardContainerView(store: store))
+        // #14: Apple's accessibility audit flags the root NSHostingView
+        // group as "Element has no description" unless we set one on the
+        // AppKit side. SwiftUI's `.accessibilityLabel` on the root view
+        // doesn't propagate here because the hosting group is upstream
+        // of the SwiftUI view tree.
+        hostingController.view.setAccessibilityLabel(AppStrings.Dashboard.title)
+        window.contentViewController = hostingController
         super.init(window: window)
     }
 

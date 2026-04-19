@@ -281,6 +281,7 @@ struct DashboardView: View {
             }
             .pickerStyle(.segmented)
             .frame(width: 80)
+            .accessibilityLabel("Temperature unit")
 
             Spacer()
 
@@ -298,6 +299,7 @@ struct DashboardView: View {
                 }
             }
             .frame(width: 140)
+            .accessibilityLabel("Sort sensors by")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)

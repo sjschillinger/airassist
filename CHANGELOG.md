@@ -84,5 +84,5 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 Initial public release. See the `Unreleased` section above until this
 tag ships; content will be rolled forward on release day.
 
-[Unreleased]: https://github.com/TODO_USER/airassist/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/TODO_USER/airassist/releases/tag/v0.1.0
+[Unreleased]: https://github.com/sjschillinger/airassist/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/sjschillinger/airassist/releases/tag/v0.1.0

@@ -44,7 +44,7 @@ PRs that drift the pbxproj away from what `xcodegen generate`
 produces will be asked to regenerate and recommit.
 
 ```bash
-git clone https://github.com/TODO_USER/airassist.git
+git clone https://github.com/sjschillinger/airassist.git
 cd airassist
 
 brew install xcodegen

@@ -8,10 +8,10 @@ cask "airassist" do
   version "0.1.0"
   sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
-  url "https://github.com/TODO_USER/airassist/releases/download/v#{version}/AirAssist-#{version}.zip"
+  url "https://github.com/sjschillinger/airassist/releases/download/v#{version}/AirAssist-#{version}.zip"
   name "Air Assist"
   desc "Menu-bar thermal monitor and workload governor for fanless MacBook Air"
-  homepage "https://github.com/TODO_USER/airassist"
+  homepage "https://github.com/sjschillinger/airassist"
 
   # Air Assist is Apple Silicon only and targets recent macOS. Keep these
   # in sync with project.yml's deployment target.

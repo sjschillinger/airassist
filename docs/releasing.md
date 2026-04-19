@@ -10,7 +10,7 @@ A single `AirAssist-<version>.zip` attached to a GitHub Release, plus a
 Users install via:
 
 ```bash
-brew install --cask TODO_USER/airassist/airassist
+brew install --cask sjschillinger/airassist/airassist
 ```
 
 Homebrew's tap (`homebrew-airassist`) is a **separate public repo**;

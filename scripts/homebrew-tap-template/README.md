@@ -6,7 +6,7 @@ into a separate public GitHub repo named `homebrew-airassist` (the
 install Air Assist with:
 
 ```bash
-brew install --cask TODO_USER/airassist/airassist
+brew install --cask sjschillinger/airassist/airassist
 ```
 
 ## One-time setup
@@ -23,7 +23,7 @@ brew install --cask TODO_USER/airassist/airassist
 3. Commit, push.
 4. Tap it locally to smoke-test:
    ```bash
-   brew tap TODO_USER/airassist
+   brew tap sjschillinger/airassist
    brew install --cask airassist
    ```
 

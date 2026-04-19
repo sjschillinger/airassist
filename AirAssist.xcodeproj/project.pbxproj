@@ -30,6 +30,7 @@
 		3C53C4BE5E248A344EB5EFBF /* DashboardWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */; };
 		3EE7E39D8EAC8F21B3B8DBD7 /* SafetyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */; };
 		4111D77C0E4FD338E48D7F0C /* AirAssistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */; };
+		411B35252456F8EEAC77AEA3 /* AppMainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = D61AD1FEA0A5FA4BC671F221 /* AppMainMenu.swift */; };
 		47390C305B3C9D72F38E8383 /* AppIcon-composed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4629A6D06B14E1E69D71A6E0 /* AppIcon-composed.svg */; };
 		47422C41049B5628AC31D285 /* ThrottleScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */; };
 		4901AB447766EEA5989D007D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CEE1EF1D22A6125D421D64C5 /* README.md */; };
@@ -61,6 +62,7 @@
 		B183D1C124AAEE3F298C599F /* ThrottleIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */; };
 		B5FCBC00DE2EE807B11B27A0 /* SleepWakeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */; };
 		B77AD3CA5AE2AF1411D68173 /* SafetyCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */; };
+		BCCAB1901E878170437146FF /* MemoryWatchdog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E3121354051F583FCBB426 /* MemoryWatchdog.swift */; };
 		BD6134487DFA3B4DD3CD9E0E /* GovernorConfigClampTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209A50EAB91CC3E47E5F04A5 /* GovernorConfigClampTests.swift */; };
 		C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2340286CEE2E559824D689B1 /* MenuBarController.swift */; };
 		C3AA7A3ED6914DB08A2F9D26 /* FirstRunDisclosure.swift in Sources */ = {isa = PBXBuildFile; fileRef = F39D53AA5D34F3BF9DC08F9F /* FirstRunDisclosure.swift */; };
@@ -150,6 +152,7 @@
 		8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
 		8B85179E897A875693EE50AD /* SensorListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorListView.swift; sourceTree = "<group>"; };
 		8EAF397631AE11D4B570EC4D /* RunningProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningProcess.swift; sourceTree = "<group>"; };
+		94E3121354051F583FCBB426 /* MemoryWatchdog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryWatchdog.swift; sourceTree = "<group>"; };
 		9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepWakeObserver.swift; sourceTree = "<group>"; };
 		9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleRuleEngine.swift; sourceTree = "<group>"; };
 		9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GovernorConfig.swift; sourceTree = "<group>"; };
@@ -174,6 +177,7 @@
 		CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottler.swift; sourceTree = "<group>"; };
 		CEE1EF1D22A6125D421D64C5 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D0BD89C1534037D26554015A /* SensorsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorsPrefsView.swift; sourceTree = "<group>"; };
+		D61AD1FEA0A5FA4BC671F221 /* AppMainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMainMenu.swift; sourceTree = "<group>"; };
 		D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinator.swift; sourceTree = "<group>"; };
 		DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseAndStayAwakeTests.swift; sourceTree = "<group>"; };
 		E195513AB2DA802AD3B203E3 /* MenuBarQuickMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarQuickMenu.swift; sourceTree = "<group>"; };
@@ -324,6 +328,7 @@
 			children = (
 				5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */,
 				A4C1EA66578373DFC8BB8830 /* AppDelegate.swift */,
+				D61AD1FEA0A5FA4BC671F221 /* AppMainMenu.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -361,6 +366,7 @@
 				F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */,
 				0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */,
 				5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */,
+				94E3121354051F583FCBB426 /* MemoryWatchdog.swift */,
 				6E9A77B36585950274F5A0C6 /* OnboardingWindow.swift */,
 				BEE7645B03DAEDE64CB56215 /* ProcessInspector.swift */,
 				3BFBE657DCEA969D7AC725E8 /* ProcessSnapshotPublisher.swift */,
@@ -581,6 +587,7 @@
 				4111D77C0E4FD338E48D7F0C /* AirAssistApp.swift in Sources */,
 				8EDE88F52ED18CCF2EFC8CBD /* AppDelegate.swift in Sources */,
 				DD41868683DA5D42CE4262A1 /* AppIntents.swift in Sources */,
+				411B35252456F8EEAC77AEA3 /* AppMainMenu.swift in Sources */,
 				6CD4DD212B31618386CDE229 /* BatteryAwareMode.swift in Sources */,
 				E9F23A842ABC54031BBAE6AB /* Constants.swift in Sources */,
 				EB79F540BA6F71D092CAA211 /* DashboardContainerView.swift in Sources */,
@@ -597,6 +604,7 @@
 				C43FB882937BC5D2E7FACF2B /* HistoryReader.swift in Sources */,
 				FAB74801EE74233DE341FF9C /* HistoryView.swift in Sources */,
 				2E8787E468BA9D77080343A2 /* IOKitSensorReader.swift in Sources */,
+				BCCAB1901E878170437146FF /* MemoryWatchdog.swift in Sources */,
 				C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */,
 				A5B74A36D44F389797534E71 /* MenuBarIconRenderer.swift in Sources */,
 				8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */,

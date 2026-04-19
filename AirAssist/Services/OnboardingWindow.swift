@@ -124,6 +124,12 @@ private struct OnboardingView: View {
                 }
 
                 HStack {
+                    // Esc dismisses without applying the onboarding choices.
+                    // We still mark the onboarding seen so re-launch doesn't
+                    // nag — if the user wants to revisit, there will be an
+                    // explicit "Show welcome again" entry (present() call).
+                    Button("Skip") { onDone() }
+                        .keyboardShortcut(.cancelAction)
                     Spacer()
                     Button("Get started") { apply() }
                         .keyboardShortcut(.defaultAction)

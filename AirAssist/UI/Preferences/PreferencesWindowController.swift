@@ -22,9 +22,13 @@ final class PreferencesWindowController: NSWindowController {
         window.minSize = NSSize(width: 520, height: 460)
         window.title = AppStrings.Preferences.title
         window.setFrameAutosaveName("AirAssist.Preferences")
-        window.contentViewController = NSHostingController(
+        let hostingController = NSHostingController(
             rootView: PreferencesView(store: store)
         )
+        // #14: see DashboardWindowController — SwiftUI label doesn't
+        // propagate to the NSHostingView group, set it on AppKit side.
+        hostingController.view.setAccessibilityLabel(AppStrings.Preferences.title)
+        window.contentViewController = hostingController
         super.init(window: window)
     }
 

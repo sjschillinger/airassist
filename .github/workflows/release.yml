@@ -138,7 +138,7 @@ jobs:
             ### Install (recommended)
 
             ```bash
-            brew install --cask TODO_USER/airassist/airassist
+            brew install --cask sjschillinger/airassist/airassist
             ```
 
             ### Manual install

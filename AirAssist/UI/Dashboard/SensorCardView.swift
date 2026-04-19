@@ -7,6 +7,11 @@ struct SensorCardView: View {
 
     private var state: ThresholdState { sensor.thresholdState(using: thresholds) }
 
+    // TODO_POST_LAUNCH (#14 contrast): system `.green` against
+    // `.regularMaterial` falls below WCAG AA large-text (3:1) in light mode.
+    // Replace with a palette that passes AA on both materials before v1.1.
+    // Visual design was locked as-shipping for v1.0 per LAUNCH_CHECKLIST
+    // #9/#10, so this is deferred rather than changed under the deadline.
     private var stateColor: Color {
         switch state {
         case .cool:    return .green

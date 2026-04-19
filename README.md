@@ -95,7 +95,7 @@ Open source, runs at user privilege, no kernel extension."
 ### Homebrew (recommended)
 
 ```bash
-brew install --cask TODO_USER/airassist/airassist
+brew install --cask sjschillinger/airassist/airassist
 ```
 
 No Xcode or developer tools required — Homebrew fetches a pre-built,
@@ -105,7 +105,7 @@ ad-hoc signed `.app` from the GitHub Releases page and drops it into
 ### Manual download
 
 Grab the latest `AirAssist-<version>.zip` from the
-[Releases](https://github.com/TODO_USER/airassist/releases) page,
+[Releases](https://github.com/sjschillinger/airassist/releases) page,
 unzip, and drag `AirAssist.app` into `/Applications`.
 
 One extra step the first time: because the build is ad-hoc signed
@@ -126,7 +126,7 @@ Sparkle is on the roadmap but not wired up yet.
 ## Build from source
 
 ```bash
-git clone https://github.com/TODO_USER/airassist.git
+git clone https://github.com/sjschillinger/airassist.git
 cd airassist
 
 # Project file is generated from project.yml via XcodeGen.

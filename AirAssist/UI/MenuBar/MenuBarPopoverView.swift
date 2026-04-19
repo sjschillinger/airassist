@@ -63,6 +63,10 @@ struct MenuBarPopoverView: View {
                     Button("4 hours")    { store.pauseThrottling(for: 4 * 60 * 60) }
                     Button("Until quit") { store.pauseThrottling(for: nil) }
                 }
+                if GlobalHotkeyService.shared.isEnabled {
+                    Divider()
+                    Text("Global hotkey: ⌘⌥P")
+                }
             }
         } label: {
             Image(systemName: store.isPauseActive ? "pause.circle.fill" : "pause.circle")
@@ -71,7 +75,18 @@ struct MenuBarPopoverView: View {
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
         .fixedSize()
-        .help(store.isPauseActive ? "Throttling paused" : "Pause throttling")
+        .help(hotkeyTooltip)
+        .accessibilityLabel(store.isPauseActive ? "Throttling paused. Click to resume." : "Pause throttling menu")
+    }
+
+    /// Combined tooltip for the pause menu: state + hotkey when enabled.
+    /// Surfaces ⌘⌥P without requiring a Preferences trip (#P0-1).
+    private var hotkeyTooltip: String {
+        let state = store.isPauseActive ? "Throttling paused" : "Pause throttling"
+        if GlobalHotkeyService.shared.isEnabled {
+            return state + " (⌘⌥P)"
+        }
+        return state
     }
 
     @ViewBuilder

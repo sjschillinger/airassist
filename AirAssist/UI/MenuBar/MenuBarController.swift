@@ -240,6 +240,57 @@ final class MenuBarController {
             }
             button.image = rendered
         }
+
+        // VoiceOver: without this, the rendered composite image is read as
+        // raw digits ("84 degrees") with no app context. Set it on both the
+        // image (for direct inspection) and the button (for AX traversal).
+        let a11y = accessibilityDescription(
+            v1: v1, v2: v2, unit: unit, state: state,
+            isPaused: store.isPauseActive,
+            throttleDotRed: throttleDot == .systemRed
+        )
+        rendered.accessibilityDescription = a11y
+        button.setAccessibilityLabel(a11y)
+        button.setAccessibilityTitle(a11y)
+    }
+
+    /// Build a VoiceOver-friendly sentence summarising the menu bar state.
+    /// Example outputs:
+    ///   - "Air Assist. CPU 84 degrees Celsius. Hot. Throttling active."
+    ///   - "Air Assist. CPU 67, GPU 61 degrees. Paused."
+    ///   - "Air Assist. Sensors unavailable."
+    private func accessibilityDescription(
+        v1: Double?, v2: Double?,
+        unit: TempUnit,
+        state: ThresholdState,
+        isPaused: Bool,
+        throttleDotRed: Bool
+    ) -> String {
+        var parts: [String] = [AppStrings.appName]
+        if let v1 {
+            let v1Str = unit.format(v1)
+            if let v2 {
+                parts.append("\(v1Str), \(unit.format(v2))")
+            } else {
+                parts.append(v1Str)
+            }
+        } else {
+            parts.append("sensors unavailable")
+        }
+        switch state {
+        case .hot:  parts.append("hot")
+        case .warm: parts.append("warm")
+        case .cool: parts.append("cool")
+        case .unknown: break
+        }
+        if isPaused {
+            parts.append("paused")
+        } else if throttleDotRed {
+            parts.append("throttling active")
+        } else if !store.liveThrottledPIDs.isEmpty {
+            parts.append("rules active")
+        }
+        return parts.joined(separator: ". ")
     }
 
     // MARK: - Observation

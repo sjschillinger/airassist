@@ -48,11 +48,11 @@ struct MenuBarPrefsView: View {
                 }
 
                 LabeledContent("Slot 1") {
-                    SlotPicker(category: $slot1Cat, value: $slot1Val, sensors: store.sensors)
+                    SlotPicker(category: $slot1Cat, value: $slot1Val, sensors: store.sensors, slotLabel: "Slot 1")
                 }
 
                 LabeledContent("Slot 2") {
-                    SlotPicker(category: $slot2Cat, value: $slot2Val, sensors: store.sensors)
+                    SlotPicker(category: $slot2Cat, value: $slot2Val, sensors: store.sensors, slotLabel: "Slot 2")
                         .disabled(layout == .single)
                         .opacity(layout == .single ? 0.4 : 1)
                 }
@@ -84,6 +84,7 @@ private struct SlotPicker: View {
     @Binding var category: String
     @Binding var value: String
     let sensors: [Sensor]
+    var slotLabel: String = "Slot"
 
     // Sub-options vary by category
     private var subOptions: [(label: String, value: String)] {
@@ -114,6 +115,7 @@ private struct SlotPicker: View {
             }
             .labelsHidden()
             .frame(width: 110)
+            .accessibilityLabel("\(slotLabel) category")
             .onChange(of: category) { _, newCat in
                 // Reset to a valid default for the incoming category
                 let cat = SlotCategory(rawValue: newCat) ?? .none
@@ -133,6 +135,7 @@ private struct SlotPicker: View {
                 }
                 .labelsHidden()
                 .frame(width: 170)
+                .accessibilityLabel("\(slotLabel) value")
             }
         }
     }

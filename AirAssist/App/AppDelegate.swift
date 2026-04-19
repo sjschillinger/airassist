@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // the main actor is running; all actual use happens from @MainActor methods.
     nonisolated(unsafe) private var store: ThermalStore!
     nonisolated(unsafe) private var menuBarController: MenuBarController?
+    nonisolated(unsafe) private var memoryWatchdog: MemoryWatchdog?
 
     nonisolated static func main() {
         let app = NSApplication.shared
@@ -23,6 +24,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SafetyCoordinator.recoverOnLaunch()
         SafetyCoordinator.installSignalHandlers()
 
+        // Minimal main menu (#41 keyboard-nav) — gives ⌘W / ⌘Q / ⌘,
+        // and the standard Edit shortcuts on any key window.
+        AppMainMenu.install()
+
         store = ThermalStore()
         store.start()
         menuBarController = MenuBarController(store: store)
@@ -38,6 +43,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         GlobalHotkeyService.shared.start()
+
+        // RSS tripwire (#49 follow-up). Cheap 5-min os_log breadcrumb if
+        // the process ever balloons past 500 MB — catches amplified
+        // NSHostingView regressions or new AirAssist leaks we haven't seen.
+        let watchdog = MemoryWatchdog()
+        watchdog.start()
+        memoryWatchdog = watchdog
 
         // One-time legal/safety disclosure. Runs after the menu bar is up so
         // the alert isn't the first thing the user sees on a cold launch; the
@@ -79,14 +91,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         again until you relaunch the app.
         """
         alert.addButton(withTitle: "Quit")
-        alert.addButton(withTitle: "Cancel")
+        let cancelButton = alert.addButton(withTitle: "Cancel")
+        // ESC cancels — standard macOS convention. Without this the only way
+        // out of the confirm is clicking Cancel, which breaks keyboard users
+        // (and the tired muscle memory of everyone else).
+        cancelButton.keyEquivalent = "\u{1b}"
         let response = alert.runModal()
         return response == .alertFirstButtonReturn ? .terminateNow : .terminateCancel
+    }
+
+    /// Action target for the "Preferences…" item in the main menu
+    /// (installed by `AppMainMenu.install`). Dispatches up the responder
+    /// chain because the menu item has no explicit target.
+    @MainActor
+    @objc func openPreferencesFromMenu(_ sender: Any?) {
+        guard store != nil else { return }
+        PreferencesWindowController.shared(store: store).show()
+    }
+
+    /// Action target for "Help → Show Welcome…". Reopens the onboarding
+    /// sheet without clearing the seen-version flag, so it behaves like a
+    /// revisit rather than re-running the first-launch ceremony.
+    @MainActor
+    @objc func showWelcomeFromMenu(_ sender: Any?) {
+        guard store != nil else { return }
+        OnboardingWindow.present(store: store, markSeen: false)
+    }
+
+    /// Action target for "Help → Export Diagnostics…". Same entry point as
+    /// the button in General prefs; duplicated here so users can escape to
+    /// a diagnostic bundle even when the prefs window is broken or they
+    /// haven't learned where the button lives.
+    @MainActor
+    @objc func exportDiagnosticsFromMenu(_ sender: Any?) {
+        guard store != nil else { return }
+        DiagnosticBundle.exportInteractively(store: store)
     }
 
     @MainActor
     func applicationWillTerminate(_ notification: Notification) {
         GlobalHotkeyService.shared.stop()
+        memoryWatchdog?.stop()
+        memoryWatchdog = nil
         store.stop()
         menuBarController?.teardown()
         menuBarController = nil

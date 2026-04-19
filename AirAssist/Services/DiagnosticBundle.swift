@@ -77,6 +77,11 @@ enum DiagnosticBundle {
         try writeConfig(to: stage.appendingPathComponent("config.json"))
         try writeLiveState(store: store, to: stage.appendingPathComponent("live-state.json"))
         try copyHistoryIfPresent(to: stage.appendingPathComponent("thermal_history.ndjson"))
+        // #P1-1: pull AirAssist crashlogs from the last 7 days into a
+        // `crashlogs/` subdirectory. Critical for a SIGSTOP tool where
+        // bug reports are often "my app froze and I don't know why"
+        // — without these, triage is blind.
+        try copyRecentCrashLogs(to: stage.appendingPathComponent("crashlogs"))
         try writeReadme(to: stage.appendingPathComponent("README.txt"))
 
         // Remove any pre-existing file at destination — NSSavePanel already
@@ -214,6 +219,59 @@ enum DiagnosticBundle {
         try FileManager.default.copyItem(at: src, to: dest)
     }
 
+    /// Copy any AirAssist-named crash reports from the user's
+    /// `~/Library/Logs/DiagnosticReports/` directory written within the
+    /// last 7 days. Silently skips missing directories or files — a
+    /// bundle without crashlogs is still useful, a bundle that errors
+    /// out because the Logs directory doesn't exist is not. No network,
+    /// no upload: these are copied into the staging dir and zipped
+    /// alongside everything else.
+    ///
+    /// Patterns covered: `AirAssist-*.ips`, `AirAssist-*.crash`,
+    /// `AirAssist_*.ips`, `AirAssist_*.crash` (Apple has flip-flopped
+    /// between the two separator forms across macOS versions).
+    private static func copyRecentCrashLogs(to destDir: URL) throws {
+        let fm = FileManager.default
+        let reportsDirs = [
+            fm.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/Logs/DiagnosticReports", isDirectory: true),
+            // System-wide reports (rare for a user-space app but cheap to check).
+            URL(fileURLWithPath: "/Library/Logs/DiagnosticReports", isDirectory: true),
+        ]
+        let cutoff = Date().addingTimeInterval(-7 * 24 * 3600)
+
+        var copiedAny = false
+        for reportsDir in reportsDirs {
+            guard fm.fileExists(atPath: reportsDir.path) else { continue }
+            let contents = (try? fm.contentsOfDirectory(
+                at: reportsDir,
+                includingPropertiesForKeys: [.contentModificationDateKey],
+                options: [.skipsHiddenFiles, .skipsPackageDescendants]
+            )) ?? []
+            for url in contents {
+                let name = url.lastPathComponent
+                let lowered = name.lowercased()
+                guard lowered.hasPrefix("airassist-") || lowered.hasPrefix("airassist_") else { continue }
+                guard lowered.hasSuffix(".ips") || lowered.hasSuffix(".crash") else { continue }
+                let values = try? url.resourceValues(forKeys: [.contentModificationDateKey])
+                if let modified = values?.contentModificationDate, modified < cutoff { continue }
+                if !copiedAny {
+                    try? fm.createDirectory(at: destDir, withIntermediateDirectories: true)
+                    copiedAny = true
+                }
+                let dest = destDir.appendingPathComponent(name)
+                // Don't overwrite a same-named file copied from the user
+                // dir if the system dir also has one; prefix with a tag.
+                if fm.fileExists(atPath: dest.path) {
+                    let disambiguated = destDir.appendingPathComponent("system-\(name)")
+                    try? fm.copyItem(at: url, to: disambiguated)
+                } else {
+                    try? fm.copyItem(at: url, to: dest)
+                }
+            }
+        }
+    }
+
     private static func writeReadme(to url: URL) throws {
         let body = """
         Air Assist diagnostic bundle
@@ -227,6 +285,10 @@ enum DiagnosticBundle {
                                    the moment of export
           thermal_history.ndjson   per-category peak temperatures over the last
                                    few days (if history has been collected)
+          crashlogs/               any AirAssist crash reports from the past
+                                   7 days (.ips / .crash), copied from
+                                   ~/Library/Logs/DiagnosticReports — empty
+                                   or absent if no crashes recorded
 
         Privacy note. Air Assist never uploads this file. It was written
         locally to the path you chose. Before attaching to a public issue

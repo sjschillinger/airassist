@@ -5,7 +5,7 @@
 Please **do not open a public GitHub issue** for security problems.
 
 Instead, use GitHub's private
-[Security Advisories](https://github.com/TODO_USER/airassist/security/advisories/new)
+[Security Advisories](https://github.com/sjschillinger/airassist/security/advisories/new)
 form, or email the maintainer directly:
 
 - **Contact:** sjschillinger@gmail.com

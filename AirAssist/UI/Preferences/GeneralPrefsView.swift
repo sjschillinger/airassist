@@ -16,6 +16,15 @@ struct GeneralPrefsView: View {
 
     @State private var loginStatus: SMAppService.Status = SMAppService.mainApp.status
 
+    // Mirror the hotkey service's persisted flag + battery-aware flags so
+    // SwiftUI re-renders when the user toggles them. These services own the
+    // authoritative state — bindings read/write through them, not through
+    // @AppStorage directly.
+    @State private var hotkeyEnabled: Bool = GlobalHotkeyService.shared.isEnabled
+    @State private var batteryAwareEnabled: Bool = false
+    @State private var batteryAwareOnBattery: ThresholdPreset = .aggressive
+    @State private var batteryAwareOnPowered: ThresholdPreset = .balanced
+
     private let intervalOptions: [(label: String, seconds: Double)] = [
         ("1 second",  1),
         ("2 seconds", 2),
@@ -55,7 +64,7 @@ struct GeneralPrefsView: View {
                 } else {
                     LabeledContent("Pause for") {
                         HStack(spacing: 6) {
-                            Button("15 min")         { store.pauseThrottling(for: 15 * 60) }
+                            Button("15 minutes")     { store.pauseThrottling(for: 15 * 60) }
                                 .help("Release every throttled PID and hold off for 15 minutes. Governor and rules resume automatically when the timer expires.")
                             Button("1 hour")         { store.pauseThrottling(for: 60 * 60) }
                             Button("4 hours")        { store.pauseThrottling(for: 4 * 60 * 60) }
@@ -67,6 +76,70 @@ struct GeneralPrefsView: View {
                     Text("Temporarily stop both the governor and per-app rules. Useful for gaming or rendering sessions.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+
+                LabeledContent("Global hotkey ⌘⌥P") {
+                    Toggle("", isOn: Binding(
+                        get: { hotkeyEnabled },
+                        set: { on in
+                            hotkeyEnabled = on
+                            GlobalHotkeyService.shared.isEnabled = on
+                        }
+                    ))
+                    .labelsHidden()
+                    .accessibilityLabel("Enable global pause hotkey Command Option P")
+                }
+                Text("Toggle pause/resume from any app. Carbon-based — no Accessibility permission required.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
+            Section("Battery-aware thresholds") {
+                LabeledContent("Enabled") {
+                    Toggle("", isOn: Binding(
+                        get: { batteryAwareEnabled },
+                        set: { on in
+                            batteryAwareEnabled = on
+                            store.batteryAware.isEnabled = on
+                        }
+                    ))
+                    .labelsHidden()
+                    .accessibilityLabel("Enable battery-aware threshold swapping")
+                }
+                if batteryAwareEnabled {
+                    LabeledContent("On battery") {
+                        Picker("", selection: Binding(
+                            get: { batteryAwareOnBattery },
+                            set: { p in
+                                batteryAwareOnBattery = p
+                                store.batteryAware.onBatteryPreset = p
+                            }
+                        )) {
+                            ForEach(ThresholdPreset.allCases) { p in
+                                Text(p.label).tag(p)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 180)
+                        .accessibilityLabel("Threshold preset while on battery")
+                    }
+                    LabeledContent("On AC") {
+                        Picker("", selection: Binding(
+                            get: { batteryAwareOnPowered },
+                            set: { p in
+                                batteryAwareOnPowered = p
+                                store.batteryAware.onPoweredPreset = p
+                            }
+                        )) {
+                            ForEach(ThresholdPreset.allCases) { p in
+                                Text(p.label).tag(p)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 180)
+                        .accessibilityLabel("Threshold preset while on AC power")
+                    }
+                }
+                Text("Swaps your sensor thresholds based on power source. Only the warm/hot color bands change — governor caps and per-app rules are untouched.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section("Stay Awake") {
@@ -82,6 +155,7 @@ struct GeneralPrefsView: View {
                     }
                     .labelsHidden()
                     .frame(width: 260)
+                    .accessibilityLabel("Stay awake mode")
                 }
 
                 if currentModeTag == .displayThenSystem {
@@ -141,7 +215,13 @@ struct GeneralPrefsView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { loginStatus = SMAppService.mainApp.status }
+        .onAppear {
+            loginStatus = SMAppService.mainApp.status
+            hotkeyEnabled = GlobalHotkeyService.shared.isEnabled
+            batteryAwareEnabled = store.batteryAware.isEnabled
+            batteryAwareOnBattery = store.batteryAware.onBatteryPreset
+            batteryAwareOnPowered = store.batteryAware.onPoweredPreset
+        }
     }
 
     // MARK: - Stay Awake bindings
@@ -177,16 +257,24 @@ struct GeneralPrefsView: View {
     }
 
     private var stayAwakeExplanation: String {
+        let base: String
         switch currentModeTag {
         case .off:
             return "The Mac follows its normal Energy Saver settings."
         case .system:
-            return "Prevents idle sleep. The display can still turn off on its normal schedule — useful for downloads, renders, or long builds."
+            base = "Prevents idle sleep. The display can still turn off on its normal schedule — useful for downloads, renders, or long builds."
         case .display:
-            return "Prevents both system and display sleep. Think of it as caffeinate with the screen locked on."
+            base = "Prevents both system and display sleep. Think of it as caffeinate with the screen locked on."
         case .displayThenSystem:
-            return "The screen stays on for the configured minutes, then sleeps while background work continues. Great for presentations or long reads that eventually need to go idle."
+            base = "The screen stays on for the configured minutes, then sleeps while background work continues. Great for presentations or long reads that eventually need to go idle."
         }
+        // Clamshell caveat. Apple Silicon portables without an external
+        // display go to sleep on lid-close regardless of which assertion
+        // we hold — PreventUserIdle{System,Display}Sleep blocks idle-
+        // initiated sleep, not clamshell-initiated sleep. We empirically
+        // verified this on 2026-04-19 (#37 runbook). Surface it so users
+        // don't expect "Stay Awake" to keep a closed-lid Air running.
+        return base + " Note: closing the lid still sleeps the Mac unless an external display is connected — that's a macOS-level rule Stay Awake can't override."
     }
 
     private func formatCountdown(_ seconds: TimeInterval) -> String {

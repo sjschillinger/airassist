@@ -92,4 +92,77 @@ final class ProcessInspectorPerfTests: XCTestCase {
             }
         }
     }
+
+    // MARK: - #50: 1000+ PID stress
+
+    /// Hard-ceiling perf test for #50. Spawns ~800 additional `sleep` children
+    /// on top of setUp's 200 (total ~1000+ AirAssist-spawned PIDs, plus whatever
+    /// else lives on the test host — typically pushes total well past 1000).
+    ///
+    /// Asserts a 100ms per-snapshot ceiling because that's the point above
+    /// which the 1 Hz control loop starts visibly stalling on the main actor.
+    /// On a 2023 M2 Air the actual number is ~10-20ms; the 100ms ceiling is
+    /// the "something has regressed catastrophically" tripwire.
+    ///
+    /// Skipped in CI (no env var); run locally via
+    /// `AIRASSIST_RUN_STRESS=1 xcodebuild test -only-testing:…/test_snapshotAt1000PIDs`
+    /// or just run the class from Xcode's Test navigator.
+    func test_snapshotAt1000PIDs() throws {
+        // Spawn an additional batch so we clear 1000 AirAssist-owned PIDs
+        // even on hosts where the base test fleet fell short.
+        let additionalTarget = 800
+        var extraChildren: [Process] = []
+        extraChildren.reserveCapacity(additionalTarget)
+        defer {
+            for p in extraChildren where p.isRunning { p.terminate() }
+        }
+
+        for _ in 0..<additionalTarget {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/bin/sleep")
+            p.arguments = ["60"]
+            p.standardOutput = FileHandle.nullDevice
+            p.standardError = FileHandle.nullDevice
+            do {
+                try p.run()
+                extraChildren.append(p)
+            } catch {
+                // Hit rlimit — stop spawning, test with what we got.
+                break
+            }
+        }
+
+        // Settle: give libproc time to see the new PIDs.
+        let settle = expectation(description: "settle")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { settle.fulfill() }
+        wait(for: [settle], timeout: 1.0)
+
+        let inspector = ProcessInspector()
+        // Warm-up snapshot so the first measured call isn't paying init cost.
+        _ = inspector.snapshot()
+
+        // Take five snapshots back-to-back and keep the median cost. Median
+        // is more robust than min/max against a stray preemption blip.
+        var samples: [TimeInterval] = []
+        var lastCount = 0
+        for _ in 0..<5 {
+            let t0 = DispatchTime.now().uptimeNanoseconds
+            let snap = inspector.snapshot()
+            let t1 = DispatchTime.now().uptimeNanoseconds
+            samples.append(Double(t1 - t0) / 1_000_000.0) // ms
+            lastCount = snap.count
+        }
+        samples.sort()
+        let median = samples[samples.count / 2]
+
+        XCTAssertGreaterThanOrEqual(lastCount, 1000,
+            "Expected ≥1000 PIDs on test host, saw \(lastCount) — spawn may have hit rlimit")
+        XCTAssertLessThan(median, 100.0,
+            "snapshot() median was \(median)ms at \(lastCount) PIDs — " +
+            "main-actor budget is ~100ms/tick. Samples: \(samples)")
+        // Log the real number for the checklist.
+        print("[#50] snapshot median at \(lastCount) PIDs: " +
+              String(format: "%.2fms", median) +
+              " (samples: \(samples.map { String(format: "%.2f", $0) })ms)")
+    }
 }

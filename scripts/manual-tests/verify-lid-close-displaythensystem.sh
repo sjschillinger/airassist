@@ -6,35 +6,36 @@
 # is covered by test_37_DisplayThenSystemDowngrades in the integration
 # runner. What that test CAN'T do is verify real lid-close behavior —
 # clamshell sleep is driven by the physical hinge sensor, which a
-# headless script cannot simulate. `pmset sleepnow` takes a different
-# kernel path (it ignores assertions for display-sleep the same way
-# clamshell does, but the overall power graph is different).
+# headless script cannot simulate.
 #
-# This runbook covers the hands-on half:
+# Empirical finding (2026-04-19, Apple Silicon portable, no external
+# display): clamshell close ALWAYS puts the system to sleep on this
+# hardware class, regardless of which `PreventUserIdle*` assertion
+# AirAssist is holding. pmset logs show:
 #
-#   1. We put AirAssist in `displayThenSystem` mode with a normal (10min)
-#      timer so the user can actually see the downgrade happen in the UI.
-#   2. User closes the lid BEFORE the downgrade fires. Expectation:
-#      display sleeps (lid-close always sleeps the internal display —
-#      there's no assertion that blocks it on Apple Silicon), but the
-#      system does NOT go to sleep. We verify by checking SMC uptime
-#      continuity across lid open/close.
-#   3. User opens the lid. `pmset -g log` should show lid-open events
-#      without a corresponding sleep-wake pair.
-#   4. User closes the lid AGAIN, this time AFTER the downgrade window.
-#      Now we're holding only `PreventUserIdleSystemSleep`, and the
-#      observed behavior should be identical on Apple Silicon (both
-#      PreventUserIdle* block idle-initiated sleep, neither blocks
-#      clamshell). This is a regression check that the downgrade didn't
-#      somehow let clamshell sleep through.
+#     Sleep   Entering Sleep state due to 'Clamshell Sleep'
+#
+# ~10-15s into the lid-close window, whether we're in the pre-downgrade
+# (PreventUserIdleDisplaySleep) or post-downgrade
+# (PreventUserIdleSystemSleep) phase. This matches Apple's documented
+# behavior: the `PreventUserIdle*` family blocks idle-initiated sleep,
+# not clamshell-initiated sleep. Closed-lid mode (kept awake with the
+# display off) requires an attached external display — that's a
+# firmware-level rule we can't override.
+#
+# So #37's regression concern — "does the downgrade make clamshell
+# behavior WORSE?" — is moot: both variants already sleep. The test
+# that actually has teeth is the clean-lifecycle check: assertions
+# released cleanly on sleep, reacquired cleanly on wake, no stuck
+# state.
 #
 # Usage:
 #   scripts/manual-tests/verify-lid-close-displaythensystem.sh
 #
 # Preconditions:
 #   • AirAssist is running (`open -a AirAssist` or from the build).
-#   • Mac is on AC power. Lid-close behavior differs on battery.
-#   • External display NOT connected (changes the clamshell semantics).
+#   • Mac is on AC power.
+#   • External display NOT connected.
 
 set -euo pipefail
 
@@ -50,17 +51,15 @@ AIRASSIST_PID=$(pgrep -x AirAssist | head -1 || true)
 [[ -n "$AIRASSIST_PID" ]] || fail "AirAssist is not running."
 pass "AirAssist running (pid=$AIRASSIST_PID)"
 
-# Sanity-check AC power.
 if ! pmset -g batt | grep -q "AC Power"; then
-    printf "${YELLOW}WARN:${RESET} Mac is on battery. Clamshell sleep behavior "
-    printf "differs on battery; results may be misleading. Plug in and re-run.\n"
+    printf "${YELLOW}WARN:${RESET} Mac is on battery. Clamshell/wake timing "
+    printf "differs on battery; results may be noisier. Plug in and re-run.\n"
 fi
 
-# Sanity-check no external display.
 if system_profiler SPDisplaysDataType 2>/dev/null | grep -iq "External\|Connection Type: DisplayPort"; then
-    printf "${YELLOW}WARN:${RESET} External display detected. Clamshell with an "
-    printf "external monitor does NOT sleep the system regardless of "
-    printf "assertions. Unplug and re-run for a clean test.\n"
+    printf "${YELLOW}WARN:${RESET} External display detected. With an external "
+    printf "monitor, clamshell does NOT sleep the system — a different test. "
+    printf "Unplug and re-run for the fanless-Air scenario.\n"
 fi
 
 aa_assertions() {
@@ -72,35 +71,29 @@ aa_assertions() {
           ' | sort -u | tr '\n' ' '
 }
 
-# ------------------------------------------------------------------
-# Step 1 — arm displayThenSystem with a 10-minute timer.
-# ------------------------------------------------------------------
-banner "Step 1 of 3 — arm displayThenSystem (10min)"
-cat <<EOF
+count_sleep_events() {
+    pmset -g log 2>/dev/null | grep -c "Entering Sleep state" || true
+}
 
-Manual action:
-  • Open AirAssist → Preferences → General → Stay Awake
-  • Select: "Display on, then system only"
-  • Leave the minutes slider at the default (10).
-  • Press ENTER when set.
+count_wake_events() {
+    pmset -g log 2>/dev/null | grep -cE "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*DarkWake to FullWake|Wake[[:space:]]+from" || true
+}
 
-EOF
-read -r
+# ------------------------------------------------------------------
+# Step 1 — arm displayThenSystem with a short (1-min) timer.
+# ------------------------------------------------------------------
+banner "Step 1 of 2 — arm displayThenSystem (pre-downgrade phase)"
+open "airassist://debug/stay-awake?mode=displayThenSystem" >/dev/null 2>&1
+sleep 1
 
 ASSRT=$(aa_assertions)
 [[ "$ASSRT" == *PreventUserIdleDisplaySleep* ]] \
-    || fail "Expected display assertion within the 10-min window; got: '$ASSRT'"
+    || fail "Expected PreventUserIdleDisplaySleep right after arming; got: '$ASSRT'"
 pass "AirAssist holds PreventUserIdleDisplaySleep"
 
-# Record SMC "Time since boot" — if the system actually sleeps, this
-# counter will drop by roughly the sleep duration on wake. If it only
-# pauses and resumes, sleep-total below will not increment.
-SLEEP_COUNT_BEFORE=$(pmset -g log 2>/dev/null | grep -c "Entering Sleep state" || true)
+SLEEP_BEFORE=$(count_sleep_events)
+WAKE_BEFORE=$(count_wake_events)
 
-# ------------------------------------------------------------------
-# Step 2 — close lid BEFORE the 10-min downgrade fires.
-# ------------------------------------------------------------------
-banner "Step 2 of 3 — close the lid for ~30 seconds (within display-assertion window)"
 cat <<EOF
 
 Manual action:
@@ -109,38 +102,44 @@ Manual action:
   • Open the lid. Log in if prompted.
   • Press ENTER.
 
-Expectation:
-  • Internal display turned off (lid closed it — no assertion blocks that).
-  • System did NOT sleep. The spotlight-menu clock etc. should be up to
-    date on lid-open, music/downloads should have kept running.
+Expectation (corrected 2026-04-19):
+  • The system WILL sleep — that's Apple Silicon clamshell behavior
+    and AirAssist's assertions can't block it.
+  • What we're verifying: the sleep-wake cycle was clean. pmset log
+    should show exactly one sleep and one wake, AirAssist's assertion
+    is still present or cleanly re-registered post-wake.
 EOF
 read -r
 
-SLEEP_COUNT_AFTER=$(pmset -g log 2>/dev/null | grep -c "Entering Sleep state" || true)
-if (( SLEEP_COUNT_AFTER > SLEEP_COUNT_BEFORE )); then
-    fail "System slept during lid-close (pmset log shows new Entering Sleep). \
-AirAssist's display-assertion didn't prevent clamshell system-sleep. \
-(Was an external display connected? Was the Mac on battery?)"
+SLEEP_AFTER=$(count_sleep_events)
+WAKE_AFTER=$(count_wake_events)
+SLEEP_DELTA=$((SLEEP_AFTER - SLEEP_BEFORE))
+WAKE_DELTA=$((WAKE_AFTER  - WAKE_BEFORE))
+
+info "pmset: +$SLEEP_DELTA sleep(s), +$WAKE_DELTA wake(s) during the 30s window"
+
+if (( SLEEP_DELTA < 1 )); then
+    fail "No sleep event logged — did the lid actually close? (expected +1)"
 fi
-pass "System did not sleep during lid-close in display window"
+if (( SLEEP_DELTA > 2 )); then
+    fail "Unexpected multiple sleep events ($SLEEP_DELTA) — investigate."
+fi
+pass "Clamshell triggered sleep as expected"
+
+ASSRT=$(aa_assertions)
+case "$ASSRT" in
+    *PreventUserIdleDisplaySleep*|*PreventUserIdleSystemSleep*)
+        pass "AirAssist assertion present post-wake: $ASSRT" ;;
+    *)
+        fail "AirAssist assertion missing post-wake: '$ASSRT' — stuck-release bug?" ;;
+esac
 
 # ------------------------------------------------------------------
-# Step 3 — skip the full 10 minutes with the debug URL (1-min timer).
+# Step 2 — force the downgrade, repeat.
 # ------------------------------------------------------------------
-banner "Step 3 of 3 — force the downgrade, then close the lid again"
-cat <<EOF
-
-We don't want to make you wait 10 minutes. Re-arm via the debug URL
-(1-minute timer) and wait for the downgrade. The test will tell you
-when to close the lid.
-
-Press ENTER to continue.
-EOF
-read -r
-
-open "airassist://debug/stay-awake?mode=displayThenSystem"
-
-printf "Waiting 65 seconds for the downgrade to fire..."
+banner "Step 2 of 2 — force downgrade, clamshell again (post-downgrade phase)"
+open "airassist://debug/stay-awake?mode=displayThenSystem" >/dev/null 2>&1
+printf "Waiting 65 seconds for the 1-min debug downgrade to fire..."
 for _ in $(seq 1 65); do printf "." ; sleep 1; done
 printf "\n"
 
@@ -149,7 +148,7 @@ ASSRT=$(aa_assertions)
     || fail "Downgrade never fired — expected system assertion, got: '$ASSRT'"
 pass "Downgrade fired: AirAssist now holds PreventUserIdleSystemSleep"
 
-SLEEP_COUNT_BEFORE=$(pmset -g log 2>/dev/null | grep -c "Entering Sleep state" || true)
+SLEEP_BEFORE=$(count_sleep_events)
 
 cat <<EOF
 
@@ -160,20 +159,34 @@ Manual action:
   • Press ENTER.
 
 Expectation:
-  • Same as before: display off, system awake.
-  • (PreventUserIdleSystemSleep behaves the same as the display variant
-    with respect to clamshell sleep on Apple Silicon.)
+  • Same as Step 1: system will sleep (clamshell), wake cleanly on
+    lid-open, and AirAssist's assertion remains registered.
+  • The regression this guards against: downgrade somehow corrupts
+    the assertion lifecycle — e.g. double-release, stuck assertion,
+    or a crash-on-wake.
 EOF
 read -r
 
-SLEEP_COUNT_AFTER=$(pmset -g log 2>/dev/null | grep -c "Entering Sleep state" || true)
-if (( SLEEP_COUNT_AFTER > SLEEP_COUNT_BEFORE )); then
-    fail "System slept during post-downgrade lid-close. \
-The downgraded system assertion didn't hold clamshell-sleep at bay."
-fi
-pass "System did not sleep during post-downgrade lid-close"
+SLEEP_AFTER=$(count_sleep_events)
+SLEEP_DELTA=$((SLEEP_AFTER - SLEEP_BEFORE))
 
-# Reset to off so we don't leave an assertion dangling.
-open "airassist://debug/stay-awake?mode=off"
+info "pmset: +$SLEEP_DELTA sleep(s) during the post-downgrade window"
 
-banner "OK — #37 verified (lid-close behavior in displayThenSystem mode)"
+(( SLEEP_DELTA >= 1 )) || fail "No sleep event logged — did the lid actually close?"
+(( SLEEP_DELTA <= 2 )) || fail "Unexpected multiple sleep events ($SLEEP_DELTA)"
+pass "Post-downgrade clamshell cycle clean"
+
+ASSRT=$(aa_assertions)
+case "$ASSRT" in
+    *PreventUserIdleSystemSleep*)
+        pass "AirAssist still holds downgraded assertion: $ASSRT" ;;
+    *PreventUserIdleDisplaySleep*)
+        fail "Assertion reverted to Display after wake — downgrade should persist" ;;
+    *)
+        fail "AirAssist assertion missing post-wake: '$ASSRT'" ;;
+esac
+
+# Reset so we don't leave an assertion dangling.
+open "airassist://debug/stay-awake?mode=off" >/dev/null 2>&1
+
+banner "OK — #37 verified (clean assertion lifecycle across clamshell cycles)"
