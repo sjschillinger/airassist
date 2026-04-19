@@ -276,8 +276,11 @@ final class MenuBarController {
             onPreferences: { [weak self] in self?.openPreferences() },
             onQuit:        { NSApp.terminate(nil) }
         ))
-        vc.sizingOptions = []
-        popover.contentSize = NSSize(width: 260, height: 460)
+        // Let SwiftUI drive the popover height from the hosted view's
+        // intrinsic size, so Summary mode (shorter) doesn't leave a gap
+        // above the header and Detailed mode can grow within its
+        // maxHeight(260) cap without clipping.
+        vc.sizingOptions = [.preferredContentSize]
         popover.contentViewController = vc
     }
 
