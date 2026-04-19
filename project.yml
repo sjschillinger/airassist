@@ -69,6 +69,7 @@ targets:
     dependencies:
       - sdk: IOKit.framework
       - sdk: ServiceManagement.framework
+      - sdk: AppIntents.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sjschillinger.airassist

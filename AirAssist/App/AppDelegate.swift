@@ -27,6 +27,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         store.start()
         menuBarController = MenuBarController(store: store)
 
+        // Global hotkey (#56). ⌘⌥P toggles pause/resume from anywhere.
+        // Carbon-based — no Accessibility permission required.
+        GlobalHotkeyService.shared.onTrigger = { [weak self] in
+            guard let store = self?.store else { return }
+            if store.isPauseActive {
+                store.resumeThrottling()
+            } else {
+                store.pauseThrottling(for: nil) // indefinite until user resumes
+            }
+        }
+        GlobalHotkeyService.shared.start()
+
         // One-time legal/safety disclosure. Runs after the menu bar is up so
         // the alert isn't the first thing the user sees on a cold launch; the
         // icon appears, then the modal.
@@ -45,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func applicationWillTerminate(_ notification: Notification) {
+        GlobalHotkeyService.shared.stop()
         store.stop()
         menuBarController?.teardown()
         menuBarController = nil
