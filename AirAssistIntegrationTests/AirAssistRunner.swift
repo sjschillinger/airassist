@@ -1,12 +1,21 @@
 import Foundation
-import XCTest
 
 /// Out-of-process harness for the runtime-safety integration tests.
 ///
-/// The integration-test bundle does NOT inject into AirAssist (no
-/// BUNDLE_LOADER) — that would distort signal delivery semantics which
-/// are precisely what we're testing. Instead, each test launches the
-/// just-built `AirAssist.app` as a child process and communicates via:
+/// Packaged as a command-line tool (target `AirAssistIntegrationRunner`),
+/// NOT an xctest bundle. We fought xcodebuild test infrastructure for a
+/// day trying to get truly out-of-process signal-delivery testing: every
+/// variant (`bundle.unit-test` with/without TEST_HOST, `bundle.ui-testing`)
+/// either injected the test code into AirAssist.app (so SIGKILL-tests
+/// killed the harness) or required Accessibility/automation TCC grants
+/// we can't script. A plain `tool` target sidesteps the whole stack —
+/// `xcodebuild build` produces both AirAssist.app and the test runner,
+/// then `scripts/run-integration.sh` invokes the runner directly. The
+/// runner is a normal Foundation-only process that spawns AirAssist as
+/// a child.
+///
+/// Each test launches the just-built `AirAssist.app` as a child process
+/// and communicates via:
 ///
 ///   • The `airassist://` URL scheme (including the `debug/*` endpoints
 ///     that are compiled in only under DEBUG — see
@@ -51,25 +60,27 @@ final class AirAssistRunner {
     /// started poking at them. Restored on `tearDown()`.
     private var savedRulesBlob: Data?
 
-    init(file: StaticString = #filePath, line: UInt = #line) throws {
-        // The integration-test xctest bundle is copied *inside* the host app
-        // at `AirAssist.app/Contents/PlugIns/AirAssistIntegrationTests.xctest`.
-        // The host-app bundle is three parents up from the xctest bundle's URL.
-        let bundleURL = Bundle(for: AirAssistRunner.Token.self).bundleURL
-        let hostApp = bundleURL                 // .../PlugIns/AirAssistIntegrationTests.xctest
-            .deletingLastPathComponent()        // .../PlugIns
-            .deletingLastPathComponent()        // .../Contents
-            .deletingLastPathComponent()        // .../AirAssist.app
-        let candidate: URL = {
-            if hostApp.pathExtension == "app" { return hostApp }
-            // Fallback: sibling of the test bundle (old layout).
-            return bundleURL.deletingLastPathComponent()
-                .appendingPathComponent("AirAssist.app")
-        }()
-        guard FileManager.default.fileExists(atPath: candidate.path) else {
-            XCTFail("AirAssist.app not found at \(candidate.path). " +
-                    "Is the AirAssist target a build dependency of the integration tests?",
-                    file: file, line: line)
+    init() throws {
+        // Locate AirAssist.app. As a CLI tool target, the runner
+        // binary sits in BUILT_PRODUCTS_DIR (e.g.
+        // .../Build/Products/Debug/AirAssistIntegrationRunner) and
+        // AirAssist.app is its sibling there. We walk up from the
+        // executable path, not from Bundle.main which is unreliable
+        // for command-line tools.
+        let exePath = CommandLine.arguments.first.map { URL(fileURLWithPath: $0) }
+            ?? URL(fileURLWithPath: ProcessInfo.processInfo.arguments[0])
+        let productsDir = exePath.resolvingSymlinksInPath().deletingLastPathComponent()
+        let candidates: [URL] = [
+            productsDir.appendingPathComponent("AirAssist.app"),
+            // Also honor an explicit override via env for CI / manual use.
+            ProcessInfo.processInfo.environment["AIRASSIST_APP"]
+                .map { URL(fileURLWithPath: $0) } ?? URL(fileURLWithPath: "/dev/null"),
+        ]
+        let found = candidates.first { url in
+            url.pathExtension == "app" && FileManager.default.fileExists(atPath: url.path)
+        }
+        guard let candidate = found else {
+            FileHandle.standardError.write(Data("AirAssist.app not found. Looked in: \(candidates.map(\.path))\n".utf8))
             throw RunnerError.appNotBuilt
         }
         self.appBundleURL = candidate
@@ -80,10 +91,6 @@ final class AirAssistRunner {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         self.workingDir = dir
     }
-
-    /// Token class used only to locate the test bundle. Cheaper than
-    /// depending on @testable imports.
-    private final class Token {}
 
     enum RunnerError: Error {
         case appNotBuilt
@@ -97,49 +104,75 @@ final class AirAssistRunner {
     /// Start AirAssist, wait for it to respond on the URL scheme, clear
     /// rules, and return. Idempotent — kills any existing AirAssist first.
     func launch(timeout: TimeInterval = 15) throws {
+        trace("launch: start appBundleURL=\(appBundleURL.path)")
         backupRulesDefaults()
+        trace("launch: backup done, killing any running AirAssist")
         killAnyRunningAirAssist()
+        trace("launch: kill done, suppressing first-run modals")
         // Suppress the first-run disclosure and onboarding modals — both
         // are NSAlert.runModal() which blocks the main thread and wedges
         // the URL-scheme handler. The integration suite assumes a headless
         // AirAssist. Stamp the "seen" keys to a future version so they
         // never fire.
         suppressFirstRunModals()
+        trace("launch: running open -g -n -a \(appBundleURL.path)")
 
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/open")
         // -g prevents activation stealing focus, -n forces a new instance
         // in case LaunchServices still thinks one is alive.
-        proc.arguments = ["-g", "-n", "-W", "-a", appBundleURL.path]
-        // NOTE: -W (wait for exit) makes `open` block until AirAssist exits.
-        // We don't actually want that for interactive tests — switch:
         proc.arguments = ["-g", "-n", "-a", appBundleURL.path]
         try proc.run()
         proc.waitUntilExit()
+        trace("launch: open exited status=\(proc.terminationStatus)")
         guard proc.terminationStatus == 0 else {
             throw RunnerError.launchFailed("open returned \(proc.terminationStatus)")
         }
 
         // Poll for the process to appear by bundle-path match.
         let deadline = Date().addingTimeInterval(timeout)
+        var polls = 0
         while Date() < deadline {
             if let p = pgrepAirAssist() {
                 self.pid = p
+                trace("launch: pgrep found pid=\(p) after \(polls) polls")
                 break
             }
+            polls += 1
             Thread.sleep(forTimeInterval: 0.1)
         }
         guard pid != nil else {
+            trace("launch: pgrep never found AirAssist after \(timeout)s")
+            captureHangDiagnostic(reason: "AirAssist never appeared in pgrep after \(timeout)s")
             throw RunnerError.launchFailed("AirAssist never appeared in pgrep after \(timeout)s")
         }
 
         // URL scheme is registered during applicationDidFinishLaunching.
         // Ping until we get a pong file back so tests never race an
         // uninitialized store.
+        trace("launch: waiting for ping")
         try waitForPing(timeout: timeout)
+        trace("launch: ping ok, clearing rules")
 
         // Fresh slate: no rules, engine off.
         openURL("airassist://debug/clear-rules")
+        trace("launch: done")
+    }
+
+    /// Emit a line to stderr AND a persistent log file so we can trace
+    /// where a hang happened without needing the xcresult bundle.
+    /// Writes to /tmp/airassist-integration-trace.log (appended, survives
+    /// tearDown) and fputs to stderr (appears inline in xcodebuild output).
+    private func trace(_ msg: String) {
+        let line = "[AirAssistRunner \(ISO8601DateFormatter().string(from: Date()))] \(msg)\n"
+        fputs(line, stderr)
+        if let fh = FileHandle(forWritingAtPath: "/tmp/airassist-integration-trace.log") {
+            fh.seekToEndOfFile()
+            if let d = line.data(using: .utf8) { fh.write(d) }
+            try? fh.close()
+        } else {
+            try? line.data(using: .utf8)?.write(to: URL(fileURLWithPath: "/tmp/airassist-integration-trace.log"))
+        }
     }
 
     /// Clean shutdown. Sends SIGTERM (the graceful path; SafetyCoordinator
@@ -185,7 +218,7 @@ final class AirAssistRunner {
     /// `exportState()` after to verify effect.
     func openURL(_ str: String) {
         guard let url = URL(string: str) else {
-            XCTFail("Bad URL: \(str)"); return
+            FileHandle.standardError.write(Data("Bad URL: \(str)\n".utf8)); return
         }
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/open")
@@ -197,20 +230,68 @@ final class AirAssistRunner {
     }
 
     /// Blocks until AirAssist writes a pong file, or throws on timeout.
+    /// On timeout, writes a `sample(1)` stack trace of the AirAssist process
+    /// and the last 30s of its `os_log` output into `workingDir/diagnostic/`
+    /// — future hangs self-diagnose instead of requiring interactive debugging.
     private func waitForPing(timeout: TimeInterval) throws {
         let pongPath = workingDir.appendingPathComponent("pong.txt").path
         let deadline = Date().addingTimeInterval(timeout)
-        // Use fresh filename per attempt so a stale file can't pass us.
         while Date() < deadline {
             try? FileManager.default.removeItem(atPath: pongPath)
             openURL("airassist://debug/ping?to=\(pongPath.urlEncoded)")
-            // Give the handler ~100ms to react.
             for _ in 0..<5 {
                 Thread.sleep(forTimeInterval: 0.1)
                 if FileManager.default.fileExists(atPath: pongPath) { return }
             }
         }
+        captureHangDiagnostic(reason: "waitForPing timed out after \(timeout)s")
         throw RunnerError.pingTimeout
+    }
+
+    /// Snapshot everything we'd want if the suite hangs in CI: `sample`
+    /// stack of AirAssist, last 30s of its os_log, `ps` of our subtree.
+    /// Writes to `/tmp/airassist-integration-diagnostic-<UUID>.txt` and
+    /// prints the path to stderr so the run log surfaces it.
+    func captureHangDiagnostic(reason: String) {
+        // Write to /tmp (NOT workingDir) so it survives tearDown's
+        // removeItem of the working dir. Test Report shows the path.
+        let path = "/tmp/airassist-integration-diagnostic-\(UUID().uuidString).txt"
+        var out = "=== AirAssist integration hang diagnostic ===\n"
+        out += "reason: \(reason)\n"
+        out += "time:   \(ISO8601DateFormatter().string(from: Date()))\n\n"
+
+        if let p = pgrepAirAssist() ?? self.pid {
+            out += "--- sample(AirAssist pid=\(p), 1s) ---\n"
+            out += shell("/usr/bin/sample", ["\(p)", "1"]) + "\n\n"
+            out += "--- ps for pid=\(p) ---\n"
+            out += shell("/bin/ps", ["-o", "pid=,stat=,etime=,command=", "-p", "\(p)"]) + "\n\n"
+        } else {
+            out += "(no AirAssist process to sample)\n\n"
+        }
+        out += "--- log show airassist subsystem (last 30s) ---\n"
+        out += shell("/usr/bin/log", [
+            "show",
+            "--predicate", "subsystem == \"com.sjschillinger.airassist\"",
+            "--last", "30s",
+            "--info",
+        ]) + "\n"
+        try? out.write(toFile: path, atomically: true, encoding: .utf8)
+        FileHandle.standardError.write(Data("AirAssist hung — diagnostic at \(path)\n".utf8))
+    }
+
+    /// One-shot shell capture. Used only by the diagnostic path so it's
+    /// fine to block; never on the hot path.
+    private func shell(_ tool: String, _ args: [String]) -> String {
+        let pipe = Pipe()
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: tool)
+        p.arguments = args
+        p.standardOutput = pipe
+        p.standardError = pipe
+        guard (try? p.run()) != nil else { return "(failed to run \(tool))" }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        p.waitUntilExit()
+        return String(data: data, encoding: .utf8) ?? ""
     }
 
     // MARK: - Seed rules
@@ -342,8 +423,12 @@ final class AirAssistRunner {
         proc.standardOutput = pipe
         proc.standardError = FileHandle.nullDevice
         do { try proc.run() } catch { return nil }
-        proc.waitUntilExit()
+        // Drain pipe BEFORE waiting. `ps -A` output on a busy Mac easily
+        // exceeds the 16-64KB Pipe buffer; if we wait first, ps blocks on
+        // write and we deadlock. readDataToEndOfFile returns when ps
+        // closes stdout (i.e., exits), so waitUntilExit below is a no-op.
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        proc.waitUntilExit()
         guard let str = String(data: data, encoding: .utf8) else { return nil }
         for rawLine in str.split(separator: "\n") {
             let line = String(rawLine).trimmingCharacters(in: .whitespaces)
@@ -391,8 +476,8 @@ func psState(for pid: Int32) -> String? {
     p.standardOutput = pipe
     p.standardError = FileHandle.nullDevice
     guard (try? p.run()) != nil else { return nil }
-    p.waitUntilExit()
     let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    p.waitUntilExit()
     let s = String(data: data, encoding: .utf8)?
         .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     return s.isEmpty ? nil : s

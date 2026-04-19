@@ -11,6 +11,26 @@ options:
 
 packages: {}
 
+schemes:
+  AirAssist:
+    build:
+      targets:
+        AirAssist: all
+        AirAssistIntegrationRunner: all
+    test:
+      targets:
+        - AirAssistTests
+        - AirAssistUITests
+      gatherCoverageData: false
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -56,15 +76,29 @@ targets:
         BUNDLE_LOADER: "$(TEST_HOST)"
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AirAssist.app/Contents/MacOS/AirAssist"
 
-  AirAssistIntegrationTests:
+  AirAssistIntegrationRunner:
     # Runtime safety suite (#16/#17/#19/#34/#35/#36/#38 — see
-    # scripts/manual-tests/ runbooks). These replace the shell-based
+    # scripts/manual-tests/ runbooks). Replaces the shell-based
     # runbooks for the cases that don't require a physical lid close
     # or real system sleep. Launches AirAssist.app from BUILT_PRODUCTS_DIR
     # via `open`, drives it through the `airassist://` URL scheme (inc.
     # debug endpoints — only present in Debug builds), and reads state
     # back via the `debug/export-state` endpoint.
-    type: bundle.unit-test
+    #
+    # Packaged as a COMMAND-LINE TOOL, not an xctest bundle. Every
+    # xctest packaging (`bundle.unit-test` with/without TEST_HOST,
+    # `bundle.ui-testing`) routes signal delivery through the process
+    # running the tests — fatal for a suite whose whole purpose is
+    # SIGKILL-ing the process under test. A plain `tool` target
+    # produces a normal macOS executable; `scripts/run-integration.sh`
+    # builds AirAssist.app and this runner together, then invokes the
+    # runner directly. The runner spawns AirAssist as a child, so
+    # SIGKILL tests land on the child, not us.
+    #
+    # Not invoked by `xcodebuild test` — this target is excluded from
+    # the scheme's test action. Run it via `scripts/run-integration.sh`
+    # or `AirAssistIntegrationRunner --list` after a build.
+    type: tool
     platform: macOS
     deploymentTarget: "15.0"
     sources:
@@ -73,16 +107,13 @@ targets:
       - target: AirAssist
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.sjschillinger.airassist.integrationtests
-        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_NAME: AirAssistIntegrationRunner
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: minimal
-        # Deliberately NOT setting BUNDLE_LOADER / TEST_HOST — this bundle
-        # does NOT inject into AirAssist. It launches it as a child
-        # process and communicates via URL scheme + filesystem. Keeping
-        # these tests out-of-process preserves the realism of signal
-        # delivery (SIGKILL/SIGTERM behavior) which an injected bundle
-        # would distort.
+        # No sandbox, no hardened runtime — this is a dev-only CLI
+        # that needs to SIGKILL AirAssist, run `pmset`, spawn `yes`,
+        # etc. Never shipped to users.
+        ENABLE_HARDENED_RUNTIME: NO
 
   AirAssistUITests:
     # Accessibility audit + keyboard navigation checks (#14/#41).

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		07DEAE60DE866AE450B0D168 /* SensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05664AF6DD35210D50D4D873 /* SensorService.swift */; };
+		099815B841513BF03BC53F73 /* PauseAndStayAwakeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */; };
 		09BFDA5470EAD62D85A3E335 /* DiagnosticBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F43EF95D16B0D67D0FD9028 /* DiagnosticBundle.swift */; };
 		0A04AF5B11A0831917ADD356 /* SensorListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B85179E897A875693EE50AD /* SensorListView.swift */; };
 		0F4EDC318F405B7E520BF6C5 /* FrontmostAppObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E79F9D9CEB95EE90B4F21 /* FrontmostAppObserver.swift */; };
@@ -18,6 +19,7 @@
 		1D00491EC4021413E4A200D8 /* AppIcon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7DDD72924D522D0C57068D59 /* AppIcon.svg */; };
 		1D99B043A174F61732F796F8 /* PreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE69B36A4A78E82AFCE02EA /* PreferencesWindowController.swift */; };
 		1FBEFE6AFC18FA9F73206F50 /* GeneralPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */; };
+		20CE73D53778FC656E48A9C7 /* AirAssistRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B822BE93D058B83394F59536 /* AirAssistRunner.swift */; };
 		23E76F3C783FC9160017310E /* ThermalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E2A65A91770B1DB2B928FA /* ThermalStore.swift */; };
 		24F6786F7227631D1C081DF9 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68ECE41B669EE247996A79BF /* PreferencesView.swift */; };
 		299495A4528A366F04A3FA11 /* RuleTemplatesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EB97E138B61FA2FD28EE16 /* RuleTemplatesTests.swift */; };
@@ -30,9 +32,8 @@
 		4111D77C0E4FD338E48D7F0C /* AirAssistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */; };
 		47390C305B3C9D72F38E8383 /* AppIcon-composed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4629A6D06B14E1E69D71A6E0 /* AppIcon-composed.svg */; };
 		47422C41049B5628AC31D285 /* ThrottleScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */; };
-		4DA8F66397857E7B4AE49ECA /* ThrottleIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */; };
+		4901AB447766EEA5989D007D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CEE1EF1D22A6125D421D64C5 /* README.md */; };
 		4F8D50BFF09B19FE97FFFA66 /* URLSchemeHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D27DC050DA4ABA3EB9D1484 /* URLSchemeHandlerTests.swift */; };
-		4FB16C5E27CC5ED26BE9F0E4 /* PauseAndStayAwakeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */; };
 		50258C58F65338E95509046D /* ProcessInspectorPerfTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10566982345E91583B70DED /* ProcessInspectorPerfTests.swift */; };
 		50EF7E4928DD0A61A1B3869B /* Sensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CA07BBE53129D2A34A1589 /* Sensor.swift */; };
 		5A858B7E2BF0CFC0B3E49847 /* ThrottleRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A644DAD204B5C11BF9D35A09 /* ThrottleRule.swift */; };
@@ -42,7 +43,6 @@
 		6CD4DD212B31618386CDE229 /* BatteryAwareMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C357D4E2F6011390B682767 /* BatteryAwareMode.swift */; };
 		704A38ED1043918BE5782CD2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B8A97982FB78D94D328FDB /* IOKit.framework */; };
 		72FE15AFF7FE2FD18EBD5B04 /* ThresholdPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */; };
-		7E446F1596617E5D02E8C834 /* AirAssistRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B822BE93D058B83394F59536 /* AirAssistRunner.swift */; };
 		81EF92D16FD31086423E4B99 /* URLSchemeHandler+Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */; };
 		8B1F31EC477E96E3DD53D9EB /* FirstLaunchSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */; };
 		8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573E0D36375389574C26D88F /* ThrottlingPrefsView.swift */; };
@@ -55,8 +55,10 @@
 		A5B74A36D44F389797534E71 /* MenuBarIconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E14DCBD5EA4C7C5865E92A /* MenuBarIconRenderer.swift */; };
 		A82D2A4454819031737A472C /* GlobalHotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31055655C5C5AA8D2754F348 /* GlobalHotkeyService.swift */; };
 		AB48799889B27371203501F4 /* SensorCategorizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DC26A8B4587EC9DE928881 /* SensorCategorizer.swift */; };
+		ACB3D6C2A49200E19A003F2F /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053C1F519C6EF5056C3BFC58 /* main.swift */; };
 		ACFABCECFECDF629B1105134 /* GovernorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */; };
 		B0A47662747C2867086D592B /* SensorsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD89C1534037D26554015A /* SensorsPrefsView.swift */; };
+		B183D1C124AAEE3F298C599F /* ThrottleIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */; };
 		B5FCBC00DE2EE807B11B27A0 /* SleepWakeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */; };
 		B77AD3CA5AE2AF1411D68173 /* SafetyCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */; };
 		BD6134487DFA3B4DD3CD9E0E /* GovernorConfigClampTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209A50EAB91CC3E47E5F04A5 /* GovernorConfigClampTests.swift */; };
@@ -77,6 +79,7 @@
 		E9F23A842ABC54031BBAE6AB /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43403D677D51F2FAC26B14EA /* Constants.swift */; };
 		EB79F540BA6F71D092CAA211 /* DashboardContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */; };
 		EBE6C2163E1F9171F1E8F87E /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */; };
+		EC80724CCFDD8458B4D929BF /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B547671D14DD15F0C9817F44 /* Assertions.swift */; };
 		FAB74801EE74233DE341FF9C /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02BA0BF3D6B9C098E7D51127 /* HistoryView.swift */; };
 /* End PBXBuildFile section */
 
@@ -88,7 +91,7 @@
 			remoteGlobalIDString = 7BA1AA1EFB1012E94DD9A5FA;
 			remoteInfo = AirAssist;
 		};
-		2A7EFC0E7156BD4FA72EB5B5 /* PBXContainerItemProxy */ = {
+		3FA34DCE989D93CF2B4887BC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F33C39F33672A17BC2A1E0D9 /* Project object */;
 			proxyType = 1;
@@ -106,12 +109,14 @@
 
 /* Begin PBXFileReference section */
 		02BA0BF3D6B9C098E7D51127 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		053C1F519C6EF5056C3BFC58 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		05664AF6DD35210D50D4D873 /* SensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorService.swift; sourceTree = "<group>"; };
 		0D2EA235795456EF4D733B04 /* MenuBarPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPrefs.swift; sourceTree = "<group>"; };
 		0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryReader.swift; sourceTree = "<group>"; };
 		16E8286BDB0C5E6AF90B6498 /* AirAssistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AirAssist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E38AF8B6D89383B136037DA /* ProcessThrottlerArbitrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottlerArbitrationTests.swift; sourceTree = "<group>"; };
+		1F632647D859182626DE798B /* AirAssistIntegrationRunner */ = {isa = PBXFileReference; includeInIndex = 0; path = AirAssistIntegrationRunner; sourceTree = BUILT_PRODUCTS_DIR; };
 		209A50EAB91CC3E47E5F04A5 /* GovernorConfigClampTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GovernorConfigClampTests.swift; sourceTree = "<group>"; };
 		22B8A97982FB78D94D328FDB /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		2340286CEE2E559824D689B1 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
@@ -141,7 +146,6 @@
 		73665E744DF97F6A87703F65 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		7DDD72924D522D0C57068D59 /* AppIcon.svg */ = {isa = PBXFileReference; path = AppIcon.svg; sourceTree = "<group>"; };
-		7ED9159D0B813B5F03BB3690 /* AirAssistIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URLSchemeHandler+Debug.swift"; sourceTree = "<group>"; };
 		8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
 		8B85179E897A875693EE50AD /* SensorListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorListView.swift; sourceTree = "<group>"; };
@@ -157,6 +161,7 @@
 		A644DAD204B5C11BF9D35A09 /* ThrottleRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleRule.swift; sourceTree = "<group>"; };
 		A7B17DD0F122F70084C97529 /* MenuBarGlyph.svg */ = {isa = PBXFileReference; path = MenuBarGlyph.svg; sourceTree = "<group>"; };
 		AD667C42F60AF2E26D510B5F /* SensorCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorCardView.swift; sourceTree = "<group>"; };
+		B547671D14DD15F0C9817F44 /* Assertions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assertions.swift; sourceTree = "<group>"; };
 		B58475359CEC0FD11EBF5424 /* AccessibilityAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityAuditTests.swift; sourceTree = "<group>"; };
 		B822BE93D058B83394F59536 /* AirAssistRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirAssistRunner.swift; sourceTree = "<group>"; };
 		B8D0D8FF68F79EF6C9054744 /* AirAssistUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -167,6 +172,7 @@
 		C7EB97E138B61FA2FD28EE16 /* RuleTemplatesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleTemplatesTests.swift; sourceTree = "<group>"; };
 		CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardWindowController.swift; sourceTree = "<group>"; };
 		CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottler.swift; sourceTree = "<group>"; };
+		CEE1EF1D22A6125D421D64C5 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D0BD89C1534037D26554015A /* SensorsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorsPrefsView.swift; sourceTree = "<group>"; };
 		D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinator.swift; sourceTree = "<group>"; };
 		DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseAndStayAwakeTests.swift; sourceTree = "<group>"; };
@@ -275,7 +281,10 @@
 			isa = PBXGroup;
 			children = (
 				B822BE93D058B83394F59536 /* AirAssistRunner.swift */,
+				B547671D14DD15F0C9817F44 /* Assertions.swift */,
+				053C1F519C6EF5056C3BFC58 /* main.swift */,
 				DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */,
+				CEE1EF1D22A6125D421D64C5 /* README.md */,
 				C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */,
 			);
 			path = AirAssistIntegrationTests;
@@ -397,7 +406,7 @@
 			isa = PBXGroup;
 			children = (
 				1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */,
-				7ED9159D0B813B5F03BB3690 /* AirAssistIntegrationTests.xctest */,
+				1F632647D859182626DE798B /* AirAssistIntegrationRunner */,
 				16E8286BDB0C5E6AF90B6498 /* AirAssistTests.xctest */,
 				B8D0D8FF68F79EF6C9054744 /* AirAssistUITests.xctest */,
 			);
@@ -444,23 +453,24 @@
 			productReference = B8D0D8FF68F79EF6C9054744 /* AirAssistUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		EBC779F3E80599F3F6E804A8 /* AirAssistIntegrationTests */ = {
+		D3E7E8AF4FE68F5932C885EE /* AirAssistIntegrationRunner */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 639F45DD6212CD58A069F3DF /* Build configuration list for PBXNativeTarget "AirAssistIntegrationTests" */;
+			buildConfigurationList = FCE34BF2F39D2CC78529F898 /* Build configuration list for PBXNativeTarget "AirAssistIntegrationRunner" */;
 			buildPhases = (
-				1806385B2744C30A1943F6EF /* Sources */,
+				EC5C438E994F12CAEDB540D3 /* Sources */,
+				8B12EB68DD24A15266B13EC7 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				F8342EE575C48731F2BB8EE0 /* PBXTargetDependency */,
+				0C0EE8B9E67E4B65168A5D50 /* PBXTargetDependency */,
 			);
-			name = AirAssistIntegrationTests;
+			name = AirAssistIntegrationRunner;
 			packageProductDependencies = (
 			);
-			productName = AirAssistIntegrationTests;
-			productReference = 7ED9159D0B813B5F03BB3690 /* AirAssistIntegrationTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
+			productName = AirAssistIntegrationRunner;
+			productReference = 1F632647D859182626DE798B /* AirAssistIntegrationRunner */;
+			productType = "com.apple.product-type.tool";
 		};
 		FD2D560CF513834C1517A36E /* AirAssistTests */ = {
 			isa = PBXNativeTarget;
@@ -496,7 +506,7 @@
 						ProvisioningStyle = Manual;
 						TestTargetID = 7BA1AA1EFB1012E94DD9A5FA;
 					};
-					EBC779F3E80599F3F6E804A8 = {
+					D3E7E8AF4FE68F5932C885EE = {
 						ProvisioningStyle = Manual;
 					};
 					FD2D560CF513834C1517A36E = {
@@ -519,7 +529,7 @@
 			projectRoot = "";
 			targets = (
 				7BA1AA1EFB1012E94DD9A5FA /* AirAssist */,
-				EBC779F3E80599F3F6E804A8 /* AirAssistIntegrationTests */,
+				D3E7E8AF4FE68F5932C885EE /* AirAssistIntegrationRunner */,
 				FD2D560CF513834C1517A36E /* AirAssistTests */,
 				C31E1919CAC0B64682144C69 /* AirAssistUITests */,
 			);
@@ -527,6 +537,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		8B12EB68DD24A15266B13EC7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4901AB447766EEA5989D007D /* README.md in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9F3BCA545AB0D073E1BC2EC0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -541,16 +559,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		1806385B2744C30A1943F6EF /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				7E446F1596617E5D02E8C834 /* AirAssistRunner.swift in Sources */,
-				4FB16C5E27CC5ED26BE9F0E4 /* PauseAndStayAwakeTests.swift in Sources */,
-				4DA8F66397857E7B4AE49ECA /* ThrottleIntegrationTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		4AF345E839684E3409B11B1B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -625,6 +633,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EC5C438E994F12CAEDB540D3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				20CE73D53778FC656E48A9C7 /* AirAssistRunner.swift in Sources */,
+				EC80724CCFDD8458B4D929BF /* Assertions.swift in Sources */,
+				099815B841513BF03BC53F73 /* PauseAndStayAwakeTests.swift in Sources */,
+				B183D1C124AAEE3F298C599F /* ThrottleIntegrationTests.swift in Sources */,
+				ACB3D6C2A49200E19A003F2F /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EF7C8528A2B6F48A455131FB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -636,6 +656,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0C0EE8B9E67E4B65168A5D50 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7BA1AA1EFB1012E94DD9A5FA /* AirAssist */;
+			targetProxy = 3FA34DCE989D93CF2B4887BC /* PBXContainerItemProxy */;
+		};
 		546A256805C66E5AA2528739 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7BA1AA1EFB1012E94DD9A5FA /* AirAssist */;
@@ -645,11 +670,6 @@
 			isa = PBXTargetDependency;
 			target = 7BA1AA1EFB1012E94DD9A5FA /* AirAssist */;
 			targetProxy = 3FF354DA76CE11DC3245E2A3 /* PBXContainerItemProxy */;
-		};
-		F8342EE575C48731F2BB8EE0 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 7BA1AA1EFB1012E94DD9A5FA /* AirAssist */;
-			targetProxy = 2A7EFC0E7156BD4FA72EB5B5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -738,6 +758,24 @@
 			};
 			name = Debug;
 		};
+		4C8FAFB5E4A635F6F910E52A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.AirAssistIntegrationRunner;
+				PRODUCT_NAME = AirAssistIntegrationRunner;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
 		4FB2836DBDF33BC32CDDF2C7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -778,26 +816,6 @@
 			};
 			name = Debug;
 		};
-		685E8CA4B077FE9C460C6774 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				COMBINE_HIDPI_IMAGES = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist.integrationtests;
-				SDKROOT = macosx;
-				SWIFT_STRICT_CONCURRENCY = minimal;
-				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AirAssist.app/Contents/MacOS/AirAssist";
-			};
-			name = Release;
-		};
 		70BDE6495D7908A0A992ACB7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -817,26 +835,6 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 			};
 			name = Release;
-		};
-		93C92BDBCFF8F85C46FB690F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				COMBINE_HIDPI_IMAGES = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist.integrationtests;
-				SDKROOT = macosx;
-				SWIFT_STRICT_CONCURRENCY = minimal;
-				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AirAssist.app/Contents/MacOS/AirAssist";
-			};
-			name = Debug;
 		};
 		A3C5C70B6B1A97E3A6EBFFBF /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -929,6 +927,24 @@
 			};
 			name = Debug;
 		};
+		D7255A86548D2F13F4A53AB5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.AirAssistIntegrationRunner;
+				PRODUCT_NAME = AirAssistIntegrationRunner;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
 		F1A9766117D338ED394E3611 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -979,20 +995,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		639F45DD6212CD58A069F3DF /* Build configuration list for PBXNativeTarget "AirAssistIntegrationTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				93C92BDBCFF8F85C46FB690F /* Debug */,
-				685E8CA4B077FE9C460C6774 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
 		929DDCA5992A7BB0E9819B6C /* Build configuration list for PBXNativeTarget "AirAssistUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2D3C9AFD07F234597E2EBD5C /* Debug */,
 				F1A9766117D338ED394E3611 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FCE34BF2F39D2CC78529F898 /* Build configuration list for PBXNativeTarget "AirAssistIntegrationRunner" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D7255A86548D2F13F4A53AB5 /* Debug */,
+				4C8FAFB5E4A635F6F910E52A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
