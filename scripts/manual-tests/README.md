@@ -43,8 +43,8 @@ Follow the shape of `verify-sigstop-lands.sh`:
 | Script                        | Checklist item |
 | ----------------------------- | -------------- |
 | `verify-sigstop-lands.sh`     | #16            |
-| `verify-crash-recovery.sh`    | #17 (TODO)     |
-| `verify-sleep-wake.sh`        | #18 (TODO)     |
-| `verify-pid-reuse.sh`         | #19 (TODO)     |
-| `verify-stay-awake.sh`        | #36 (TODO)     |
-| `verify-force-quit-clean.sh`  | #38 (TODO)     |
+| `verify-crash-recovery.sh`    | #17            |
+| `verify-sleep-wake.sh`        | #18            |
+| `verify-pid-reuse.sh`         | #19            |
+| `verify-stay-awake.sh`        | #36            |
+| `verify-force-quit-clean.sh`  | #38            |

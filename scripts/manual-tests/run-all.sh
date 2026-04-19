@@ -12,12 +12,12 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SCRIPTS=(
-    verify-sigstop-lands.sh
-    # verify-crash-recovery.sh    # TODO #17
-    # verify-sleep-wake.sh        # TODO #18
-    # verify-pid-reuse.sh         # TODO #19
-    # verify-stay-awake.sh        # TODO #36
-    # verify-force-quit-clean.sh  # TODO #38
+    verify-sigstop-lands.sh       # #16
+    verify-crash-recovery.sh      # #17
+    verify-sleep-wake.sh          # #18
+    verify-pid-reuse.sh           # #19
+    verify-stay-awake.sh          # #36
+    verify-force-quit-clean.sh    # #38
 )
 
 FAILED=()
