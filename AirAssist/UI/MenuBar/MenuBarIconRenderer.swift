@@ -113,17 +113,21 @@ enum MenuBarIconRenderer {
         // auto-flips black/white with menu-bar appearance). Fall back to the
         // SF Symbol name for robustness if the asset ever goes missing.
         let targetPt = BaseSize.iconPt * scale
+        // The tight-cropped menu-bar glyph still has a touch of margin inside
+        // its viewBox, so draw it a bit larger than the SF-Symbol baseline to
+        // match the visual weight of neighbouring system icons.
+        let glyphScale: CGFloat = 1.18
         let baseIcon: NSImage? = {
             guard showIcon else { return nil }
             if let glyph = NSImage(named: "MenuBarGlyph") {
                 // Template imagesets return isTemplate = true via asset metadata;
                 // belt-and-braces for external callers.
                 glyph.isTemplate = true
-                // Size to match SF Symbol rendering at the same point size.
-                let resized = NSImage(size: NSSize(width: targetPt, height: targetPt))
+                let drawPt = targetPt * glyphScale
+                let resized = NSImage(size: NSSize(width: drawPt, height: drawPt))
                 resized.isTemplate = true
                 resized.lockFocus()
-                glyph.draw(in: NSRect(x: 0, y: 0, width: targetPt, height: targetPt),
+                glyph.draw(in: NSRect(x: 0, y: 0, width: drawPt, height: drawPt),
                            from: .zero, operation: .sourceOver, fraction: 1.0)
                 resized.unlockFocus()
                 return resized
