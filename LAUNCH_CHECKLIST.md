@@ -90,9 +90,11 @@ scope" for what we're explicitly saying no to.
 
 - [x] **#6 Natural sort for sensor names** — 618ca3f
 - [x] **#7 Category order in popover** — reordered enum (SoC first)
-- [ ] **#8 Condense 14× "CPU Die N" rows**
-  - Default collapsed to hottest die + expand affordance
-  - Or aggregate "CPU Cluster (hottest of N)" synthetic row
+- [x] **#8 Condense 14× "CPU Die N" rows** — category headers in the
+  detailed popover are now collapsible. Auto-collapses categories
+  with >5 sensors on first sight; shows hottest value + count when
+  collapsed. User collapse/expand choices persist across launches.
+  Resolved this session.
 - [~] **#9 App icon quality check** — bespoke, not placeholder, but
   dated. Thermometer + air-flow metaphor on a blue→red gradient. Uses
   glossy top highlight (Big Sur+ moved to matte). Ship-acceptable for
@@ -156,22 +158,15 @@ scope" for what we're explicitly saying no to.
 
 ## 💡 Non-obvious concerns
 
-- [🚨] **#29 Name / trademark check — REAL COLLISIONS FOUND**
-  - **`airassist.app`** is a live AI-classroom product (our own
-    Info.plist previously pointed `SUFeedURL` at this domain — now
-    removed, but the name collision remains).
-  - **theairassist.com** — another AI support product.
-  - **Relativity "aiR Assist"** — legal-tech AI feature inside
-    RelativityOne.
-  - Laser-cutter hardware: xTool, Cloudray, ACCELaser all ship "Air
-    Assist" products (expected).
-  - **Strong recommendation: rename before public launch.** Candidates
-    from original list: "Thermal Assist", "Mac Assist", "Aerial",
-    "Breeze". My lean: **Breeze** (single word, fanless metaphor, no
-    known Mac-utility collision on first-pass search — needs its own
-    TESS check). Ping me and I'll do the search.
-  - Bundle ID prefix (`com.sjschillinger.*`) is already rename-safe;
-    only the last segment changes.
+- [x] **#29 Name / trademark check — DECISION: keep AirAssist**
+  - Collisions exist but in unrelated categories (AI classroom product,
+    Relativity legal-tech feature, laser-cutter hardware). Trademark
+    risk for an OSS Mac utility in a different product class is low.
+    SEO dilution accepted.
+  - Decided 2026-04-18. Everything downstream settles on this name:
+    repo URL `sjschillinger/airassist`, bundle ID
+    `com.sjschillinger.airassist`, Homebrew cask `airassist`, README
+    copy.
 - [ ] **#30 Fanless-only positioning — have the HN answer ready**
   - README is honest; write 1-liner: "yes, works on Pros; not optimized yet;
     roadmap in NON_AIR_ROADMAP.md (dev repo)"
@@ -327,11 +322,15 @@ users won't feel compelled to request additions to. Each item is
 scoped to be shippable without opening the door to follow-up scope.
 
 ### Platform-native integrations
-- [ ] **#53 URL scheme handler** — `airassist://pause?duration=30m`,
-  `airassist://resume`, `airassist://throttle?bundle=<id>&duty=<n>`,
-  `airassist://release?bundle=<id>`. Minimal surface; enables user-
-  built automations. Register via `CFBundleURLTypes` in Info.plist,
-  handle in `NSApplicationDelegate.application(_:open:)`.
+- [x] **#53 URL scheme handler** — shipped this session.
+  - `airassist://pause[?duration=15m|1h|30s|forever]`
+  - `airassist://resume`
+  - `airassist://throttle?bundle=<id>&duty=<0.5|50%>[&duration=1h]`
+  - `airassist://release?bundle=<id>`
+  - Registered via `CFBundleURLTypes`; handled in
+    `AppDelegate.application(_:open:)`. Pure parser covered by 12
+    unit tests in `URLSchemeHandlerTests.swift`. Ready to be the
+    dispatch layer for #54 AppIntents.
 - [ ] **#54 Shortcuts.app actions (AppIntents)** — three actions to
   start: "Pause AirAssist", "Resume AirAssist", "Throttle Frontmost
   App". Builds on #53; AppIntents framework makes this ~100 LOC on

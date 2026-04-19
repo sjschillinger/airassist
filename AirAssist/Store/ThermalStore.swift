@@ -253,6 +253,47 @@ final class ThermalStore {
         }
     }
 
+    /// URL-scheme / Shortcuts entry point: throttle every PID currently
+    /// matching `bundleID` (case-insensitive) via `.manual` duty. Like
+    /// `throttleFrontmost` but identifies the target by bundle instead of
+    /// PID, so it survives the app being killed and re-launched within the
+    /// duration (the next matching snapshot picks it up again).
+    /// Returns the number of PIDs affected.
+    @discardableResult
+    func throttleBundle(bundleID: String,
+                        duty: Double,
+                        duration: TimeInterval = 60 * 60) -> Int {
+        let target = bundleID.lowercased()
+        let pids = snapshots.latest.filter {
+            ($0.bundleID?.lowercased() == target) && $0.id > 0 && $0.id != getpid()
+        }
+        for p in pids {
+            processThrottler.setDuty(duty, for: p.id, name: p.name, source: .manual)
+        }
+        // Auto-release after the duration. Clear by bundle so we catch PIDs
+        // that were spawned after the initial call too.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(duration))
+            self?.releaseBundle(bundleID: bundleID)
+        }
+        return pids.count
+    }
+
+    /// Release any manual throttles on processes matching `bundleID`.
+    /// Called explicitly by URL scheme / Shortcuts, and automatically by
+    /// the `throttleBundle` expiry timer.
+    @discardableResult
+    func releaseBundle(bundleID: String) -> Int {
+        let target = bundleID.lowercased()
+        let pids = snapshots.latest
+            .filter { $0.bundleID?.lowercased() == target }
+            .map { $0.id }
+        for pid in pids {
+            processThrottler.clearDuty(source: .manual, for: pid)
+        }
+        return pids.count
+    }
+
     // MARK: - Rule management helpers (used by UI)
 
     /// Insert or replace a rule for a process. Keyed by bundleID when available.

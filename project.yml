@@ -99,3 +99,10 @@ targets:
         # IOKit access for thermal sensors
         com.apple.security.temporary-exception.iokit-user-client-class:
           - IOHIDEventSystemUserClient
+        # airassist:// URL scheme. Entry point for Shortcuts.app actions and
+        # ad-hoc automations (Raycast, Alfred, `open airassist://pause`).
+        CFBundleURLTypes:
+          - CFBundleURLName: com.sjschillinger.airassist.url
+            CFBundleTypeRole: Viewer
+            CFBundleURLSchemes:
+              - airassist

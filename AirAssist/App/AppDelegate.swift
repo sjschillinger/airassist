@@ -33,6 +33,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         FirstRunDisclosure.presentIfNeeded()
     }
 
+    /// Handler for `airassist://` URLs. Registered via `CFBundleURLTypes` in
+    /// Info.plist; macOS calls this when the user opens such a URL from the
+    /// browser, Shortcuts, Raycast, a shell (`open airassist://pause`), etc.
+    @MainActor
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            URLSchemeHandler.handle(url, store: store)
+        }
+    }
+
     @MainActor
     func applicationWillTerminate(_ notification: Notification) {
         store.stop()

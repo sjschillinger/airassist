@@ -36,5 +36,18 @@
 	<array>
 		<string>IOHIDEventSystemUserClient</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.sjschillinger.airassist.url</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>airassist</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+	</array>
 </dict>
 </plist>
