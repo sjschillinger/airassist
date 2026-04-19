@@ -73,6 +73,14 @@ final class ProcessThrottler {
     }
 
     private var active: [pid_t: Entry] = [:]
+    /// Per-PID kqueue-backed watchers that fire on process exit. Registered
+    /// the moment we start throttling a PID, cancelled the moment we stop.
+    /// Closes the PID-reuse window (#19): without this we'd rely on the 1Hz
+    /// snapshot to notice the PID is gone, and during that up-to-1s window
+    /// the kernel may recycle the PID for an unrelated program. Sending
+    /// SIGSTOP to the wrong process is the kind of bug that erodes trust
+    /// fast. See `docs/engineering-references.md` §2 for the kqueue details.
+    private var exitWatchers: [pid_t: DispatchSourceProcess] = [:]
     private let currentUID: uid_t = getuid()
 
     /// Optional safety layer. Set by `ThermalStore` on startup. When present,
@@ -148,7 +156,45 @@ final class ProcessThrottler {
             await self.runCycle(pid: pid)
         }
         active[pid] = Entry(sources: [source: duty], name: name, task: task)
+        installExitWatcher(pid: pid)
         publishInflight()
+    }
+
+    /// Register a one-shot kqueue process source that fires the instant the
+    /// kernel notes `pid` has exited. We release the PID before anyone else
+    /// on this main actor can try to SIGSTOP a recycled PID.
+    ///
+    /// Process-source events can fire on an arbitrary dispatch queue on
+    /// Apple Silicon (see engineering-references.md §2), so the handler hops
+    /// back to the main actor before mutating `active`.
+    private func installExitWatcher(pid: pid_t) {
+        // Already watched? Don't stack sources.
+        if exitWatchers[pid] != nil { return }
+        let src = DispatchSource.makeProcessSource(
+            identifier: pid, eventMask: .exit, queue: .global(qos: .utility)
+        )
+        src.setEventHandler { [weak self] in
+            // Cancel immediately — .exit is one-shot, and cancelling from
+            // within the handler is the idiomatic Swift pattern.
+            src.cancel()
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                // If by some race another code path already released this
+                // pid, `release` is a no-op.
+                self.exitWatchers.removeValue(forKey: pid)
+                self.release(pid: pid)
+            }
+        }
+        src.resume()
+        exitWatchers[pid] = src
+    }
+
+    /// Tear down an exit watcher if one exists. Called from `release(pid:)`
+    /// and `releaseAll()` so we never leak process sources or double-fire.
+    private func cancelExitWatcher(pid: pid_t) {
+        if let src = exitWatchers.removeValue(forKey: pid) {
+            src.cancel()
+        }
     }
 
     /// Withdraw a specific source's request for this PID. If no source still
@@ -180,6 +226,7 @@ final class ProcessThrottler {
         guard let entry = active.removeValue(forKey: pid) else { return }
         entry.task.cancel()
         _ = kill(pid, SIGCONT)
+        cancelExitWatcher(pid: pid)
         safety?.noteContinued(pid: pid)
         publishInflight()
     }
@@ -193,6 +240,8 @@ final class ProcessThrottler {
             _ = kill(pid, SIGCONT)
         }
         active.removeAll()
+        for (_, src) in exitWatchers { src.cancel() }
+        exitWatchers.removeAll()
         safety?.resetStopTimestamps()
         publishInflight()
     }

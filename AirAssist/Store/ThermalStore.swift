@@ -11,6 +11,9 @@ final class ThermalStore {
     // MARK: - Stay Awake
     let stayAwake = StayAwakeService()
 
+    // MARK: - Sleep/wake
+    private var sleepWakeObserver: SleepWakeObserver?
+
     /// User-facing API: change the stay-awake mode. Persists the choice
     /// so the selection survives a quit.
     func setStayAwakeMode(_ mode: StayAwakeService.Mode) {
@@ -160,6 +163,20 @@ final class ThermalStore {
             sensorService.pollIntervalSeconds = saved
         }
         sensorService.start()
+        // Release every throttled PID on sleep (#18). See SleepWakeObserver
+        // for the full rationale — the short version is "a SIGSTOP'd process
+        // at the moment of suspend can wake up still stopped."
+        sleepWakeObserver = SleepWakeObserver(
+            onWillSleep: { [weak self] in
+                self?.processThrottler.releaseAll()
+            },
+            onDidWake: { [weak self] in
+                // Engines re-arm naturally on their next 1Hz tick. Nothing
+                // to do here beyond logging, which SleepWakeObserver does.
+                _ = self
+            }
+        )
+        sleepWakeObserver?.start()
         logger.pruneOldEntries()
         logTask = Task { @MainActor [weak self] in
             while !Task.isCancelled {
@@ -187,6 +204,8 @@ final class ThermalStore {
         logTask = nil
         controlLoopTask?.cancel()
         controlLoopTask = nil
+        sleepWakeObserver?.stop()
+        sleepWakeObserver = nil
         frontmostObserver.stop()
         sensorService.stop()
         governor.stop()

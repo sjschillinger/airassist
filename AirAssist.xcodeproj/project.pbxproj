@@ -45,6 +45,7 @@
 		AB48799889B27371203501F4 /* SensorCategorizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DC26A8B4587EC9DE928881 /* SensorCategorizer.swift */; };
 		ACFABCECFECDF629B1105134 /* GovernorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */; };
 		B0A47662747C2867086D592B /* SensorsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD89C1534037D26554015A /* SensorsPrefsView.swift */; };
+		B5FCBC00DE2EE807B11B27A0 /* SleepWakeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */; };
 		B77AD3CA5AE2AF1411D68173 /* SafetyCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */; };
 		BD6134487DFA3B4DD3CD9E0E /* GovernorConfigClampTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209A50EAB91CC3E47E5F04A5 /* GovernorConfigClampTests.swift */; };
 		C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2340286CEE2E559824D689B1 /* MenuBarController.swift */; };
@@ -105,6 +106,7 @@
 		8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
 		8B85179E897A875693EE50AD /* SensorListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorListView.swift; sourceTree = "<group>"; };
 		8EAF397631AE11D4B570EC4D /* RunningProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningProcess.swift; sourceTree = "<group>"; };
+		9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepWakeObserver.swift; sourceTree = "<group>"; };
 		9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleRuleEngine.swift; sourceTree = "<group>"; };
 		9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GovernorConfig.swift; sourceTree = "<group>"; };
 		A0C523C9176A233CA7DDF721 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -280,6 +282,7 @@
 				CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */,
 				D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */,
 				05664AF6DD35210D50D4D873 /* SensorService.swift */,
+				9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */,
 				F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */,
 				730102034F0141285957EA50 /* ThermalGovernor.swift */,
 				9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */,
@@ -459,6 +462,7 @@
 				0A04AF5B11A0831917ADD356 /* SensorListView.swift in Sources */,
 				07DEAE60DE866AE450B0D168 /* SensorService.swift in Sources */,
 				B0A47662747C2867086D592B /* SensorsPrefsView.swift in Sources */,
+				B5FCBC00DE2EE807B11B27A0 /* SleepWakeObserver.swift in Sources */,
 				CD2D85C4177BC7D73A473358 /* StayAwakeService.swift in Sources */,
 				A421ADB89070A8D476A827E9 /* TemperatureFormatter.swift in Sources */,
 				CAB1687E2D8A71F55C3F50B5 /* ThermalEntry.swift in Sources */,
