@@ -155,7 +155,13 @@ struct SensorListView: View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack(alignment: .leading, spacing: 0, pinnedViews: .sectionHeaders) {
                 ForEach(groups, id: \.category) { group in
-                    let collapsed = isCollapsed(group.category, count: group.sensors.count)
+                    // A category with exactly one sensor is always shown as a
+                    // single "collapsed-style" row — the header + one sensor
+                    // row would be visually redundant. Effectively collapsed
+                    // and not collapsible.
+                    let singleton = group.sensors.count == 1
+                    let collapsed = singleton
+                        || isCollapsed(group.category, count: group.sensors.count)
                     Section {
                         if !collapsed {
                             ForEach(group.sensors) { sensor in
@@ -171,7 +177,8 @@ struct SensorListView: View {
                             thresholds: thresholds,
                             unit: unit,
                             isCollapsed: collapsed,
-                            isCollapsible: group.sensors.count > 1,
+                            isCollapsible: !singleton && group.sensors.count > 1,
+                            showCount: !singleton,
                             onToggle: {
                                 withAnimation(.easeInOut(duration: 0.15)) {
                                     toggle(group.category, currentlyCollapsed: collapsed)
@@ -194,6 +201,9 @@ private struct CategoryHeaderView: View {
     let unit: TempUnit
     let isCollapsed: Bool
     let isCollapsible: Bool
+    /// Suppresses the "· N" sensor-count suffix for singleton categories
+    /// where the count is always 1 and adds no information.
+    let showCount: Bool
     let onToggle: () -> Void
 
     /// Hottest current value in this category (used as the collapsed-row
@@ -236,7 +246,7 @@ private struct CategoryHeaderView: View {
                 .font(.system(size: 9, weight: .semibold))
                 .foregroundStyle(.secondary)
 
-            if isCollapsed {
+            if isCollapsed && showCount {
                 Text("· \(sensors.count)")
                     .font(.system(size: 9, weight: .regular))
                     .foregroundStyle(.secondary)
