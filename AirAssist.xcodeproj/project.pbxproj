@@ -13,12 +13,14 @@
 		0F4EDC318F405B7E520BF6C5 /* FrontmostAppObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7E79F9D9CEB95EE90B4F21 /* FrontmostAppObserver.swift */; };
 		133CBE6FAE9AA07D61B348B5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0C523C9176A233CA7DDF721 /* Assets.xcassets */; };
 		14BC7D908B94115EF40BC9D5 /* ThrottleRuleEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */; };
+		182DE0DDA2536407E350B62F /* ThresholdPresetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C15D67B3F0B0BCE3515381 /* ThresholdPresetTests.swift */; };
 		1A0F0707769B5E1104E65551 /* MenuBarPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C53CD24479A02B74641C02 /* MenuBarPrefsView.swift */; };
 		1D00491EC4021413E4A200D8 /* AppIcon.svg in Resources */ = {isa = PBXBuildFile; fileRef = 7DDD72924D522D0C57068D59 /* AppIcon.svg */; };
 		1D99B043A174F61732F796F8 /* PreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE69B36A4A78E82AFCE02EA /* PreferencesWindowController.swift */; };
 		1FBEFE6AFC18FA9F73206F50 /* GeneralPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */; };
 		23E76F3C783FC9160017310E /* ThermalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E2A65A91770B1DB2B928FA /* ThermalStore.swift */; };
 		24F6786F7227631D1C081DF9 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68ECE41B669EE247996A79BF /* PreferencesView.swift */; };
+		299495A4528A366F04A3FA11 /* RuleTemplatesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7EB97E138B61FA2FD28EE16 /* RuleTemplatesTests.swift */; };
 		2B6962559FBCFCF4DDF1A3DF /* ProcessThrottlerArbitrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E38AF8B6D89383B136037DA /* ProcessThrottlerArbitrationTests.swift */; };
 		2C02FDC905DF81A8091E7AD3 /* MenuBarQuickMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E195513AB2DA802AD3B203E3 /* MenuBarQuickMenu.swift */; };
 		2E8787E468BA9D77080343A2 /* IOKitSensorReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */; };
@@ -27,6 +29,7 @@
 		3EE7E39D8EAC8F21B3B8DBD7 /* SafetyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */; };
 		4111D77C0E4FD338E48D7F0C /* AirAssistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */; };
 		47390C305B3C9D72F38E8383 /* AppIcon-composed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4629A6D06B14E1E69D71A6E0 /* AppIcon-composed.svg */; };
+		47422C41049B5628AC31D285 /* ThrottleScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */; };
 		4F8D50BFF09B19FE97FFFA66 /* URLSchemeHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D27DC050DA4ABA3EB9D1484 /* URLSchemeHandlerTests.swift */; };
 		50EF7E4928DD0A61A1B3869B /* Sensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CA07BBE53129D2A34A1589 /* Sensor.swift */; };
 		5A858B7E2BF0CFC0B3E49847 /* ThrottleRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A644DAD204B5C11BF9D35A09 /* ThrottleRule.swift */; };
@@ -105,6 +108,7 @@
 		573E0D36375389574C26D88F /* ThrottlingPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottlingPrefsView.swift; sourceTree = "<group>"; };
 		586DB3B79D410ED45D4B6B80 /* AppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntents.swift; sourceTree = "<group>"; };
 		58CA07BBE53129D2A34A1589 /* Sensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sensor.swift; sourceTree = "<group>"; };
+		5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleScheduleTests.swift; sourceTree = "<group>"; };
 		5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPrefsView.swift; sourceTree = "<group>"; };
 		5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitSensorReader.swift; sourceTree = "<group>"; };
 		5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirAssistApp.swift; sourceTree = "<group>"; };
@@ -134,6 +138,7 @@
 		BEE7645B03DAEDE64CB56215 /* ProcessInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInspector.swift; sourceTree = "<group>"; };
 		BF7E79F9D9CEB95EE90B4F21 /* FrontmostAppObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontmostAppObserver.swift; sourceTree = "<group>"; };
 		C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormatter.swift; sourceTree = "<group>"; };
+		C7EB97E138B61FA2FD28EE16 /* RuleTemplatesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleTemplatesTests.swift; sourceTree = "<group>"; };
 		CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardWindowController.swift; sourceTree = "<group>"; };
 		CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottler.swift; sourceTree = "<group>"; };
 		D0BD89C1534037D26554015A /* SensorsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorsPrefsView.swift; sourceTree = "<group>"; };
@@ -145,6 +150,7 @@
 		F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardContainerView.swift; sourceTree = "<group>"; };
 		F39D53AA5D34F3BF9DC08F9F /* FirstRunDisclosure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunDisclosure.swift; sourceTree = "<group>"; };
 		F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinatorTests.swift; sourceTree = "<group>"; };
+		F8C15D67B3F0B0BCE3515381 /* ThresholdPresetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThresholdPresetTests.swift; sourceTree = "<group>"; };
 		F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayAwakeService.swift; sourceTree = "<group>"; };
 		FAE7B1E9B83D8BC64EA57633 /* IOKitBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOKitBridge.h; sourceTree = "<group>"; };
 		FB12A736A62BA39A609E7C19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -328,7 +334,10 @@
 			children = (
 				209A50EAB91CC3E47E5F04A5 /* GovernorConfigClampTests.swift */,
 				1E38AF8B6D89383B136037DA /* ProcessThrottlerArbitrationTests.swift */,
+				C7EB97E138B61FA2FD28EE16 /* RuleTemplatesTests.swift */,
 				F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */,
+				F8C15D67B3F0B0BCE3515381 /* ThresholdPresetTests.swift */,
+				5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */,
 				6D27DC050DA4ABA3EB9D1484 /* URLSchemeHandlerTests.swift */,
 			);
 			path = AirAssistTests;
@@ -441,7 +450,10 @@
 			files = (
 				BD6134487DFA3B4DD3CD9E0E /* GovernorConfigClampTests.swift in Sources */,
 				2B6962559FBCFCF4DDF1A3DF /* ProcessThrottlerArbitrationTests.swift in Sources */,
+				299495A4528A366F04A3FA11 /* RuleTemplatesTests.swift in Sources */,
 				B77AD3CA5AE2AF1411D68173 /* SafetyCoordinatorTests.swift in Sources */,
+				182DE0DDA2536407E350B62F /* ThresholdPresetTests.swift in Sources */,
+				47422C41049B5628AC31D285 /* ThrottleScheduleTests.swift in Sources */,
 				4F8D50BFF09B19FE97FFFA66 /* URLSchemeHandlerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
