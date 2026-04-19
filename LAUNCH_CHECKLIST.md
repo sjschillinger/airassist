@@ -121,17 +121,23 @@ scope" for what we're explicitly saying no to.
 ## 🛡️ Safety & correctness
 
 - [ ] **#16 Verify SIGSTOP actually lands on a real process**
-  - `yes > /dev/null &` → add rule → `ps -o pid,stat,comm` → expect `T`
-  - Pending since multi-session ago. Do before launch.
+  - Runnable: `./scripts/manual-tests/verify-sigstop-lands.sh`
+  - See `docs/engineering-references.md` §1 for SIGSTOP semantics
+    and §4 for `ps` STAT codes.
 - [ ] **#17 SafetyCoordinator crash-recovery live test**
   - Start throttling → `kill -9` AirAssist → verify target resumes
-  - Single most important behavior; if broken, launch is bad
+  - Single most important behavior; if broken, launch is bad.
+  - TODO: convert to `scripts/manual-tests/verify-crash-recovery.sh`
 - [ ] **#18 Sleep/wake cycle handling**
   - Observe `NSWorkspace.willSleepNotification`/`didWakeNotification`
   - Decide: resume all throttled PIDs on sleep? Re-arm on wake?
+  - See `docs/engineering-references.md` §3 for notification semantics,
+    Power Nap gotcha, and the "posted on NSWorkspace.shared.notificationCenter"
+    trap.
 - [ ] **#19 PID reuse / process-exit mid-throttle**
-  - Detect stale PIDs (kqueue EVFILT_PROC on NOTE_EXIT, or poll)
-  - Don't send SIGSTOP to recycled PIDs
+  - Detect stale PIDs via kqueue `EVFILT_PROC NOTE_EXIT` (preferred
+    over polling — see `engineering-references.md` §2).
+  - Don't send SIGSTOP to recycled PIDs.
 - [x] **#20 Thermal sensor read failure path** — `ReadState` enum + UI in popover & dashboard
 
 ---
