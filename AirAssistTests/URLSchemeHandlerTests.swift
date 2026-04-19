@@ -8,6 +8,46 @@ import XCTest
 @MainActor
 final class URLSchemeHandlerTests: XCTestCase {
 
+    // MARK: - normalizeAction
+    //
+    // Regression coverage for the integration-suite wedge: before this
+    // helper, `airassist://debug/ping` collapsed to `action="debug"` and
+    // the debug sub-router bailed as "unknown debug action". Every
+    // URL-dispatch site now goes through `normalizeAction`; these tests
+    // lock in the wire shapes.
+
+    func testNormalizeHostOnly() {
+        let url = URL(string: "airassist://pause")!
+        XCTAssertEqual(URLSchemeHandler.normalizeAction(url), "pause")
+    }
+
+    func testNormalizeEmptyHostWithPath() {
+        // `airassist:///pause` — rarer shape but valid.
+        let url = URL(string: "airassist:///pause")!
+        XCTAssertEqual(URLSchemeHandler.normalizeAction(url), "pause")
+    }
+
+    func testNormalizeHostAndPath() {
+        let url = URL(string: "airassist://debug/ping")!
+        XCTAssertEqual(URLSchemeHandler.normalizeAction(url), "debug/ping")
+    }
+
+    func testNormalizeHostAndPathWithQuery() {
+        // Query string must not bleed into the action.
+        let url = URL(string: "airassist://debug/ping?to=/tmp/pong.txt")!
+        XCTAssertEqual(URLSchemeHandler.normalizeAction(url), "debug/ping")
+    }
+
+    func testNormalizeHostAndPathWithDeeperPath() {
+        let url = URL(string: "airassist://debug/sub/action")!
+        XCTAssertEqual(URLSchemeHandler.normalizeAction(url), "debug/sub/action")
+    }
+
+    func testNormalizeLowercases() {
+        let url = URL(string: "airassist://Debug/Ping")!
+        XCTAssertEqual(URLSchemeHandler.normalizeAction(url), "debug/ping")
+    }
+
     // MARK: - parseDuration
 
     func testDurationSecondsBare() {

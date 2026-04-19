@@ -39,10 +39,7 @@ enum URLSchemeHandler {
             logger.debug("Ignoring URL with wrong scheme: \(url.absoluteString, privacy: .public)")
             return
         }
-        // URLs can arrive as `airassist://pause` (host == "pause") or
-        // `airassist:///pause` (path == "/pause"). Normalize.
-        let action = (url.host?.isEmpty == false ? url.host! : url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")))
-            .lowercased()
+        let action = normalizeAction(url)
         let params = queryParams(url)
 
         logger.info("Received airassist:// action=\(action, privacy: .public)")
@@ -89,6 +86,28 @@ enum URLSchemeHandler {
     }
 
     // MARK: - Parsing helpers
+
+    /// Normalize an `airassist://` URL down to a single slash-separated
+    /// lowercase action. Internal so unit tests can lock in the contract.
+    ///
+    ///   airassist://pause                → host="pause",  path=""       → "pause"
+    ///   airassist:///pause               → host="",       path="/pause" → "pause"
+    ///   airassist://debug/ping           → host="debug",  path="/ping"  → "debug/ping"
+    ///   airassist://debug/ping?to=/tmp   → host="debug",  path="/ping"  → "debug/ping"
+    ///
+    /// Before this helper existed we only looked at `host`, so
+    /// `airassist://debug/ping` collapsed to `"debug"` and the debug
+    /// sub-router fell through with a bogus "unknown debug action: " log
+    /// — wedging the integration suite.
+    static func normalizeAction(_ url: URL) -> String {
+        let trimmedPath = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        if let host = url.host, !host.isEmpty {
+            return trimmedPath.isEmpty
+                ? host.lowercased()
+                : "\(host.lowercased())/\(trimmedPath.lowercased())"
+        }
+        return trimmedPath.lowercased()
+    }
 
     private static func queryParams(_ url: URL) -> [String: String] {
         guard let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),
