@@ -173,7 +173,18 @@ final class ProcessThrottler {
         let src = DispatchSource.makeProcessSource(
             identifier: pid, eventMask: .exit, queue: .global(qos: .utility)
         )
-        src.setEventHandler { [weak self] in
+        // The handler MUST be `@Sendable` (i.e., non-main-actor-isolated):
+        // this class is `@MainActor`, and under Swift 6 strict concurrency
+        // closures created inside `@MainActor` methods inherit main-actor
+        // isolation by default. But Dispatch fires the handler on the
+        // utility queue — so at runtime Swift's
+        // `_swift_task_checkIsolatedSwift` → `dispatch_assert_queue` trips
+        // SIGTRAP. Binding the closure to a `@Sendable` typed `let` forces
+        // it non-isolated; the main-actor work still happens inside the
+        // inner `Task { @MainActor ... }` hop. `pid` is `pid_t` (Sendable);
+        // `DispatchSourceProcess` is thread-safe so capturing `src` to
+        // call `.cancel()` from the handler is fine.
+        let handler: @Sendable () -> Void = { [weak self] in
             // Cancel immediately — .exit is one-shot, and cancelling from
             // within the handler is the idiomatic Swift pattern.
             src.cancel()
@@ -185,6 +196,7 @@ final class ProcessThrottler {
                 self.release(pid: pid)
             }
         }
+        src.setEventHandler(handler: handler)
         src.resume()
         exitWatchers[pid] = src
     }
