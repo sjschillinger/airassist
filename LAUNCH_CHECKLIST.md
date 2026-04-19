@@ -211,6 +211,75 @@ ship broken. Then the 4 remaining 🚨 blockers (#2, #3, #4, #29).
 
 ---
 
+## 🆕 Added from 2026-04-18 pre-launch review
+
+Items surfaced while reviewing everything end-to-end. Some overlap with
+earlier entries — cross-references in parens.
+
+### Functional smoke tests (need explicit runs, not just code review)
+- [ ] **#34 Rule re-attach across app relaunch** — add per-app rule, kill
+  target app, relaunch it, confirm new PID gets throttled
+- [ ] **#35 Pause auto-resume** — pause 15 min, wait for expiry, confirm
+  both governor + rules resume (extends #17)
+- [ ] **#36 Stay Awake assertion verification** — each of the 4 modes,
+  check `pmset -g assertions` shows the right `PreventUserIdleSystemSleep`
+  / `PreventUserIdleDisplaySleep` entries
+- [ ] **#37 Lid-close with `displayThenSystem` mode** — display sleeps
+  after timeout, system stays awake
+- [ ] **#38 Force-quit mid-throttle cleanup** — next launch has no stuck
+  SIGSTOP'd processes (extends #17)
+
+### UX polish (new since #11 landed)
+- [ ] **#39 Onboarding sheet on first launch** — #11's `FirstLaunchSeeder`
+  handles sensor defaults but there's no explanatory panel. Users see a
+  menu bar icon and no context. Add a one-time sheet: what this does, why
+  SIGSTOP is safe, link to GitHub. High-impact for installer retention.
+- [ ] **#40 Tooltips on non-obvious controls** — Stay Awake mode variants,
+  duty %, pause durations, summary-mode toggle
+- [ ] **#41 Keyboard navigation in prefs** — tab order, Esc closes,
+  checked alongside #14
+- [ ] **#42 Popover width at low sensor counts** — single-sensor summary
+  mode still reserves ~260pt; tighten
+
+### Feature gaps worth closing pre-1.0
+- [ ] **#43 "Why is this throttled?" affordance** — hovering a live-
+  throttled row in the popover shows source (governor / rule / manual)
+- [ ] **#44 Right-click throttle adjust from popover** — change duty or
+  release directly without opening prefs
+- [ ] **#45 Temperature history sparkline in popover** — `HistoryLogger`
+  already captures; just wire a 10-min sparkline row
+- [ ] **#46 Export diagnostic bundle** — one-click save of logs + config
+  + recent sensor history, for bug reports. Saves enormous back-and-
+  forth on GitHub issues.
+- [ ] **#47 Quit confirmation if rules are currently active** — prevents
+  the "why did Chrome suddenly get fast" surprise
+
+### Stability (covers #22 but broader)
+- [ ] **#48 Thread Sanitizer 30-min run** — catch MainActor violations
+- [ ] **#49 Instruments / Leaks 1-hour run** — memory + handle growth
+- [ ] **#50 Perf at 1000+ PIDs** — `ProcessInspector` must stay under a
+  few ms per cycle; simulate with spawned noop children
+
+### Launch-day logistics
+- [ ] **#51 Pick ONE launch channel** — HN Show / r/macapps / lobste.rs.
+  One thoughtful post beats five.
+- [ ] **#52 Issue responsiveness expectation** — state it in README so
+  users don't feel ghosted when response takes a week.
+
+---
+
+## Top-5 if time is tight
+
+1. #16 / #17 Safety audit (watchdog + `T`-state verification)
+2. #39 Onboarding sheet
+3. #1 Notarize decision (stay free-tier or enroll)
+4. TODO_USER placeholder sweep
+5. #10 README screenshots (light + dark menu bar)
+
+Everything else slips to 0.1.1 without shame.
+
+---
+
 ## Completed
 
 - ✅ Phase 1 scaffolding (commit `cbb0d7c`): `.gitignore`, References/
