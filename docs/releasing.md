@@ -16,16 +16,56 @@ brew install --cask TODO_USER/airassist/airassist
 Homebrew's tap (`homebrew-airassist`) is a **separate public repo**;
 see `scripts/homebrew-tap-template/README.md`.
 
-## Why ad-hoc signing, not Developer ID
+## Why ad-hoc signing, not Developer ID + notarization
 
-$99/yr avoided for now. Homebrew downloads via curl, which doesn't set
-`com.apple.quarantine`, so Gatekeeper doesn't block ad-hoc builds
-installed that way. Users who download the zip directly from the
-release page need to run `xattr -dr com.apple.quarantine /Applications/AirAssist.app`
-once. README says so.
+This is a **permanent decision for Air Assist**, not a temporary
+stopgap to avoid the $99/yr Apple Developer Program fee. The reasoning:
 
-Upgrading to paid tier later is a workflow edit, not a rearchitecture —
-see the comment block at the top of `.github/workflows/release.yml`.
+1. **Homebrew already solves Gatekeeper.** `brew install --cask` pulls
+   the zip via curl (doesn't set `com.apple.quarantine`) and installs
+   into `/Applications`. macOS treats it as a trusted local install.
+   Notarization's job is making *direct downloads* smoother — we don't
+   distribute that way.
+2. **AGPL-3.0 forks are expected.** If the "official" AirAssist is
+   notarized under one person's Apple Developer ID, every forker is
+   forced either to (a) pay Apple $99/yr themselves or (b) ship an
+   "unofficial-feeling" ad-hoc build. Neither is great. By making
+   ad-hoc + Homebrew the canonical path, every build — ours and
+   forks — stands on the same footing: verifiable source, tap
+   provenance, SHA256 pinning.
+3. **Source is the trust root.** Notarization means Apple scans your
+   binary and vouches for it. For a tool whose selling point is "no
+   telemetry, no network, audit it yourself," adding an Apple-vouching
+   step is philosophically noisy. Users who want stronger assurance
+   should read the code and build locally — that's the OSS promise
+   and notarization doesn't improve on it.
+4. **Reproducibility.** Notarized binaries are harder to reproduce
+   bit-for-bit (Apple's signature timestamp varies). Ad-hoc builds
+   are closer to reproducible, which matters if anyone ever wants to
+   supply-chain-verify a release.
+
+Users who download the zip **directly from the GitHub release page**
+(instead of via Homebrew) will hit the quarantine flag and need to run
+`xattr -dr com.apple.quarantine /Applications/AirAssist.app` once. The
+README documents this. That friction is intentionally placed on the
+direct-download path so Homebrew stays the smooth default.
+
+### When we'd reconsider
+
+Only if one of these becomes true:
+
+- Direct `.dmg` from a website becomes a distribution channel we care
+  about
+- Casual-user install friction ("macOS says it's damaged") becomes the
+  single most common support issue — not "an" issue, *the* issue
+- We decide to pursue the Mac App Store, which would separately
+  require sandboxing (declined — incompatible with our IOKit
+  entitlement)
+
+None of these apply today. The `.github/workflows/release.yml` file
+still has a commented-out block for the paid-tier swap in case a
+future maintainer changes their mind, but this is a deliberate
+position, not a TODO.
 
 ## Pre-flight
 
@@ -107,9 +147,13 @@ Do **not** edit a published release's assets in place — Homebrew
 caches by URL, so users who already installed the bad build will not
 get the fix unless the version bumps.
 
-## When we upgrade to paid Developer ID
+## If a future maintainer decides to switch to Developer ID + notarization
 
-(For future-me.) Swap in:
+(See the "Why ad-hoc signing" section above for why this isn't the
+current plan. This section exists so the mechanical swap is documented
+if someone *does* change their mind.)
+
+Swap in:
 
 - `apple-actions/import-codesign-certs@v2` before the Archive step
 - Replace `CODE_SIGN_IDENTITY=-` with the real Developer ID identity

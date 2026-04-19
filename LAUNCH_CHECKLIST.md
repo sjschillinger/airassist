@@ -18,17 +18,32 @@ Last updated: 2026-04-18
 
 ## 🚨 Blocks launch (must fix before public release)
 
-- [~] **#1 Signing & notarization infrastructure** — free-tier path landed
+- [x] **#1 Signing & distribution infrastructure** — free-tier path is
+  the permanent plan, not a temporary stopgap
   - ✅ Free-tier release pipeline: ad-hoc signed zip via Homebrew cask
     (`.github/workflows/release.yml` + `scripts/homebrew-tap-template/` +
     `docs/releasing.md`). Draft-only; nothing publishes without a manual
     click.
-  - [ ] Decision: stay on free tier for 0.1.0, or enroll in Apple
-    Developer Program ($99/yr) and switch to Developer ID + notarization
-    before 1.0. Upgrade path is a single workflow edit (see the comment
-    block at the top of `release.yml`).
-  - [ ] Still-pending if we stay free-tier: create the separate
-    `homebrew-airassist` public repo from `scripts/homebrew-tap-template/`.
+  - **Decision (2026-04-18): do NOT notarize.** Reasoning:
+    - Homebrew cask install strips quarantine, so Gatekeeper is
+      already solved for `brew`-installed users. Notarization adds no
+      real security or UX benefit for that path.
+    - AGPL-3.0 means forks are expected and welcome. If we set
+      notarization as the "official" signal, we accidentally raise
+      the barrier for any contributor who wants to ship their own
+      build. Source-first trust model is more consistent with OSS.
+    - Notarized binaries complicate reproducible builds (Apple's
+      signature timestamp differs per submission).
+    - $99/yr is better spent on literally anything else for a free
+      utility.
+    - The source + Homebrew tap is the trust root; Apple's vouching
+      is redundant.
+  - Revisit **only** if we start distributing outside Homebrew (direct
+    `.dmg` download from a website), if casual-user install friction
+    becomes the #1 support issue, or if we ever pursue the Mac App
+    Store (which would also require sandboxing — declined in #32).
+  - [ ] Still-pending: create the separate `homebrew-airassist` public
+    repo from `scripts/homebrew-tap-template/` before tagging 0.1.0.
 
 - [x] **#2 Sparkle framework not actually linked**
   - Resolution: checklist was wrong — no `SUFeedURL` / `SUPublicEDKey`

@@ -157,11 +157,18 @@ Air Assist is **not** sandboxed. It uses the
 entitlement to access `IOHIDEventSystemUserClient`, which is how it
 reads the SoC's thermal sensors. That entitlement is incompatible with
 the App Store sandbox, so Air Assist will not ship on the Mac App
-Store. For 0.1.x it's distributed as an **ad-hoc signed** build via
-Homebrew cask (and as source, for anyone who wants to audit or build
-it themselves). A Developer ID + notarization pass is on the roadmap
-for 1.0; see [docs/releasing.md](docs/releasing.md) for the current
-pipeline.
+Store.
+
+Air Assist is distributed as an **ad-hoc signed** build via Homebrew
+cask, and as source for anyone who wants to audit or build it
+themselves. **It is not notarized by Apple, and that's a deliberate
+choice, not a limitation.** Homebrew already handles Gatekeeper on
+install, so notarization would add no real benefit — while locking the
+"official" build identity to a single paid Apple Developer account and
+raising the barrier for forks to ship their own builds. The source
+tree plus the signed Homebrew tap is the trust root here; Apple's
+vouching would be redundant. See [docs/releasing.md](docs/releasing.md)
+for the full rationale and the release pipeline.
 
 Throttling uses only POSIX signals on processes owned by your user
 account. No kernel extension, no `SMAppService`-installed helper, no
