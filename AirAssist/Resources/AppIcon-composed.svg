@@ -1,21 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"  stop-color="#6FB5E5"/>
-      <stop offset="40%" stop-color="#9CD0EA"/>
-      <stop offset="70%" stop-color="#F7C36B"/>
-      <stop offset="100%" stop-color="#E56A3F"/>
-    </linearGradient>
-    <!-- soft inner highlight near the top for subtle depth -->
+    <!-- Flat sky blue background. A very soft white top-sheen keeps the
+         squircle from looking like a printed sticker, without making it
+         a gradient in the visual sense. -->
     <radialGradient id="sheen" cx="50%" cy="18%" r="65%">
-      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="0.28"/>
-      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0.04"/>
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
   <!-- macOS icon safe shape: 824x824 centered in 1024 canvas; squircle-approximated rounded rect -->
-  <rect x="100" y="100" width="824" height="824" rx="184" ry="184" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="184" ry="184" fill="#5AA9E0"/>
   <rect x="100" y="100" width="824" height="824" rx="184" ry="184" fill="url(#sheen)"/>
 
   <!-- Glyph, white, centered. Content bounds of the master glyph are
