@@ -10,6 +10,11 @@ struct MenuBarPopoverView: View {
     @AppStorage("tempUnit") private var tempUnitRaw: Int = TempUnit.celsius.rawValue
     private var unit: TempUnit { TempUnit(rawValue: tempUnitRaw) ?? .celsius }
 
+    @AppStorage("sensorDisplayMode") private var displayModeRaw: String = SensorDisplayMode.detailed.rawValue
+    private var displayMode: SensorDisplayMode {
+        SensorDisplayMode(rawValue: displayModeRaw) ?? .detailed
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -97,10 +102,17 @@ struct MenuBarPopoverView: View {
                 EmptyView()   // won't hit — groups wouldn't be empty
             }
         } else {
-            SensorListView(groups: groups,
-                           thresholds: store.thresholds,
-                           unit: unit)
-                .frame(maxHeight: 260)
+            switch displayMode {
+            case .detailed:
+                SensorListView(groups: groups,
+                               thresholds: store.thresholds,
+                               unit: unit)
+                    .frame(maxHeight: 260)
+            case .summary:
+                SensorSummaryView(groups: groups,
+                                  thresholds: store.thresholds,
+                                  unit: unit)
+            }
         }
     }
 

@@ -16,6 +16,23 @@ enum ThresholdState {
     case cool, warm, hot, unknown
 }
 
+/// How the popover's sensor list is rendered.
+/// - `detailed`: one row per sensor, grouped by category (the default;
+///   matches what long-time users expect).
+/// - `summary`: one row per category showing High / Avg / Low across the
+///   sensors in that category. Much shorter on Macs with lots of dies.
+enum SensorDisplayMode: String, CaseIterable {
+    case detailed = "detailed"
+    case summary  = "summary"
+
+    var label: String {
+        switch self {
+        case .detailed: return "Detailed"
+        case .summary:  return "Summary"
+        }
+    }
+}
+
 @Observable
 @MainActor
 final class Sensor: Identifiable {

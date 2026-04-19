@@ -10,6 +10,7 @@ struct MenuBarPrefsView: View {
     @AppStorage("menuBarSlot1Value")    private var slot1Val: String    = SensorCategory.cpu.rawValue
     @AppStorage("menuBarSlot2Category") private var slot2Cat: String    = SlotCategory.none.rawValue
     @AppStorage("menuBarSlot2Value")    private var slot2Val: String    = ""
+    @AppStorage("sensorDisplayMode")    private var displayModeRaw: String = SensorDisplayMode.detailed.rawValue
 
     private var layout: MenuBarLayout { MenuBarLayout(rawValue: layoutRaw) ?? .single }
 
@@ -54,6 +55,22 @@ struct MenuBarPrefsView: View {
                     SlotPicker(category: $slot2Cat, value: $slot2Val, sensors: store.sensors)
                         .disabled(layout == .single)
                         .opacity(layout == .single ? 0.4 : 1)
+                }
+            }
+
+            Section("Popover") {
+                LabeledContent("Sensor list") {
+                    Picker("", selection: Binding(
+                        get: { SensorDisplayMode(rawValue: displayModeRaw) ?? .detailed },
+                        set: { displayModeRaw = $0.rawValue }
+                    )) {
+                        ForEach(SensorDisplayMode.allCases, id: \.self) { m in
+                            Text(m.label).tag(m)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(width: 180)
                 }
             }
         }
