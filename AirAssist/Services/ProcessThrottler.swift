@@ -311,6 +311,15 @@ final class ProcessThrottler {
 
             // STOP phase: SIGSTOP, sleep stop-slice.
             if stopNs > 0 {
+                // Re-check cancellation and that this pid is still in the
+                // active map right before we issue SIGSTOP. Closes a narrow
+                // race where `release(pid:)` ran on the main actor between
+                // the duty read above and here — without this check we'd
+                // SIGSTOP a pid the throttler thinks it's already released
+                // (and for which the exit watcher may have been cancelled).
+                if Task.isCancelled { _ = kill(pid, SIGCONT); return }
+                let stillActive = await MainActor.run { self.active[pid] != nil }
+                if !stillActive { return }
                 if !signal(SIGSTOP, to: pid) { return }
                 await MainActor.run { self.safety?.noteStopped(pid: pid) }
                 try? await Task.sleep(nanoseconds: stopNs)

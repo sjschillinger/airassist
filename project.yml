@@ -56,6 +56,54 @@ targets:
         BUNDLE_LOADER: "$(TEST_HOST)"
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AirAssist.app/Contents/MacOS/AirAssist"
 
+  AirAssistIntegrationTests:
+    # Runtime safety suite (#16/#17/#19/#34/#35/#36/#38 — see
+    # scripts/manual-tests/ runbooks). These replace the shell-based
+    # runbooks for the cases that don't require a physical lid close
+    # or real system sleep. Launches AirAssist.app from BUILT_PRODUCTS_DIR
+    # via `open`, drives it through the `airassist://` URL scheme (inc.
+    # debug endpoints — only present in Debug builds), and reads state
+    # back via the `debug/export-state` endpoint.
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistIntegrationTests
+    dependencies:
+      - target: AirAssist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjschillinger.airassist.integrationtests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        # Deliberately NOT setting BUNDLE_LOADER / TEST_HOST — this bundle
+        # does NOT inject into AirAssist. It launches it as a child
+        # process and communicates via URL scheme + filesystem. Keeping
+        # these tests out-of-process preserves the realism of signal
+        # delivery (SIGKILL/SIGTERM behavior) which an injected bundle
+        # would distort.
+
+  AirAssistUITests:
+    # Accessibility audit + keyboard navigation checks (#14/#41).
+    # Separate from AirAssistIntegrationTests because XCUITest needs
+    # its own harness and can't share a launch with out-of-process
+    # integration tests.
+    type: bundle.ui-testing
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistUITests
+    dependencies:
+      - target: AirAssist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjschillinger.airassist.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        TEST_TARGET_NAME: AirAssist
+
   AirAssist:
     type: application
     platform: macOS

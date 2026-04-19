@@ -30,7 +30,10 @@
 		4111D77C0E4FD338E48D7F0C /* AirAssistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */; };
 		47390C305B3C9D72F38E8383 /* AppIcon-composed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 4629A6D06B14E1E69D71A6E0 /* AppIcon-composed.svg */; };
 		47422C41049B5628AC31D285 /* ThrottleScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */; };
+		4DA8F66397857E7B4AE49ECA /* ThrottleIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */; };
 		4F8D50BFF09B19FE97FFFA66 /* URLSchemeHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D27DC050DA4ABA3EB9D1484 /* URLSchemeHandlerTests.swift */; };
+		4FB16C5E27CC5ED26BE9F0E4 /* PauseAndStayAwakeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */; };
+		50258C58F65338E95509046D /* ProcessInspectorPerfTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10566982345E91583B70DED /* ProcessInspectorPerfTests.swift */; };
 		50EF7E4928DD0A61A1B3869B /* Sensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58CA07BBE53129D2A34A1589 /* Sensor.swift */; };
 		5A858B7E2BF0CFC0B3E49847 /* ThrottleRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A644DAD204B5C11BF9D35A09 /* ThrottleRule.swift */; };
 		5EEC54693BD115E3BF931574 /* ThermalGovernor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 730102034F0141285957EA50 /* ThermalGovernor.swift */; };
@@ -39,11 +42,14 @@
 		6CD4DD212B31618386CDE229 /* BatteryAwareMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C357D4E2F6011390B682767 /* BatteryAwareMode.swift */; };
 		704A38ED1043918BE5782CD2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B8A97982FB78D94D328FDB /* IOKit.framework */; };
 		72FE15AFF7FE2FD18EBD5B04 /* ThresholdPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */; };
+		7E446F1596617E5D02E8C834 /* AirAssistRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B822BE93D058B83394F59536 /* AirAssistRunner.swift */; };
+		81EF92D16FD31086423E4B99 /* URLSchemeHandler+Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */; };
 		8B1F31EC477E96E3DD53D9EB /* FirstLaunchSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */; };
 		8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573E0D36375389574C26D88F /* ThrottlingPrefsView.swift */; };
 		8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */; };
 		8EDE88F52ED18CCF2EFC8CBD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C1EA66578373DFC8BB8830 /* AppDelegate.swift */; };
 		96364AA71968BC08B8C14C16 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73665E744DF97F6A87703F65 /* DashboardView.swift */; };
+		9A5BE146B664C0F3E44DFADC /* AccessibilityAuditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58475359CEC0FD11EBF5424 /* AccessibilityAuditTests.swift */; };
 		9B4B56353080E959F327AC06 /* MenuBarGlyph.svg in Resources */ = {isa = PBXBuildFile; fileRef = A7B17DD0F122F70084C97529 /* MenuBarGlyph.svg */; };
 		A421ADB89070A8D476A827E9 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */; };
 		A5B74A36D44F389797534E71 /* MenuBarIconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E14DCBD5EA4C7C5865E92A /* MenuBarIconRenderer.swift */; };
@@ -75,6 +81,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2058C1366FD0325142058E51 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F33C39F33672A17BC2A1E0D9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7BA1AA1EFB1012E94DD9A5FA;
+			remoteInfo = AirAssist;
+		};
+		2A7EFC0E7156BD4FA72EB5B5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F33C39F33672A17BC2A1E0D9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7BA1AA1EFB1012E94DD9A5FA;
+			remoteInfo = AirAssist;
+		};
 		3FF354DA76CE11DC3245E2A3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F33C39F33672A17BC2A1E0D9 /* Project object */;
@@ -121,6 +141,8 @@
 		73665E744DF97F6A87703F65 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		7DDD72924D522D0C57068D59 /* AppIcon.svg */ = {isa = PBXFileReference; path = AppIcon.svg; sourceTree = "<group>"; };
+		7ED9159D0B813B5F03BB3690 /* AirAssistIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URLSchemeHandler+Debug.swift"; sourceTree = "<group>"; };
 		8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
 		8B85179E897A875693EE50AD /* SensorListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorListView.swift; sourceTree = "<group>"; };
 		8EAF397631AE11D4B570EC4D /* RunningProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunningProcess.swift; sourceTree = "<group>"; };
@@ -135,17 +157,23 @@
 		A644DAD204B5C11BF9D35A09 /* ThrottleRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleRule.swift; sourceTree = "<group>"; };
 		A7B17DD0F122F70084C97529 /* MenuBarGlyph.svg */ = {isa = PBXFileReference; path = MenuBarGlyph.svg; sourceTree = "<group>"; };
 		AD667C42F60AF2E26D510B5F /* SensorCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorCardView.swift; sourceTree = "<group>"; };
+		B58475359CEC0FD11EBF5424 /* AccessibilityAuditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityAuditTests.swift; sourceTree = "<group>"; };
+		B822BE93D058B83394F59536 /* AirAssistRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirAssistRunner.swift; sourceTree = "<group>"; };
+		B8D0D8FF68F79EF6C9054744 /* AirAssistUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEE7645B03DAEDE64CB56215 /* ProcessInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInspector.swift; sourceTree = "<group>"; };
 		BF7E79F9D9CEB95EE90B4F21 /* FrontmostAppObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontmostAppObserver.swift; sourceTree = "<group>"; };
+		C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleIntegrationTests.swift; sourceTree = "<group>"; };
 		C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormatter.swift; sourceTree = "<group>"; };
 		C7EB97E138B61FA2FD28EE16 /* RuleTemplatesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleTemplatesTests.swift; sourceTree = "<group>"; };
 		CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardWindowController.swift; sourceTree = "<group>"; };
 		CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottler.swift; sourceTree = "<group>"; };
 		D0BD89C1534037D26554015A /* SensorsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorsPrefsView.swift; sourceTree = "<group>"; };
 		D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinator.swift; sourceTree = "<group>"; };
+		DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseAndStayAwakeTests.swift; sourceTree = "<group>"; };
 		E195513AB2DA802AD3B203E3 /* MenuBarQuickMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarQuickMenu.swift; sourceTree = "<group>"; };
 		E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchSeeder.swift; sourceTree = "<group>"; };
 		EB3CE8E0F5867CC85E9AF30C /* URLSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandler.swift; sourceTree = "<group>"; };
+		F10566982345E91583B70DED /* ProcessInspectorPerfTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInspectorPerfTests.swift; sourceTree = "<group>"; };
 		F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryLogger.swift; sourceTree = "<group>"; };
 		F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardContainerView.swift; sourceTree = "<group>"; };
 		F39D53AA5D34F3BF9DC08F9F /* FirstRunDisclosure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunDisclosure.swift; sourceTree = "<group>"; };
@@ -219,7 +247,9 @@
 			isa = PBXGroup;
 			children = (
 				09669E238E58D811CA3E5D82 /* AirAssist */,
+				45C947B0A195B87FD8F58270 /* AirAssistIntegrationTests */,
 				BD6BE353B8FE8562FD7A8890 /* AirAssistTests */,
+				789C0A2B1EB99C8E2C4D1B60 /* AirAssistUITests */,
 				0B21C9C1D4DFC06A0D6B88EE /* Frameworks */,
 				E475C39220847B2C421D62B4 /* Products */,
 			);
@@ -239,6 +269,16 @@
 				573E0D36375389574C26D88F /* ThrottlingPrefsView.swift */,
 			);
 			path = Preferences;
+			sourceTree = "<group>";
+		};
+		45C947B0A195B87FD8F58270 /* AirAssistIntegrationTests */ = {
+			isa = PBXGroup;
+			children = (
+				B822BE93D058B83394F59536 /* AirAssistRunner.swift */,
+				DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */,
+				C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */,
+			);
+			path = AirAssistIntegrationTests;
 			sourceTree = "<group>";
 		};
 		511DEC8A353C08911776EAF3 /* Dashboard */ = {
@@ -291,6 +331,14 @@
 			path = MenuBar;
 			sourceTree = "<group>";
 		};
+		789C0A2B1EB99C8E2C4D1B60 /* AirAssistUITests */ = {
+			isa = PBXGroup;
+			children = (
+				B58475359CEC0FD11EBF5424 /* AccessibilityAuditTests.swift */,
+			);
+			path = AirAssistUITests;
+			sourceTree = "<group>";
+		};
 		803F2BB8CDD42057DA27761A /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -315,6 +363,7 @@
 				730102034F0141285957EA50 /* ThermalGovernor.swift */,
 				9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */,
 				EB3CE8E0F5867CC85E9AF30C /* URLSchemeHandler.swift */,
+				81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -333,6 +382,7 @@
 			isa = PBXGroup;
 			children = (
 				209A50EAB91CC3E47E5F04A5 /* GovernorConfigClampTests.swift */,
+				F10566982345E91583B70DED /* ProcessInspectorPerfTests.swift */,
 				1E38AF8B6D89383B136037DA /* ProcessThrottlerArbitrationTests.swift */,
 				C7EB97E138B61FA2FD28EE16 /* RuleTemplatesTests.swift */,
 				F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */,
@@ -347,7 +397,9 @@
 			isa = PBXGroup;
 			children = (
 				1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */,
+				7ED9159D0B813B5F03BB3690 /* AirAssistIntegrationTests.xctest */,
 				16E8286BDB0C5E6AF90B6498 /* AirAssistTests.xctest */,
+				B8D0D8FF68F79EF6C9054744 /* AirAssistUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -373,6 +425,42 @@
 			productName = AirAssist;
 			productReference = 1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C31E1919CAC0B64682144C69 /* AirAssistUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 929DDCA5992A7BB0E9819B6C /* Build configuration list for PBXNativeTarget "AirAssistUITests" */;
+			buildPhases = (
+				EF7C8528A2B6F48A455131FB /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				546A256805C66E5AA2528739 /* PBXTargetDependency */,
+			);
+			name = AirAssistUITests;
+			packageProductDependencies = (
+			);
+			productName = AirAssistUITests;
+			productReference = B8D0D8FF68F79EF6C9054744 /* AirAssistUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		EBC779F3E80599F3F6E804A8 /* AirAssistIntegrationTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 639F45DD6212CD58A069F3DF /* Build configuration list for PBXNativeTarget "AirAssistIntegrationTests" */;
+			buildPhases = (
+				1806385B2744C30A1943F6EF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F8342EE575C48731F2BB8EE0 /* PBXTargetDependency */,
+			);
+			name = AirAssistIntegrationTests;
+			packageProductDependencies = (
+			);
+			productName = AirAssistIntegrationTests;
+			productReference = 7ED9159D0B813B5F03BB3690 /* AirAssistIntegrationTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		FD2D560CF513834C1517A36E /* AirAssistTests */ = {
 			isa = PBXNativeTarget;
@@ -404,6 +492,13 @@
 					7BA1AA1EFB1012E94DD9A5FA = {
 						ProvisioningStyle = Manual;
 					};
+					C31E1919CAC0B64682144C69 = {
+						ProvisioningStyle = Manual;
+						TestTargetID = 7BA1AA1EFB1012E94DD9A5FA;
+					};
+					EBC779F3E80599F3F6E804A8 = {
+						ProvisioningStyle = Manual;
+					};
 					FD2D560CF513834C1517A36E = {
 						ProvisioningStyle = Manual;
 					};
@@ -424,7 +519,9 @@
 			projectRoot = "";
 			targets = (
 				7BA1AA1EFB1012E94DD9A5FA /* AirAssist */,
+				EBC779F3E80599F3F6E804A8 /* AirAssistIntegrationTests */,
 				FD2D560CF513834C1517A36E /* AirAssistTests */,
+				C31E1919CAC0B64682144C69 /* AirAssistUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -444,11 +541,22 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1806385B2744C30A1943F6EF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7E446F1596617E5D02E8C834 /* AirAssistRunner.swift in Sources */,
+				4FB16C5E27CC5ED26BE9F0E4 /* PauseAndStayAwakeTests.swift in Sources */,
+				4DA8F66397857E7B4AE49ECA /* ThrottleIntegrationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4AF345E839684E3409B11B1B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				BD6134487DFA3B4DD3CD9E0E /* GovernorConfigClampTests.swift in Sources */,
+				50258C58F65338E95509046D /* ProcessInspectorPerfTests.swift in Sources */,
 				2B6962559FBCFCF4DDF1A3DF /* ProcessThrottlerArbitrationTests.swift in Sources */,
 				299495A4528A366F04A3FA11 /* RuleTemplatesTests.swift in Sources */,
 				B77AD3CA5AE2AF1411D68173 /* SafetyCoordinatorTests.swift in Sources */,
@@ -512,17 +620,36 @@
 				5A858B7E2BF0CFC0B3E49847 /* ThrottleRule.swift in Sources */,
 				14BC7D908B94115EF40BC9D5 /* ThrottleRuleEngine.swift in Sources */,
 				8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */,
+				81EF92D16FD31086423E4B99 /* URLSchemeHandler+Debug.swift in Sources */,
 				D409F8F956BAF02BB00A41B5 /* URLSchemeHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EF7C8528A2B6F48A455131FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A5BE146B664C0F3E44DFADC /* AccessibilityAuditTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		546A256805C66E5AA2528739 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7BA1AA1EFB1012E94DD9A5FA /* AirAssist */;
+			targetProxy = 2058C1366FD0325142058E51 /* PBXContainerItemProxy */;
+		};
 		E70B237EE69C04458651FD4F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7BA1AA1EFB1012E94DD9A5FA /* AirAssist */;
 			targetProxy = 3FF354DA76CE11DC3245E2A3 /* PBXContainerItemProxy */;
+		};
+		F8342EE575C48731F2BB8EE0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7BA1AA1EFB1012E94DD9A5FA /* AirAssist */;
+			targetProxy = 2A7EFC0E7156BD4FA72EB5B5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -591,6 +718,26 @@
 			};
 			name = Release;
 		};
+		2D3C9AFD07F234597E2EBD5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist.uitests;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+				TEST_TARGET_NAME = AirAssist;
+			};
+			name = Debug;
+		};
 		4FB2836DBDF33BC32CDDF2C7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -631,6 +778,26 @@
 			};
 			name = Debug;
 		};
+		685E8CA4B077FE9C460C6774 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist.integrationtests;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AirAssist.app/Contents/MacOS/AirAssist";
+			};
+			name = Release;
+		};
 		70BDE6495D7908A0A992ACB7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -650,6 +817,26 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 			};
 			name = Release;
+		};
+		93C92BDBCFF8F85C46FB690F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist.integrationtests;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AirAssist.app/Contents/MacOS/AirAssist";
+			};
+			name = Debug;
 		};
 		A3C5C70B6B1A97E3A6EBFFBF /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -742,6 +929,26 @@
 			};
 			name = Debug;
 		};
+		F1A9766117D338ED394E3611 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.airassist.uitests;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+				TEST_TARGET_NAME = AirAssist;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -768,6 +975,24 @@
 			buildConfigurations = (
 				5F9E350F869C654265BB16D8 /* Debug */,
 				70BDE6495D7908A0A992ACB7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		639F45DD6212CD58A069F3DF /* Build configuration list for PBXNativeTarget "AirAssistIntegrationTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				93C92BDBCFF8F85C46FB690F /* Debug */,
+				685E8CA4B077FE9C460C6774 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		929DDCA5992A7BB0E9819B6C /* Build configuration list for PBXNativeTarget "AirAssistUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D3C9AFD07F234597E2EBD5C /* Debug */,
+				F1A9766117D338ED394E3611 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

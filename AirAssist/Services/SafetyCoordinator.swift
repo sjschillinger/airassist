@@ -27,7 +27,13 @@ final class SafetyCoordinator {
     // MARK: - Configuration
 
     /// Maximum continuous SIGSTOP duration before the watchdog intervenes.
-    static let watchdogMaxPauseMs: Int = 500
+    /// Set to 1.5s: with a 100ms cycle period the worst legitimate stop is
+    /// ~95ms (duty 0.05 × 100ms), so 1500ms gives ~15× headroom. A tighter
+    /// bound like 500ms can false-fire when the main actor is loaded
+    /// (Xcode Instruments attached, large sensor poll, etc.) and the
+    /// cycler's `await MainActor.run` hops get delayed — forcing SIGCONT
+    /// then wastes the cycle's stop phase.
+    static let watchdogMaxPauseMs: Int = 1_500
     /// Watchdog tick period.
     static let watchdogTickMs: Int = 250
 
@@ -205,6 +211,10 @@ fileprivate func updateSignalHandlerPIDs(_ pids: [pid_t]) {
 
 /// C-compatible signal handler. Releases every pid then re-raises with
 /// default disposition so the process exits.
+///
+/// All calls here must be async-signal-safe — `kill`, `sigaction`, and
+/// `raise` qualify per POSIX. Do not add stdio / malloc / Swift method
+/// calls.
 @_cdecl("airAssistSignalHandler")
 fileprivate func airAssistSignalHandler(_ sig: Int32) {
     let count = gInflightCount
@@ -213,7 +223,14 @@ fileprivate func airAssistSignalHandler(_ sig: Int32) {
         _ = kill(gInflightPIDs[i], SIGCONT)
         i += 1
     }
-    // Restore default and re-raise so normal termination proceeds.
-    signal(sig, SIG_DFL)
+    // Restore default disposition via sigaction (not signal(2)) — we
+    // installed the handler via sigaction and mixing the two on the same
+    // signal has undefined behavior on Darwin. Then re-raise so normal
+    // termination proceeds.
+    var act = sigaction()
+    act.__sigaction_u = __sigaction_u(__sa_handler: SIG_DFL)
+    sigemptyset(&act.sa_mask)
+    act.sa_flags = 0
+    sigaction(sig, &act, nil)
     raise(sig)
 }

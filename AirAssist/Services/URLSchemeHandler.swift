@@ -47,6 +47,15 @@ enum URLSchemeHandler {
 
         logger.info("Received airassist:// action=\(action, privacy: .public)")
 
+        #if DEBUG
+        // Debug endpoints used by the integration test bundle. Compiled out
+        // of Release builds — see URLSchemeHandler+Debug.swift for the
+        // handler. Returns early when the URL was a debug action.
+        if URLSchemeDebugHandler.tryHandle(action: action, params: params, store: store) {
+            return
+        }
+        #endif
+
         switch action {
         case "pause":
             let duration = params["duration"].flatMap(parseDuration(_:))
