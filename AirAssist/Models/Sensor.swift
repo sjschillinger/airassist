@@ -1,12 +1,12 @@
 import Foundation
 
 enum SensorCategory: String, Codable, CaseIterable {
-    // Display / grouping order is driven by `allCases` — keep the most
-    // actionable categories first so long lists (e.g. 14× CPU Die rows on
-    // an M-series Pro) don't push the SoC off-screen in the popover.
-    case soc     = "SoC"
+    // Display / grouping order is driven by `allCases` — CPU and GPU lead
+    // because they're what most users care about day-to-day; SoC, battery,
+    // storage, and the catch-all "other" follow.
     case cpu     = "CPU"
     case gpu     = "GPU"
+    case soc     = "SoC"
     case battery = "Battery"
     case storage = "Storage"
     case other   = "Other"
