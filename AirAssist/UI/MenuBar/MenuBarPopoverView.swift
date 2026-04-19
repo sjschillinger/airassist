@@ -20,12 +20,16 @@ struct MenuBarPopoverView: View {
             header
             Divider()
             sensorList
+            sparklineRow
             Divider()
             throttleSection
             Divider()
             actionButtons
         }
-        .frame(width: 280)
+        // #42 Tighten width. Previously fixed at 280; summary-mode popovers
+        // felt oversized for a single-sensor readout. 260 is the width the
+        // category headers + throttle rows were actually designed against.
+        .frame(width: displayMode == .summary ? 240 : 260)
     }
 
     // MARK: - Sections
@@ -126,20 +130,82 @@ struct MenuBarPopoverView: View {
         let name: String
         let duty: Double      // lowest (most aggressive) duty in the group
         let count: Int
+        /// Union of ThrottleSources across the PIDs in this group — used by
+        /// #43 (why is this throttled?) to show a source badge and a tooltip.
+        let sources: Set<ThrottleSource>
+        /// All PIDs in this group — used by #44 to issue per-source releases
+        /// from a context menu.
+        let pids: [pid_t]
     }
 
     private var throttleRows: [ThrottleRow] {
-        let live = store.liveThrottledPIDs.filter { kill($0.pid, 0) == 0 }
-        let grouped = Dictionary(grouping: live, by: { $0.name })
+        // Pull the richer detail view so we can attribute sources per-PID,
+        // and still do the kill(pid, 0) liveness filter.
+        let detail = store.processThrottler.throttleDetail
+            .filter { kill($0.pid, 0) == 0 }
+        let grouped = Dictionary(grouping: detail, by: { $0.name })
         return grouped.map { name, items in
-            ThrottleRow(
+            let srcs = Set(items.flatMap { $0.sources.keys })
+            let dutyMin = items
+                .flatMap { $0.sources.values }
+                .min() ?? 1.0
+            return ThrottleRow(
                 id: name,
                 name: name,
-                duty: items.map(\.duty).min() ?? 1.0,
-                count: items.count
+                duty: dutyMin,
+                count: items.count,
+                sources: srcs,
+                pids: items.map { $0.pid }
             )
         }
         .sorted { $0.duty < $1.duty }
+    }
+
+    /// Human-readable explanation used by the row tooltip and the
+    /// context menu header (#43).
+    private func sourcesDescription(_ sources: Set<ThrottleSource>) -> String {
+        let labels = sources.map { src -> String in
+            switch src {
+            case .rule:     return "per-app rule"
+            case .governor: return "system governor"
+            case .manual:   return "manual throttle"
+            }
+        }
+        .sorted()
+        if labels.isEmpty { return "unknown source" }
+        if labels.count == 1 { return "Throttled by \(labels[0])." }
+        return "Throttled by " + labels.prefix(labels.count - 1).joined(separator: ", ")
+            + " and " + labels.last! + "."
+    }
+
+    private func sourceBadge(_ sources: Set<ThrottleSource>) -> (symbol: String, tint: Color) {
+        if sources.contains(.governor) { return ("thermometer.high", .orange) }
+        if sources.contains(.rule)     { return ("list.bullet.rectangle", .blue) }
+        if sources.contains(.manual)   { return ("hand.point.up.left", .purple) }
+        return ("circle", .secondary)
+    }
+
+    /// Compact one-minute hottest-temp sparkline (#45). Only rendered when
+    /// we have at least 4 samples — less than that is visually meaningless.
+    /// Draws inline, no expensive off-screen passes.
+    @ViewBuilder
+    private var sparklineRow: some View {
+        let samples = store.sparklineSamples
+        if samples.count >= 4 {
+            HStack(spacing: 8) {
+                Text("Last min")
+                    .font(.caption2).foregroundStyle(.secondary)
+                Sparkline(samples: samples)
+                    .frame(height: 18)
+                    .frame(maxWidth: .infinity)
+                if let last = samples.last {
+                    Text(unit.format(last))
+                        .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+        }
     }
 
     @ViewBuilder
@@ -159,14 +225,45 @@ struct MenuBarPopoverView: View {
             }
             if !rows.isEmpty {
                 ForEach(rows.prefix(3)) { row in
-                    HStack {
-                        Text(row.count > 1 ? "•  \(row.name) (×\(row.count))" : "•  \(row.name)")
+                    let badge = sourceBadge(row.sources)
+                    HStack(spacing: 6) {
+                        // Source badge (#43). Tooltip explains which engine
+                        // asked for the throttle, so the user isn't left
+                        // guessing why Chrome suddenly got quieter.
+                        Image(systemName: badge.symbol)
+                            .foregroundStyle(badge.tint)
+                            .help(sourcesDescription(row.sources))
+                        Text(row.count > 1 ? "\(row.name) (×\(row.count))" : row.name)
                             .lineLimit(1)
                         Spacer()
                         Text("\(Int((row.duty * 100).rounded()))%").monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
                     .font(.caption2)
+                    .contentShape(Rectangle())
+                    .help(sourcesDescription(row.sources))
+                    // #44 Right-click / long-press context menu to adjust
+                    // or release this app's throttle without opening prefs.
+                    .contextMenu {
+                        Section(sourcesDescription(row.sources)) {
+                            Button("Set to 85% (light)") { setManualDuty(row: row, duty: 0.85) }
+                            Button("Set to 50%")          { setManualDuty(row: row, duty: 0.50) }
+                            Button("Set to 25% (heavy)")  { setManualDuty(row: row, duty: 0.25) }
+                            Divider()
+                            if row.sources.contains(.manual) {
+                                Button("Clear manual throttle") {
+                                    for pid in row.pids {
+                                        store.processThrottler.clearDuty(source: .manual, for: pid)
+                                    }
+                                }
+                            }
+                            Button("Release all throttling for this app") {
+                                for pid in row.pids {
+                                    store.processThrottler.release(pid: pid)
+                                }
+                            }
+                        }
+                    }
                 }
                 if rows.count > 3 {
                     Text("+ \(rows.count - 3) more")
@@ -176,6 +273,14 @@ struct MenuBarPopoverView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
+    }
+
+    /// Apply (or replace) a manual-source duty on every PID in the row.
+    /// Used by the #44 context-menu quick adjustments.
+    private func setManualDuty(row: ThrottleRow, duty: Double) {
+        for pid in row.pids {
+            store.processThrottler.setDuty(duty, for: pid, name: row.name, source: .manual)
+        }
     }
 
     private var governorSummary: String {
@@ -250,6 +355,43 @@ private struct MenuBarButton: View {
         .padding(.vertical, 6)
         .foregroundStyle(role == .destructive ? Color.red : Color.primary)
         .modifier(HoverHighlight())
+    }
+}
+
+// MARK: - Sparkline (#45)
+
+/// Minimal sparkline used in the popover. Deliberately dependency-free
+/// (no Charts framework) — the popover has to render in <50ms on a cold
+/// menu-bar click, and Charts has first-time-use compile-and-cache cost.
+/// Auto-scales y to the sample range; a flat line renders centered.
+private struct Sparkline: View {
+    let samples: [Double]
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            let (lo, hi) = sampleRange
+            Path { path in
+                guard samples.count >= 2, w > 0, h > 0 else { return }
+                let stepX = w / CGFloat(max(1, samples.count - 1))
+                let range = max(0.001, hi - lo)
+                for (i, s) in samples.enumerated() {
+                    let x = CGFloat(i) * stepX
+                    let normalized = (s - lo) / range
+                    let y = h - CGFloat(normalized) * h
+                    if i == 0 { path.move(to: CGPoint(x: x, y: y)) }
+                    else      { path.addLine(to: CGPoint(x: x, y: y)) }
+                }
+            }
+            .stroke(Color.accentColor, lineWidth: 1.2)
+        }
+    }
+
+    private var sampleRange: (Double, Double) {
+        guard let lo = samples.min(), let hi = samples.max() else { return (0, 1) }
+        if abs(hi - lo) < 0.01 { return (lo - 1, hi + 1) }
+        return (lo, hi)
     }
 }
 

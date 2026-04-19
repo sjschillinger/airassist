@@ -62,6 +62,7 @@
 		DA468550C7C0B1564688DBF2 /* SensorCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD667C42F60AF2E26D510B5F /* SensorCardView.swift */; };
 		DD41868683DA5D42CE4262A1 /* AppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586DB3B79D410ED45D4B6B80 /* AppIntents.swift */; };
 		DE977BF95BCAEC213B071E1B /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B8F67C6B8D8B0CD7E191D3E /* AppIntents.framework */; };
+		E1372B68907BA9810AF17D34 /* OnboardingWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9A77B36585950274F5A0C6 /* OnboardingWindow.swift */; };
 		E421277A46C55704D12DEDB4 /* RunningProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EAF397631AE11D4B570EC4D /* RunningProcess.swift */; };
 		E9F23A842ABC54031BBAE6AB /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43403D677D51F2FAC26B14EA /* Constants.swift */; };
 		EB79F540BA6F71D092CAA211 /* DashboardContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */; };
@@ -109,6 +110,7 @@
 		5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThresholdPersistence.swift; sourceTree = "<group>"; };
 		68ECE41B669EE247996A79BF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		6D27DC050DA4ABA3EB9D1484 /* URLSchemeHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandlerTests.swift; sourceTree = "<group>"; };
+		6E9A77B36585950274F5A0C6 /* OnboardingWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindow.swift; sourceTree = "<group>"; };
 		730102034F0141285957EA50 /* ThermalGovernor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalGovernor.swift; sourceTree = "<group>"; };
 		73665E744DF97F6A87703F65 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
@@ -293,6 +295,7 @@
 				F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */,
 				0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */,
 				5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */,
+				6E9A77B36585950274F5A0C6 /* OnboardingWindow.swift */,
 				BEE7645B03DAEDE64CB56215 /* ProcessInspector.swift */,
 				3BFBE657DCEA969D7AC725E8 /* ProcessSnapshotPublisher.swift */,
 				CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */,
@@ -468,6 +471,7 @@
 				669F7ADA3EFC37AAD09B3AD2 /* MenuBarPrefs.swift in Sources */,
 				1A0F0707769B5E1104E65551 /* MenuBarPrefsView.swift in Sources */,
 				2C02FDC905DF81A8091E7AD3 /* MenuBarQuickMenu.swift in Sources */,
+				E1372B68907BA9810AF17D34 /* OnboardingWindow.swift in Sources */,
 				24F6786F7227631D1C081DF9 /* PreferencesView.swift in Sources */,
 				1D99B043A174F61732F796F8 /* PreferencesWindowController.swift in Sources */,
 				30D3D067217FDCD224706495 /* ProcessInspector.swift in Sources */,

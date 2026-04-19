@@ -43,6 +43,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // the alert isn't the first thing the user sees on a cold launch; the
         // icon appears, then the modal.
         FirstRunDisclosure.presentIfNeeded()
+        // After the risk disclosure is accepted (first launch only),
+        // show the onboarding window so users get a productive default
+        // instead of a blank menu-bar icon. Idempotent via its own key.
+        OnboardingWindow.presentIfNeeded(store: store)
     }
 
     /// Handler for `airassist://` URLs. Registered via `CFBundleURLTypes` in
@@ -53,6 +57,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for url in urls {
             URLSchemeHandler.handle(url, store: store)
         }
+    }
+
+    /// Confirm quit while rules are live (#47) — prevents the "why did
+    /// Chrome suddenly get faster / hotter" surprise after an accidental
+    /// ⌘Q. Suppressed if the user is holding ⌥ (opt-quit convention for
+    /// "I know what I'm doing, just do it").
+    @MainActor
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard store != nil else { return .terminateNow }
+        let rulesLive = store.throttleRules.enabled && !store.liveThrottledPIDs.isEmpty
+        guard rulesLive else { return .terminateNow }
+        if NSEvent.modifierFlags.contains(.option) { return .terminateNow }
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Quit Air Assist?"
+        alert.informativeText = """
+        Air Assist is currently throttling \(store.liveThrottledPIDs.count) \
+        process(es). Quitting will release them — they'll run at full speed \
+        again until you relaunch the app.
+        """
+        alert.addButton(withTitle: "Quit")
+        alert.addButton(withTitle: "Cancel")
+        let response = alert.runModal()
+        return response == .alertFirstButtonReturn ? .terminateNow : .terminateCancel
     }
 
     @MainActor

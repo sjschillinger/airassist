@@ -17,6 +17,24 @@ final class ThermalStore {
     // MARK: - Battery-aware auto-mode (#59)
     let batteryAware = BatteryAwareMode()
 
+    // MARK: - Popover sparkline (#45)
+    /// Ring buffer of the hottest enabled-sensor reading, one sample per
+    /// control-loop tick (~1 Hz). Capped at `sparklineCapacity` (60 ≈ 1 min).
+    /// Kept in-memory only — the on-disk `HistoryLogger` is the source of
+    /// truth for the Dashboard's longer charts; this is just a cheap live
+    /// strip for the menu bar popover.
+    private(set) var sparklineSamples: [Double] = []
+    static let sparklineCapacity: Int = 60
+
+    private func appendSparklineSample() {
+        if let t = enabledSensors.compactMap(\.currentValue).max() {
+            sparklineSamples.append(t)
+            if sparklineSamples.count > Self.sparklineCapacity {
+                sparklineSamples.removeFirst(sparklineSamples.count - Self.sparklineCapacity)
+            }
+        }
+    }
+
     /// User-facing API: change the stay-awake mode. Persists the choice
     /// so the selection survives a quit.
     func setStayAwakeMode(_ mode: StayAwakeService.Mode) {
@@ -205,6 +223,7 @@ final class ThermalStore {
                 self.snapshots.refresh()
                 self.ruleEngine.tick()
                 self.governor.tick()
+                self.appendSparklineSample()
             }
         }
     }
