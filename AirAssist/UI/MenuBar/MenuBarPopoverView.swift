@@ -27,8 +27,13 @@ struct MenuBarPopoverView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Image(systemName: AppStrings.MenuBar.defaultIcon)
-                .font(.title2)
+            // Template imageset → SwiftUI renders in the current foreground
+            // style, so this automatically flips with light/dark appearance.
+            Image("MenuBarGlyph")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 22, height: 22)
+                .foregroundStyle(.primary)
             Text(AppStrings.appName)
                 .font(.headline)
             Spacer()

@@ -140,9 +140,15 @@ final class MenuBarController {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: MenuBarIconRenderer.widthSingle)
         guard let button = statusItem?.button else { return }
-        button.image = NSImage(systemSymbolName: "thermometer.medium",
-                               accessibilityDescription: AppStrings.appName)
-        button.image?.isTemplate = true
+        // Use our brand glyph as the placeholder pre-first-sync; falls back to
+        // the SF Symbol if the asset ever goes missing. isTemplate is already
+        // set by the imageset's template-rendering intent, but belt-and-braces.
+        let initialImage = NSImage(named: "MenuBarGlyph")
+            ?? NSImage(systemSymbolName: "thermometer.medium",
+                       accessibilityDescription: AppStrings.appName)
+        initialImage?.isTemplate = true
+        initialImage?.accessibilityDescription = AppStrings.appName
+        button.image = initialImage
         button.imagePosition = .imageLeft
         button.action = #selector(statusItemClicked(_:))
         button.target = self

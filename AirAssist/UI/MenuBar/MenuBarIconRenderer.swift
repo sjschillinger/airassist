@@ -160,12 +160,21 @@ enum MenuBarIconRenderer {
             height: iconSize.height
         )
         if showIcon, let baseIcon {
-            if let tint {
-                tint.set()
+            // The composite image will lose `isTemplate` as soon as any colored
+            // element (thermal tint OR throttle dot) is baked in, which means
+            // macOS won't auto-flip black→white when the menu bar appearance
+            // changes. In that case we must manually draw the glyph in the
+            // current labelColor. When no coloured element is present we leave
+            // the glyph as pure black and let the template flip in the status
+            // bar handle it.
+            let compositeWillBeTemplate = (tint == nil && throttleDot == nil)
+            let effectiveColor: NSColor? = tint ?? (compositeWillBeTemplate ? nil : NSColor.labelColor)
+            if let color = effectiveColor {
+                color.set()
                 let tinted = baseIcon.copy() as! NSImage
                 tinted.isTemplate = false
                 tinted.lockFocus()
-                tint.set()
+                color.set()
                 let r = NSRect(origin: .zero, size: iconSize)
                 r.fill(using: .sourceAtop)
                 tinted.unlockFocus()
