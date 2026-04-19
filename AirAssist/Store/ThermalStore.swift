@@ -14,6 +14,9 @@ final class ThermalStore {
     // MARK: - Sleep/wake
     private var sleepWakeObserver: SleepWakeObserver?
 
+    // MARK: - Battery-aware auto-mode (#59)
+    let batteryAware = BatteryAwareMode()
+
     /// User-facing API: change the stay-awake mode. Persists the choice
     /// so the selection survives a quit.
     func setStayAwakeMode(_ mode: StayAwakeService.Mode) {
@@ -177,6 +180,13 @@ final class ThermalStore {
             }
         )
         sleepWakeObserver?.start()
+        // Battery-aware preset swapping (#59). Opt-in; no-op if disabled.
+        batteryAware.onApplyThresholds = { [weak self] settings in
+            guard let self else { return }
+            self.thresholds = settings
+            ThresholdPersistence.save(settings)
+        }
+        batteryAware.start()
         logger.pruneOldEntries()
         logTask = Task { @MainActor [weak self] in
             while !Task.isCancelled {
@@ -206,6 +216,7 @@ final class ThermalStore {
         controlLoopTask = nil
         sleepWakeObserver?.stop()
         sleepWakeObserver = nil
+        batteryAware.stop()
         frontmostObserver.stop()
         sensorService.stop()
         governor.stop()
