@@ -173,12 +173,14 @@ scope" for what we're explicitly saying no to.
     repo URL `sjschillinger/airassist`, bundle ID
     `com.sjschillinger.airassist`, Homebrew cask `airassist`, README
     copy.
-- [ ] **#30 Fanless-only positioning — have the HN answer ready**
-  - README is honest; write 1-liner: "yes, works on Pros; not optimized yet;
-    roadmap in NON_AIR_ROADMAP.md (dev repo)"
-- [ ] **#31 Competitor comparison blurb**
-  - Pre-write the "how is this different" answer for HN/Reddit
-  - Lean into: "less, but free, OSS, no root"
+- [x] **#30 Fanless-only positioning — have the HN answer ready** —
+  README now has a "Why MacBook Air only?" section with the runs-on-Pros
+  caveat + NON_AIR_ROADMAP pointer.
+- [x] **#31 Competitor comparison blurb** — README "How this compares
+  to other tools" section with category-by-category rows (fan-control
+  utilities / turbo-bin togglers / commercial CPU cappers / CLI pause
+  loops), plus a one-paragraph HN/Reddit answer. Named products kept
+  out per the pre-commit hook.
 - [x] **#32 Sandboxing decision — documented in README** — new Privacy + Sandboxing sections
 - [ ] **#33 Notarization dry-run with entitlement**
   - Submit test build with `com.apple.security.temporary-exception.iokit-user-client-class`
@@ -316,8 +318,9 @@ earlier entries — cross-references in parens.
 ### Launch-day logistics
 - [ ] **#51 Pick ONE launch channel** — HN Show / r/macapps / lobste.rs.
   One thoughtful post beats five.
-- [ ] **#52 Issue responsiveness expectation** — state it in README so
-  users don't feel ghosted when response takes a week.
+- [x] **#52 Issue responsiveness expectation** — README "Support &
+  response times" section sets the one-maintainer-spare-time expectation
+  and points to the diagnostic bundle for bug reports.
 
 ---
 

@@ -56,6 +56,40 @@ your shell has.
   (see `NON_AIR_ROADMAP.md` in the development repo for what a proper
   Pro/Studio port would look like — not yet implemented).
 
+### Why MacBook Air only?
+
+The Air is the one Mac with no fans — when the SoC hits its thermal
+limit, the only relief it has is to slow the CPU itself, and you watch
+your machine stop feeling like a Mac. Every other Mac has spinning
+metal that handles this case for you. AirAssist exists to give the
+fanless Air an equivalent pressure-release valve: when temps climb,
+throttle the background noise instead of the thing you're actually
+doing.
+
+It runs on Pros and Studios too — nothing is gated by model — but the
+governor tuning is calibrated for the Air's thermal envelope, and the
+value proposition is weaker on a machine that can just spin up a fan.
+The [NON_AIR_ROADMAP.md](NON_AIR_ROADMAP.md) notes what a proper port
+would entail if someone wants it.
+
+## How this compares to other tools
+
+AirAssist deliberately does **less** than the usual Mac tweaker apps.
+That's the point: on a fanless machine you want *sustained workloads,
+not control surfaces*. Quick differentiation by category:
+
+| Tool category | What those tools do | What AirAssist does differently |
+|---------------|---------------------|----------------------------------|
+| **Fan-control utilities** | Read sensors, spin fans faster to clear heat. | The Air has no fans. AirAssist reads the same sensors but acts on *processes* — pausing the hottest background workloads instead of spinning metal that isn't there. |
+| **Turbo-Boost togglers** | Disable the P-cores' turbo bin system-wide, usually via a kernel extension run as root. | User-privilege only. No kernel extension, no helper daemon. Pauses only processes your user owns, and per-app rather than disabling a whole CPU feature. |
+| **Commercial per-app CPU cappers** | Set a static percentage cap on named apps. | Open source (AGPL-3.0), free for personal use, and *reactive* — the cap is driven by measured temperature, not a fixed number. Temps cool off, the cap lifts. |
+| **`nice` / SIGSTOP loops in a shell** | One-off CLI niceness or hand-rolled pause/resume loops. | A well-behaved version of the same idea: dead-man's-switch resume on crash, 4 Hz stuck-cycle watchdog, sleep/wake handling, and a UI you can hand to someone who isn't a terminal user. |
+
+**Shortest answer for HN / Reddit:** "It's the fanless-Mac equivalent
+of fan control — when things get hot, it duty-cycles the greediest
+background processes instead of spinning fans you don't have.
+Open source, runs at user privilege, no kernel extension."
+
 ## Install
 
 ### Homebrew (recommended)
@@ -175,6 +209,22 @@ account. No kernel extension, no `SMAppService`-installed helper, no
 elevated privileges at any point. If you're the kind of person who
 reads entitlements files before installing something, check
 `project.yml` — there is nothing else hiding in there.
+
+## Support & response times
+
+AirAssist is maintained by one person in spare time. Realistic
+expectations so nobody feels ghosted:
+
+- **Bug reports:** I aim to acknowledge within a week. A reproducer +
+  a diagnostic bundle (Preferences → Support → Export Diagnostic
+  Bundle…) dramatically shortens the round-trip.
+- **Security issues:** see [SECURITY.md](SECURITY.md) for the private
+  disclosure path; those get priority over feature requests.
+- **Feature requests:** read, triaged on weekends, merged when they
+  fit the fanless-Air thesis. "Make it also control fans" / "port to
+  Windows" / "add a menu bar widget for Spotify" — politely declined.
+- **Silent weeks happen.** If something looks stuck for more than two
+  weeks, a gentle bump on the issue is welcome, not annoying.
 
 ## Contributing
 
