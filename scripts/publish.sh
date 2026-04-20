@@ -137,7 +137,7 @@ done
 
 echo "→ Scanning staged output for forbidden references…"
 if violations=$(grep -IErln "${FORBIDDEN_PATTERN}" "${STAGE}" 2>/dev/null \
-                | grep -vE '(\.github/workflows/forbidden-strings\.yml)$' \
+                | grep -vE '(\.github/workflows/forbidden-strings\.yml|scripts/hooks/pre-commit)$' \
                 | head -10); then
   if [ -n "${violations}" ]; then
     echo "✖ publish aborted: forbidden reference found in staged output." >&2
