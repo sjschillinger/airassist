@@ -26,11 +26,22 @@ cask "airassist" do
     strategy :github_latest
   end
 
-  # We ship ad-hoc signed builds (no $99/yr Developer ID). Homebrew
-  # downloads via curl, which does NOT set com.apple.quarantine, so
-  # Gatekeeper stays quiet on install. No `xattr` dance needed for
-  # brew-installed copies.
+  # We ship ad-hoc signed builds (no $99/yr Developer ID). Recent
+  # Homebrew versions tag cask downloads with `com.apple.quarantine`,
+  # which — on macOS Sequoia and newer — causes Gatekeeper to show the
+  # "Apple could not verify…" dialog on first launch. We strip the
+  # attribute in a postflight so the app opens cleanly on first run,
+  # matching the experience users reasonably expect from a brew-
+  # installed tool. The signature, bundle contents, and SHA256 are
+  # unchanged — this only removes the first-launch quarantine flag,
+  # same as a user running `xattr -dr com.apple.quarantine` manually.
   app "AirAssist.app"
+
+  postflight do
+    system_command "/usr/bin/xattr",
+                   args: ["-dr", "com.apple.quarantine", "#{appdir}/AirAssist.app"],
+                   sudo: false
+  end
 
   # Clean uninstall. `brew uninstall --cask airassist --zap` removes
   # everything below in addition to the .app.

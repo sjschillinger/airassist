@@ -26,11 +26,14 @@ see `scripts/homebrew-tap-template/README.md`.
 This is a **permanent decision for Air Assist**, not a temporary
 stopgap to avoid the $99/yr Apple Developer Program fee. The reasoning:
 
-1. **Homebrew already solves Gatekeeper.** `brew install --cask` pulls
-   the zip via curl (doesn't set `com.apple.quarantine`) and installs
-   into `/Applications`. macOS treats it as a trusted local install.
-   Notarization's job is making *direct downloads* smoother — we don't
-   distribute that way.
+1. **Homebrew (with a one-line cask postflight) solves Gatekeeper.**
+   Current Homebrew tags cask downloads with `com.apple.quarantine`,
+   so on macOS Sequoia+ a plain ad-hoc install shows the "Apple could
+   not verify…" dialog on first launch. Our cask strips the attribute
+   in a `postflight` (`xattr -dr com.apple.quarantine …`), so
+   `brew install --cask airassist` opens cleanly on first run.
+   Notarization's job is making *direct downloads* smoother — we
+   don't distribute that way.
 2. **AGPL-3.0 forks are expected.** If the "official" AirAssist is
    notarized under one person's Apple Developer ID, every forker is
    forced either to (a) pay Apple $99/yr themselves or (b) ship an
