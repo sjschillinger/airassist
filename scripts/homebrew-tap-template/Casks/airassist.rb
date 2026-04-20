@@ -10,7 +10,7 @@ cask "airassist" do
 
   url "https://github.com/sjschillinger/airassist/releases/download/v#{version}/AirAssist-#{version}.zip"
   name "Air Assist"
-  desc "Menu-bar thermal monitor and workload governor for fanless MacBook Air"
+  desc "Menu-bar thermal monitor and workload governor for fanless Macs, such as MacBook Airs and Neos"
   homepage "https://github.com/sjschillinger/airassist"
 
   # Air Assist is Apple Silicon only and targets recent macOS. Keep these

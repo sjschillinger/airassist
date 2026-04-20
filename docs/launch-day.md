@@ -78,7 +78,7 @@ Create the remote and push:
 ```bash
 cd ../airassist-public
 gh repo create sjschillinger/airassist --public \
-    --description "Menu-bar thermal monitor + workload governor for fanless MacBook Air" \
+    --description "Menu-bar thermal monitor + workload governor for fanless Macs, such as MacBook Airs and Neos" \
     --source . --push
 git push origin v0.9.0   # push the tag — triggers release.yml
 ```
