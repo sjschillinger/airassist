@@ -40,8 +40,15 @@ enum AppMainMenu {
             keyEquivalent: ""
         ))
 
-        // "Check for Updates…" item is re-added in Tier 4 C3 once the
-        // GitHub-Releases-backed UpdateCheckService lands.
+        // "Check for Updates…" — always visible. Runs a manual check
+        // against the GitHub Releases API and either opens the release
+        // page or shows an "up to date" alert. Safe on every build type:
+        // no signing check, no installer, just a notifier.
+        appMenu.addItem(NSMenuItem(
+            title: "Check for Updates…",
+            action: #selector(AppDelegate.checkForUpdatesFromMenu(_:)),
+            keyEquivalent: ""
+        ))
 
         appMenu.addItem(.separator())
 

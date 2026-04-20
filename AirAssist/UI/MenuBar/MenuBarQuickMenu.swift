@@ -30,6 +30,19 @@ final class MenuBarQuickMenu: NSObject {
 
         let menu = NSMenu()
 
+        // Update nudge — only rendered when the daily check (or the
+        // user's last manual check) found a release newer than ours.
+        // Clicking opens the release page in their browser; users on
+        // Homebrew simply run `brew upgrade --cask airassist`.
+        if let newer = UpdateCheckService.shared.latestVersion {
+            let upd = NSMenuItem(title: "↑ Version \(newer) available — Get it",
+                                 action: #selector(qmOpenReleasePage),
+                                 keyEquivalent: "")
+            upd.target = self
+            menu.addItem(upd)
+            menu.addItem(.separator())
+        }
+
         let dashItem = NSMenuItem(title: "Open Dashboard",
                                   action: #selector(qmDashboard),
                                   keyEquivalent: "d")
@@ -166,6 +179,10 @@ final class MenuBarQuickMenu: NSObject {
     @objc private func qmStayAwake(_ sender: NSMenuItem) {
         guard let mode = sender.representedObject as? StayAwakeService.Mode else { return }
         store?.setStayAwakeMode(mode)
+    }
+
+    @objc private func qmOpenReleasePage() {
+        UpdateCheckService.shared.openReleasePage()
     }
 
     @objc private func qmThrottleFrontmost() {

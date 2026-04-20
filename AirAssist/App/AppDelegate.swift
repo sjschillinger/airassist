@@ -55,6 +55,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // app lifecycle — miss it here and the payload is lost for good).
         MetricKitReporter.shared.start()
 
+        // Tier 4: daily GitHub-Releases-API check. No-op if the user has
+        // turned off automaticChecksEnabled in Preferences. Manual
+        // "Check for Updates…" still works either way.
+        UpdateCheckService.shared.start()
+
         // Minimal main menu (#41 keyboard-nav) — gives ⌘W / ⌘Q / ⌘,
         // and the standard Edit shortcuts on any key window.
         AppMainMenu.install()
@@ -158,6 +163,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// the button in General prefs; duplicated here so users can escape to
     /// a diagnostic bundle even when the prefs window is broken or they
     /// haven't learned where the button lives.
+    /// Action target for the app-menu "Check for Updates…" item. Forces
+    /// an immediate check; on completion, shows either the release page
+    /// (if newer) or an "up to date" alert so the user gets explicit
+    /// feedback from the click.
+    @MainActor
+    @objc func checkForUpdatesFromMenu(_ sender: Any?) {
+        Task { @MainActor in
+            await UpdateCheckService.shared.checkNow()
+            if let newer = UpdateCheckService.shared.latestVersion {
+                // A newer release exists — hand the user the release page
+                // rather than trying to install over a running ad-hoc app.
+                let alert = NSAlert()
+                alert.messageText = "Air Assist \(newer) is available"
+                alert.informativeText = """
+                You're running \(UpdateCheckService.currentVersion). \
+                Open the release page to download and install.
+
+                Homebrew users can instead run:
+                    brew upgrade --cask airassist
+                """
+                alert.addButton(withTitle: "Open Release Page")
+                alert.addButton(withTitle: "Later")
+                if alert.runModal() == .alertFirstButtonReturn {
+                    UpdateCheckService.shared.openReleasePage()
+                }
+            } else {
+                let alert = NSAlert()
+                alert.messageText = "Air Assist is up to date"
+                alert.informativeText = "You're running \(UpdateCheckService.currentVersion), the latest release."
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
+        }
+    }
+
     @MainActor
     @objc func exportDiagnosticsFromMenu(_ sender: Any?) {
         guard store != nil else { return }

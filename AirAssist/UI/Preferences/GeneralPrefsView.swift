@@ -204,6 +204,42 @@ struct GeneralPrefsView: View {
                 }
             }
 
+            Section("Updates") {
+                LabeledContent("Check automatically") {
+                    Toggle("", isOn: Binding(
+                        get: { UpdateCheckService.shared.automaticChecksEnabled },
+                        set: { UpdateCheckService.shared.automaticChecksEnabled = $0 }
+                    ))
+                    .labelsHidden()
+                    .accessibilityLabel("Check for updates automatically every day")
+                }
+                LabeledContent("Status") {
+                    HStack(spacing: 8) {
+                        if let v = UpdateCheckService.shared.latestVersion {
+                            Text("Version \(v) available").foregroundStyle(.orange)
+                            Button("Open Release Page") {
+                                UpdateCheckService.shared.openReleasePage()
+                            }
+                            .controlSize(.small)
+                        } else if let last = UpdateCheckService.shared.lastCheckedAt {
+                            Text("Up to date — last checked \(last, style: .relative) ago")
+                                .font(.caption).foregroundStyle(.secondary)
+                        } else {
+                            Text("Never checked").font(.caption).foregroundStyle(.secondary)
+                        }
+                        Button("Check Now") {
+                            Task { @MainActor in
+                                await UpdateCheckService.shared.checkNow()
+                            }
+                        }
+                        .controlSize(.small)
+                        .disabled(UpdateCheckService.shared.isChecking)
+                    }
+                }
+                Text("One daily request to api.github.com to see if a newer release exists. No telemetry, no personal data — just the version tag. Turning this off leaves the \"Check for Updates…\" menu item working for manual checks.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
             Section("Support") {
                 LabeledContent("Diagnostics") {
                     Button("Export Diagnostic Bundle…") {
