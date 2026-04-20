@@ -5,7 +5,7 @@
 # (or `shasum -a 256 AirAssist-<version>.zip`).
 
 cask "airassist" do
-  version "0.1.0"
+  version "0.9.0"
   sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
   url "https://github.com/sjschillinger/airassist/releases/download/v#{version}/AirAssist-#{version}.zip"
@@ -14,8 +14,8 @@ cask "airassist" do
   homepage "https://github.com/sjschillinger/airassist"
 
   # Air Assist is Apple Silicon only and targets recent macOS. Keep these
-  # in sync with project.yml's deployment target.
-  depends_on macos: ">= :sonoma"
+  # in sync with project.yml's deployment target (currently macOS 15).
+  depends_on macos: ">= :sequoia"
   depends_on arch: :arm64
 
   # We ship ad-hoc signed builds (no $99/yr Developer ID). Homebrew
