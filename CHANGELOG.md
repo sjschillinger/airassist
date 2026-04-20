@@ -9,39 +9,7 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
-### Added
-
-- **`airassist://` URL scheme documentation** — new README "Automation"
-  section enumerates `pause`, `resume`, `throttle`, `release` with the
-  exact duration / duty formats, plus Shortcuts.app and shell examples.
-  The scheme itself shipped in 0.9.0; 0.9 only documents it.
-- **Privacy "Data sources" note** — README Privacy section now spells
-  out that Air Assist reads from `IOHIDEventSystemClient` (public HID
-  API, same interface `powermetrics` uses), does not call any private
-  SPI, does not touch SMC, and ships no bundled binary blob. Differentiates
-  against tools that ship kexts or XPC helpers.
-- **OS thermal-state governor input** — when `respectOSThermalState` is
-  on (default), `ProcessInfo.processInfo.thermalState` feeds into the
-  aggression factor alongside temperature and CPU overshoot. Mapping:
-  `nominal 0`, `fair 0.25`, `serious 0.6`, `critical 1.0`. Folded via
-  `max(...)`, so nominal contributes nothing and the signal is strictly
-  additive.
-- **"Throttle only when on battery"** opt-in on the governor. When on
-  AC with the flag enabled, caps stay armed-but-silent and the reason
-  string surfaces why. Off by default.
-- **Stay Awake: "Release when display sleeps"** preference. When on,
-  drops the IOPM assertion on `screensDidSleepNotification` (lid close
-  without external display, screen lock, idle display-off) and re-takes
-  it on wake. Off by default — the existing caffeinate-style behaviour
-  remains the less-surprising default.
-
-### Changed
-
-- **Release body** now shows both `brew install` (first-time) and
-  `brew upgrade` (returning users) so the update-nudge landing page is
-  unambiguous about the follow-through path.
-
-### Planned for 0.11 (non-blocking backlog)
+### Planned for 0.10 (non-blocking backlog)
 
 - Fast user-switching awareness — observe
   `NSWorkspace.sessionDidResignActiveNotification` so throttled PIDs are
@@ -50,11 +18,11 @@ Dates are in ISO 8601 (YYYY-MM-DD).
   process can stay frozen until then.
 - Power-source awareness at the governor preset layer, modulating caps
   tighter on battery and looser on AC. Complements the existing
-  `BatteryAwareMode` threshold swap and the 0.10 `onBatteryOnly` gate.
+  `BatteryAwareMode` threshold swap and the `onBatteryOnly` gate.
 
 ---
 
-## [0.9.0] — 2026-04-19
+## [0.9.0] — 2026-04-20
 
 Initial public release.
 
@@ -115,6 +83,29 @@ Initial public release.
   the user double-launches.
 - **Natural sort** for sensor names (`CPU Die 2` before `CPU Die 10`)
   via `localizedStandardCompare`.
+- **OS thermal-state governor input** — when `respectOSThermalState`
+  is on (default), `ProcessInfo.processInfo.thermalState` feeds into
+  the aggression factor alongside temperature and CPU overshoot.
+  Mapping: `nominal 0`, `fair 0.25`, `serious 0.6`, `critical 1.0`.
+  Folded via `max(...)`, so nominal contributes nothing and the
+  signal is strictly additive — a cool machine never throttles
+  harder than the temp/CPU overshoot alone would dictate.
+- **"Throttle only when on battery"** opt-in on the governor. When
+  on AC with the flag enabled, caps stay armed-but-silent and the
+  reason string surfaces why. Off by default.
+- **Stay Awake: "Release when display sleeps"** preference. When on,
+  drops the IOPM assertion on `screensDidSleepNotification` (lid
+  close without external display, screen lock, idle display-off)
+  and re-takes the same assertion on wake. Off by default — the
+  existing `caffeinate(1)`-style behaviour remains the less-
+  surprising default.
+- **README "Automation" section** documenting the `airassist://`
+  URL scheme with exact duration / duty formats and Shortcuts.app
+  + shell examples.
+- **README "Data sources" note** in Privacy, spelling out that
+  Air Assist reads from `IOHIDEventSystemClient` (public HID API,
+  same interface `powermetrics` uses), does not call any private
+  SPI, does not touch SMC, and ships no bundled binary blob.
 
 ### Changed
 

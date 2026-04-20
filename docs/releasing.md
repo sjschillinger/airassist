@@ -3,6 +3,11 @@
 End-to-end cut-a-release flow. Intentionally boring — every step is
 either a single command or pasting one string.
 
+> **First time shipping?** Read [launch-day.md](launch-day.md) instead.
+> It covers the one-time bootstrap (creating the public app + tap
+> repos, the first end-to-end install smoke) that doesn't apply once
+> you're in steady state.
+
 ## What gets shipped
 
 A single `AirAssist-<version>.zip` attached to a GitHub Release, plus a
