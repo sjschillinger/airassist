@@ -72,6 +72,13 @@ final class MetricKitReporter: NSObject, MXMetricManagerSubscriber, @unchecked S
 
     // MARK: - MXMetricManagerSubscriber
 
+    // `MXMetricPayload` (and the `didReceive(_:[MXMetricPayload])` overload)
+    // is iOS-only — the method is marked unavailable on macOS, so overriding
+    // it is a hard compile error. Debug incremental builds can skip
+    // re-checking this file and mask the error; a clean CI Archive catches
+    // it. Keep only the diagnostic overload on macOS; that's the signal we
+    // actually care about anyway (crashes, hangs, CPU exceptions).
+    #if os(iOS)
     func didReceive(_ payloads: [MXMetricPayload]) {
         // Serialize on the delivery thread — `MXMetricPayload` is not
         // Sendable, but the `Data` we extract from it is. That lets us
@@ -82,6 +89,7 @@ final class MetricKitReporter: NSObject, MXMetricManagerSubscriber, @unchecked S
             for blob in blobs { self.write(blob, prefix: "metric") }
         }
     }
+    #endif
 
     func didReceive(_ payloads: [MXDiagnosticPayload]) {
         // Extract both the JSON blob (for persistence) and a summary
