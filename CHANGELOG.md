@@ -9,18 +9,48 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
-### Planned for 0.10 (non-blocking backlog from the 0.9.0 pre-launch audit)
+### Added
+
+- **`airassist://` URL scheme documentation** — new README "Automation"
+  section enumerates `pause`, `resume`, `throttle`, `release` with the
+  exact duration / duty formats, plus Shortcuts.app and shell examples.
+  The scheme itself shipped in 0.9.0; 0.9 only documents it.
+- **Privacy "Data sources" note** — README Privacy section now spells
+  out that Air Assist reads from `IOHIDEventSystemClient` (public HID
+  API, same interface `powermetrics` uses), does not call any private
+  SPI, does not touch SMC, and ships no bundled binary blob. Differentiates
+  against tools that ship kexts or XPC helpers.
+- **OS thermal-state governor input** — when `respectOSThermalState` is
+  on (default), `ProcessInfo.processInfo.thermalState` feeds into the
+  aggression factor alongside temperature and CPU overshoot. Mapping:
+  `nominal 0`, `fair 0.25`, `serious 0.6`, `critical 1.0`. Folded via
+  `max(...)`, so nominal contributes nothing and the signal is strictly
+  additive.
+- **"Throttle only when on battery"** opt-in on the governor. When on
+  AC with the flag enabled, caps stay armed-but-silent and the reason
+  string surfaces why. Off by default.
+- **Stay Awake: "Release when display sleeps"** preference. When on,
+  drops the IOPM assertion on `screensDidSleepNotification` (lid close
+  without external display, screen lock, idle display-off) and re-takes
+  it on wake. Off by default — the existing caffeinate-style behaviour
+  remains the less-surprising default.
+
+### Changed
+
+- **Release body** now shows both `brew install` (first-time) and
+  `brew upgrade` (returning users) so the update-nudge landing page is
+  unambiguous about the follow-through path.
+
+### Planned for 0.11 (non-blocking backlog)
 
 - Fast user-switching awareness — observe
   `NSWorkspace.sessionDidResignActiveNotification` so throttled PIDs are
   released when the active session changes. Today the inflight
   dead-man's-switch catches this on the next cold launch, but a paused
   process can stay frozen until then.
-- `NSProcessInfo.thermalState` as an additional governor input, so the
-  OS's own thermal-throttling signal biases our aggression factor.
-- Power-source awareness at the governor tick, modulating caps tighter
-  on battery and looser on AC. Complements the existing
-  `BatteryAwareMode` preset swap.
+- Power-source awareness at the governor preset layer, modulating caps
+  tighter on battery and looser on AC. Complements the existing
+  `BatteryAwareMode` threshold swap and the 0.10 `onBatteryOnly` gate.
 
 ---
 

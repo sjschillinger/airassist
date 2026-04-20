@@ -93,6 +93,21 @@ struct GovernorConfig: Codable {
     /// consider it for throttling (avoids noise).
     var minCPUForTargeting: Double = 15
 
+    /// When true, the governor only acts while the Mac is drawing from
+    /// battery — on AC the caps are armed-but-silent. Precedent: App
+    /// Tamer's `autoStopOnlyWhenOnBattery`. Off by default; the
+    /// fanless Air is still worth protecting on AC when the ambient is
+    /// hot, so this is a preference, not the default.
+    var onBatteryOnly: Bool = false
+
+    /// When true, `ProcessInfo.processInfo.thermalState` feeds into the
+    /// aggression factor. macOS reports `.nominal / .fair / .serious /
+    /// .critical`; higher states bias the duty tighter so we catch a
+    /// thermal runaway before the SoC starts self-throttling. On by
+    /// default — the signal is free and strictly improves responsiveness
+    /// to real heat events.
+    var respectOSThermalState: Bool = true
+
     /// Quick flags
     var tempEnabled: Bool { mode == .temperature || mode == .both }
     var cpuEnabled:  Bool { mode == .cpu         || mode == .both }
@@ -105,7 +120,9 @@ struct GovernorConfig: Codable {
         tempHysteresisC: Double = 5,
         cpuHysteresisPercent: Double = 50,
         maxTargets: Int = 4,
-        minCPUForTargeting: Double = 15
+        minCPUForTargeting: Double = 15,
+        onBatteryOnly: Bool = false,
+        respectOSThermalState: Bool = true
     ) {
         self.mode = mode
         self.maxTempC = maxTempC
@@ -114,6 +131,8 @@ struct GovernorConfig: Codable {
         self.cpuHysteresisPercent = cpuHysteresisPercent
         self.maxTargets = maxTargets
         self.minCPUForTargeting = minCPUForTargeting
+        self.onBatteryOnly = onBatteryOnly
+        self.respectOSThermalState = respectOSThermalState
     }
 
     /// Schema-evolution-safe decode. A persisted blob written by an older
@@ -125,7 +144,8 @@ struct GovernorConfig: Codable {
     /// and keeps the rest of the user's settings intact.
     private enum CodingKeys: String, CodingKey {
         case mode, maxTempC, maxCPUPercent, tempHysteresisC,
-             cpuHysteresisPercent, maxTargets, minCPUForTargeting
+             cpuHysteresisPercent, maxTargets, minCPUForTargeting,
+             onBatteryOnly, respectOSThermalState
     }
 
     init(from decoder: Decoder) throws {
@@ -137,7 +157,9 @@ struct GovernorConfig: Codable {
             tempHysteresisC: (try c.decodeIfPresent(Double.self, forKey: .tempHysteresisC)) ?? 5,
             cpuHysteresisPercent: (try c.decodeIfPresent(Double.self, forKey: .cpuHysteresisPercent)) ?? 50,
             maxTargets: (try c.decodeIfPresent(Int.self, forKey: .maxTargets)) ?? 4,
-            minCPUForTargeting: (try c.decodeIfPresent(Double.self, forKey: .minCPUForTargeting)) ?? 15
+            minCPUForTargeting: (try c.decodeIfPresent(Double.self, forKey: .minCPUForTargeting)) ?? 15,
+            onBatteryOnly: (try c.decodeIfPresent(Bool.self, forKey: .onBatteryOnly)) ?? false,
+            respectOSThermalState: (try c.decodeIfPresent(Bool.self, forKey: .respectOSThermalState)) ?? true
         )
     }
 }

@@ -112,6 +112,7 @@ private struct GovernorSection: View {
             }
             if !store.governorConfig.isOff {
                 targetingSection
+                advancedSection
                 previewSection
             }
         }
@@ -334,8 +335,45 @@ private struct GovernorSection: View {
         }
     }
 
+    @ViewBuilder
+    private var advancedSection: some View {
+        GroupBox("Advanced") {
+            VStack(alignment: .leading, spacing: 10) {
+                Toggle(isOn: bindBool(\.onBatteryOnly)) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Throttle only when on battery")
+                        Text("When unchecked, caps apply on AC and battery alike. "
+                             + "When checked, the governor stays armed-but-silent "
+                             + "whenever a charger is connected.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                Divider()
+                Toggle(isOn: bindBool(\.respectOSThermalState)) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Factor in the OS thermal state")
+                        Text("Lets macOS's own thermal pressure reading bias the "
+                             + "duty cycle tighter when the system is already "
+                             + "reporting heat stress. Recommended.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
     private var currentTotalCPU: Double {
         store.governor.lastTotalCPUPercent
+    }
+
+    private func bindBool(_ path: WritableKeyPath<GovernorConfig, Bool>) -> Binding<Bool> {
+        Binding(get: { store.governorConfig[keyPath: path] },
+                set: { v in var c = store.governorConfig; c[keyPath: path] = v; store.governorConfig = c })
     }
 
     private func bind(_ path: WritableKeyPath<GovernorConfig, Double>) -> Binding<Double> {

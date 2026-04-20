@@ -76,14 +76,32 @@ final class ThermalGovernor {
     /// Supplied by ThermalStore so the governor doesn't depend on its internals.
     private let hottestTempC: () -> Double?
 
+    /// Closure to sample "is the Mac on battery right now" each tick.
+    /// Injected so the governor stays unit-testable without IOKit.
+    /// Conservative default: always `false` (treated as AC) if the
+    /// store doesn't supply one — preserves pre-`onBatteryOnly`
+    /// behaviour for any code path that builds a governor directly.
+    private let isOnBattery: () -> Bool
+
+    /// Closure to sample `ProcessInfo.processInfo.thermalState`. Injected
+    /// so tests can drive the aggression path without poking the real
+    /// OS signal. Default reads live from the process.
+    private let osThermalState: () -> ProcessInfo.ThermalState
+
     init(snapshots: ProcessSnapshotPublisher,
          throttler: ProcessThrottler,
          config: GovernorConfig,
-         hottestTempC: @escaping () -> Double?) {
-        self.snapshots    = snapshots
-        self.throttler    = throttler
-        self.config       = config
-        self.hottestTempC = hottestTempC
+         hottestTempC: @escaping () -> Double?,
+         isOnBattery: @escaping () -> Bool = { false },
+         osThermalState: @escaping () -> ProcessInfo.ThermalState = {
+             ProcessInfo.processInfo.thermalState
+         }) {
+        self.snapshots      = snapshots
+        self.throttler      = throttler
+        self.config         = config
+        self.hottestTempC   = hottestTempC
+        self.isOnBattery    = isOnBattery
+        self.osThermalState = osThermalState
     }
 
     /// Release every PID the governor has requested. Called by ThermalStore
@@ -110,6 +128,19 @@ final class ThermalGovernor {
             releaseAllGovernorTargets()
             isTempThrottling = false
             isCPUThrottling  = false
+            return
+        }
+
+        // "Throttle only on battery" gate. When enabled + on AC, the
+        // governor is armed-but-silent: targets released, flags cleared,
+        // reason surfaces why so the user isn't confused by an "Armed"
+        // status that never fires. When on battery, fall through to the
+        // normal cap check.
+        if config.onBatteryOnly && !isOnBattery() {
+            releaseAllGovernorTargets()
+            isTempThrottling = false
+            isCPUThrottling  = false
+            reason = "Idle · on AC (on-battery-only is on)"
             return
         }
 
@@ -162,7 +193,17 @@ final class ThermalGovernor {
             // Normalise: 10°C over or 100% over ≈ full aggressive throttle.
             let tempFactor = min(1.0, tempOvershoot / 10.0)
             let cpuFactor  = min(1.0, cpuOvershoot  / 100.0)
-            let aggression = max(tempFactor, cpuFactor)
+            // OS-level thermal-state bias. When macOS itself is already
+            // reporting thermal pressure, we bias toward harder throttling
+            // so we catch the runaway before the SoC self-throttles into
+            // a slideshow. Mapping: nominal 0, fair 0.25, serious 0.6,
+            // critical 1.0. Conservative — nominal contributes nothing, so
+            // the feature can never make a cool machine throttle harder
+            // than the live temp/CPU overshoot would warrant on its own.
+            let osFactor: Double = config.respectOSThermalState
+                ? Self.biasFor(osThermalState())
+                : 0
+            let aggression = max(tempFactor, cpuFactor, osFactor)
             // duty ranges from 0.80 (mild) down to 0.20 (hard).
             let duty = 0.80 - (0.60 * aggression)
 
@@ -240,6 +281,19 @@ final class ThermalGovernor {
             }
             .sorted { $0.avg > $1.avg }
             .map { $0.proc }
+    }
+
+    /// Map `ProcessInfo.ThermalState` to a `[0, 1]` aggression bias.
+    /// Static + pure for unit-test visibility. `nonisolated` because
+    /// it touches no state — the whole class is `@MainActor` otherwise.
+    nonisolated static func biasFor(_ state: ProcessInfo.ThermalState) -> Double {
+        switch state {
+        case .nominal:  return 0.0
+        case .fair:     return 0.25
+        case .serious:  return 0.6
+        case .critical: return 1.0
+        @unknown default: return 0.0
+        }
     }
 
     private func releaseAllGovernorTargets() {

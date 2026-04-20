@@ -149,7 +149,8 @@ final class ThermalStore {
             config: governorConfig,
             hottestTempC: { [weak self] in
                 self?.enabledSensors.compactMap(\.currentValue).max()
-            }
+            },
+            isOnBattery: { BatteryAwareMode.isOnBatteryPower() }
         )
         self.ruleEngine = ThrottleRuleEngine(
             snapshots: snapshots,
@@ -176,6 +177,11 @@ final class ThermalStore {
     func start() {
         safety.startWatchdog()
         frontmostObserver.start()
+        // Wire up Stay Awake's own screen-sleep listener so the
+        // `releaseOnScreenSleep` preference can drop / re-take the
+        // assertion around lid close or screen lock. No-op if the
+        // preference is off.
+        stayAwake.startObservingScreenSleep()
         // Apply the user's saved poll interval before starting the service
         // so the first poll respects the preference. UserDefaults.object(...)
         // distinguishes "never set" (→ use SensorService's 1s default) from

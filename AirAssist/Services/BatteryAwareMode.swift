@@ -101,8 +101,18 @@ final class BatteryAwareMode {
 
     /// Current snapshot of the power source. `true` = drawing from battery.
     private func isOnBatteryPower() -> Bool {
+        Self.isOnBatteryPower()
+    }
+
+    /// Shared IOKit power-source probe. Static so other services
+    /// (e.g. `ThermalGovernor`'s on-battery-only gate) can consult the
+    /// same truth without owning a `BatteryAwareMode` instance or
+    /// re-deriving the IOPS call. Conservative default: `false` (AC)
+    /// if IOKit can't answer, so "throttle only on battery" never
+    /// accidentally fires on an IOKit hiccup.
+    static func isOnBatteryPower() -> Bool {
         guard let blob = IOPSCopyPowerSourcesInfo()?.takeRetainedValue() else {
-            return false // conservatively assume AC if we can't tell
+            return false
         }
         let source = IOPSGetProvidingPowerSourceType(blob).takeUnretainedValue() as String
         // `kIOPMBatteryPowerKey` on battery, `kIOPMACPowerKey` on AC.

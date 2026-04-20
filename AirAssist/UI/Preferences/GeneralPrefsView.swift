@@ -182,6 +182,23 @@ struct GeneralPrefsView: View {
                     }
                 }
 
+                if currentModeTag != .off {
+                    LabeledContent("When the display sleeps") {
+                        Toggle(isOn: releaseOnScreenSleepBinding) {
+                            Text("Release Stay Awake")
+                        }
+                        .toggleStyle(.switch)
+                        .help("When on, Air Assist drops the Stay Awake "
+                              + "assertion whenever the display sleeps — "
+                              + "lid close without an external display, "
+                              + "screen lock, or an idle display-off — "
+                              + "and re-takes it when the display wakes. "
+                              + "Useful if you use Stay Awake for long "
+                              + "unattended jobs but want the machine to "
+                              + "rest while you're not at it.")
+                    }
+                }
+
                 Text(stayAwakeExplanation)
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -279,6 +296,13 @@ struct GeneralPrefsView: View {
         case .display:            return .display
         case .displayThenSystem:  return .displayThenSystem
         }
+    }
+
+    private var releaseOnScreenSleepBinding: Binding<Bool> {
+        Binding(
+            get: { store.stayAwake.releaseOnScreenSleep },
+            set: { store.stayAwake.releaseOnScreenSleep = $0 }
+        )
     }
 
     private var stayAwakeModeBinding: Binding<StayAwakeMode> {

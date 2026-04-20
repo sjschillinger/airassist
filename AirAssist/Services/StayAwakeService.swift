@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import IOKit
 import IOKit.pwr_mgt
@@ -76,6 +77,21 @@ final class StayAwakeService {
     /// so the UI can show a countdown.
     private(set) var displayTimerRemaining: TimeInterval?
 
+    /// When true, any held assertion is released on
+    /// `screensDidSleepNotification` (lid close without external display,
+    /// screen lock, idle display-sleep) and re-taken on
+    /// `screensDidWakeNotification`. Off by default — the existing
+    /// behaviour (keep assertion through screen sleep) matches
+    /// `caffeinate(1)` and is the less-surprising default.
+    var releaseOnScreenSleep: Bool {
+        get { Self.persistedReleaseOnScreenSleep }
+        set {
+            Self.persistedReleaseOnScreenSleep = newValue
+            // Flip applies to the *next* screen-sleep event; we don't
+            // retroactively drop or re-take the current assertion here.
+        }
+    }
+
     // MARK: - Private
 
     private var assertionID: IOPMAssertionID?
@@ -84,9 +100,44 @@ final class StayAwakeService {
     private var countdownTask: Task<Void, Never>?
     private var downgradeDeadline: Date?
 
+    /// True while the assertion is suspended because the screen is asleep
+    /// and `releaseOnScreenSleep` is enabled. We remember the type we
+    /// were holding so we can re-take the same one on wake.
+    private var suspendedAssertionType: String?
+    private var screenSleepTokens: [NSObjectProtocol] = []
+
     private let assertionName = "Air Assist — Stay Awake" as CFString
 
     // MARK: - API
+
+    /// Attach to `NSWorkspace` screen-sleep / wake notifications so the
+    /// `releaseOnScreenSleep` preference can take effect. Idempotent.
+    /// Owner should pair with `stopObservingScreenSleep()` on shutdown.
+    func startObservingScreenSleep() {
+        guard screenSleepTokens.isEmpty else { return }
+        let center = NSWorkspace.shared.notificationCenter
+        let sleep = center.addObserver(
+            forName: NSWorkspace.screensDidSleepNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            MainActor.assumeIsolated { self.handleScreensDidSleep() }
+        }
+        let wake = center.addObserver(
+            forName: NSWorkspace.screensDidWakeNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            MainActor.assumeIsolated { self.handleScreensDidWake() }
+        }
+        screenSleepTokens = [sleep, wake]
+    }
+
+    func stopObservingScreenSleep() {
+        let center = NSWorkspace.shared.notificationCenter
+        for t in screenSleepTokens { center.removeObserver(t) }
+        screenSleepTokens.removeAll()
+    }
 
     /// Apply a new mode. Safe to call repeatedly with the same mode
     /// (no-op after the first call for that mode).
@@ -94,6 +145,10 @@ final class StayAwakeService {
         guard mode != currentMode else { return }
         releaseAssertion()
         cancelDowngrade()
+        // User-driven mode change wins over any pending suspend-on-wake
+        // — otherwise a user who toggles off during screen sleep would
+        // see the assertion quietly resurrect on screen wake.
+        suspendedAssertionType = nil
 
         currentMode = mode
 
@@ -119,7 +174,31 @@ final class StayAwakeService {
     func shutdown() {
         cancelDowngrade()
         releaseAssertion()
+        stopObservingScreenSleep()
+        suspendedAssertionType = nil
         currentMode = .off
+    }
+
+    // MARK: - Screen-sleep suspend / resume (releaseOnScreenSleep)
+
+    private func handleScreensDidSleep() {
+        guard releaseOnScreenSleep else { return }
+        guard currentMode.isActive, let held = assertionType else { return }
+        // Remember what we were holding so we can restore the same type.
+        suspendedAssertionType = held
+        releaseAssertion()
+    }
+
+    private func handleScreensDidWake() {
+        guard let type = suspendedAssertionType else { return }
+        // Only re-take if the user hasn't turned the mode off in the
+        // meantime. `setMode(.off)` clears `suspendedAssertionType`
+        // through shutdown / releaseAssertion paths anyway, but guard
+        // defensively.
+        if currentMode.isActive {
+            takeAssertion(type: type)
+        }
+        suspendedAssertionType = nil
     }
 
     // MARK: - IOKit assertion plumbing
@@ -199,6 +278,15 @@ final class StayAwakeService {
 }
 
 // MARK: - Persistence
+
+extension StayAwakeService {
+    fileprivate static let releaseOnScreenSleepKey = "stayAwake.releaseOnScreenSleep"
+
+    fileprivate static var persistedReleaseOnScreenSleep: Bool {
+        get { UserDefaults.standard.bool(forKey: releaseOnScreenSleepKey) }
+        set { UserDefaults.standard.set(newValue, forKey: releaseOnScreenSleepKey) }
+    }
+}
 
 /// Persists the last-selected mode so toggling back on after a quit
 /// restores whatever the user had configured. Kept separate from the
