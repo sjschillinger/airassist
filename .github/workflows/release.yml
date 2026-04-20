@@ -1,0 +1,184 @@
+name: Release
+
+# Free-tier release workflow. Fires on a pushed tag like "v1.0.0".
+#
+# What this does:
+#   1. Build a Release-configuration archive
+#   2. Export the .app, ad-hoc sign it (no Apple Developer cert required)
+#   3. Zip via ditto (preserves extended attributes)
+#   4. Compute SHA256 (the Homebrew cask formula needs it)
+#   5. Attach AirAssist-<version>.zip + SHA256SUMS.txt to the GitHub Release
+#
+# Users install via `brew install --cask` from the homebrew-airassist tap —
+# Homebrew downloads with curl (no quarantine attribute set), macOS trusts
+# ad-hoc signed locally-installed binaries, Gatekeeper stays quiet.
+#
+# Upgrade path when we move to the $99 Developer ID tier later:
+#   - Drop in apple-actions/import-codesign-certs@v2
+#   - Replace `codesign -s -` with the Developer ID identity
+#   - Add `xcrun notarytool submit --wait` + `xcrun stapler staple`
+#   - Keep everything else the same
+#
+# Repository secrets needed TODAY: none.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    name: Build & publish release
+    # See ci.yml for rationale on macos-15 — Swift 6 + SDK 15 require
+    # Xcode 16, which is default on macos-15 runners but not macos-14.
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    permissions:
+      # Needed so softprops/action-gh-release can write to the Release.
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install XcodeGen
+        if: hashFiles('project.yml') != ''
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        if: hashFiles('project.yml') != ''
+        run: xcodegen generate
+
+      - name: Archive
+        run: |
+          set -o pipefail
+          # Archive with ad-hoc signing. `CODE_SIGN_IDENTITY=-` is the
+          # ad-hoc identity; `CODE_SIGNING_REQUIRED=NO` because we're
+          # deliberately not using a real cert.
+          xcodebuild \
+            -project AirAssist.xcodeproj \
+            -scheme AirAssist \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath build/AirAssist.xcarchive \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            archive
+
+      - name: Export .app from archive
+        run: |
+          set -o pipefail
+          mkdir -p build/export
+          # The archive already contains a signed (ad-hoc) .app. We
+          # just need to copy it out — no need for xcodebuild
+          # -exportArchive which requires an exportOptions.plist tuned
+          # for Developer ID.
+          cp -R "build/AirAssist.xcarchive/Products/Applications/AirAssist.app" "build/export/AirAssist.app"
+
+      - name: Re-sign ad-hoc (deep, top to bottom)
+        run: |
+          set -o pipefail
+          # Belt-and-braces: re-sign the exported bundle top-to-bottom
+          # so every nested framework / embedded binary has a
+          # consistent ad-hoc signature. `--deep` is deprecated for
+          # Developer ID but still valid for ad-hoc, and the simplest
+          # way to get a clean signature on a SwiftUI app.
+          codesign --force --deep --sign - "build/export/AirAssist.app"
+          codesign --verify --verbose=2 "build/export/AirAssist.app"
+
+      - name: Zip (ditto preserves xattrs + symlinks)
+        id: zip
+        run: |
+          set -o pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          ZIP_NAME="AirAssist-${VERSION}.zip"
+          cd build/export
+          # ditto produces the kind of zip Homebrew + Archive Utility
+          # expect. plain `zip` mangles extended attributes and can
+          # corrupt the signature.
+          ditto -c -k --keepParent "AirAssist.app" "../../${ZIP_NAME}"
+          cd ../..
+          SHA=$(shasum -a 256 "${ZIP_NAME}" | cut -d ' ' -f 1)
+          SIZE=$(stat -f%z "${ZIP_NAME}")
+          echo "zip_name=${ZIP_NAME}"       >> "$GITHUB_OUTPUT"
+          echo "zip_path=${ZIP_NAME}"       >> "$GITHUB_OUTPUT"
+          echo "sha256=${SHA}"              >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}"         >> "$GITHUB_OUTPUT"
+          echo "size_bytes=${SIZE}"         >> "$GITHUB_OUTPUT"
+          # Also write a SHA256SUMS.txt that the Homebrew cask formula
+          # can consume without parsing the release page.
+          echo "${SHA}  ${ZIP_NAME}" > SHA256SUMS.txt
+
+      - name: Smoke-test the signed bundle
+        run: |
+          set -o pipefail
+          # `spctl --assess` is what Gatekeeper runs. For ad-hoc signed
+          # apps this will report "rejected" with source "Unnotarized
+          # Developer ID" or similar — that's expected and doesn't
+          # block the release; Homebrew's install path side-steps
+          # Gatekeeper anyway. We only fail the job if the signature
+          # itself is corrupt.
+          codesign --verify --deep --strict --verbose=2 "build/export/AirAssist.app"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # `tag_name` defaults to the pushed tag; keep it implicit.
+          name: Air Assist ${{ steps.zip.outputs.version }}
+          body: |
+            ## Air Assist ${{ steps.zip.outputs.version }}
+
+            Ad-hoc signed, unnotarized build. See [CHANGELOG.md](../blob/main/CHANGELOG.md)
+            for what's new.
+
+            ### Install (recommended)
+
+            First-time install:
+
+            ```bash
+            brew install --cask sjschillinger/airassist/airassist
+            ```
+
+            Already have Air Assist? Upgrade in place:
+
+            ```bash
+            brew upgrade --cask airassist
+            ```
+
+            ### Manual install
+
+            1. Download `${{ steps.zip.outputs.zip_name }}` below.
+            2. Unzip, move `AirAssist.app` into `/Applications`.
+            3. First-launch only — run once in Terminal to clear the
+               quarantine attribute macOS adds to browser downloads:
+               ```
+               xattr -dr com.apple.quarantine /Applications/AirAssist.app
+               ```
+               (Homebrew does this for you; manual downloaders see the
+               "damaged" dialog without it.)
+
+            ### Verify
+
+            ```
+            shasum -a 256 ${{ steps.zip.outputs.zip_name }}
+            # should match:
+            ${{ steps.zip.outputs.sha256 }}
+            ```
+          draft: true            # stays draft until you explicitly publish
+          prerelease: false
+          files: |
+            ${{ steps.zip.outputs.zip_path }}
+            SHA256SUMS.txt
+
+      - name: Upload build as artifact (debug / fallback)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AirAssist-${{ steps.zip.outputs.version }}
+          path: ${{ steps.zip.outputs.zip_path }}
+          retention-days: 14

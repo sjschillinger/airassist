@@ -1,0 +1,50 @@
+name: Forbidden strings
+
+# Last line of defence in CI: scans the tree for references to third-party
+# products we studied locally but must never ship. Mirrors the pre-commit
+# hook at scripts/hooks/pre-commit and the scanner in scripts/publish.sh.
+#
+# If this fires, find the offending file, rephrase or remove the reference,
+# and push a new commit. Do NOT add to the allowlist below to paper over a
+# real leak.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan:
+    name: Scan for forbidden references
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan
+        run: |
+          set -euo pipefail
+          pattern='App[[:space:]]*Tamer|AppTamer|TG[[:space:]]*Pro|TGPro|iStat[[:space:]]*Menus|Macs[[:space:]]*Fan[[:space:]]*Control|BGHUDAppKit|BBRLogger|BBRLayout|BBRUpdater'
+
+          # Files that legitimately contain these strings to do their jobs.
+          allow='^(scripts/hooks/pre-commit|scripts/publish\.sh|\.github/workflows/forbidden-strings\.yml)$'
+
+          violations=$(grep -IErln "${pattern}" . \
+            --exclude-dir=.git \
+            --exclude-dir=References \
+            --exclude-dir=_inbox \
+            --exclude-dir=screenshots \
+            --exclude-dir=graphify-out \
+            --exclude-dir=.claude \
+            | sed 's|^\./||' \
+            | grep -vE "${allow}" || true)
+
+          if [ -n "${violations}" ]; then
+            echo "::error::Forbidden reference detected. See paths below."
+            echo "${violations}"
+            exit 1
+          fi
+          echo "No forbidden references found."

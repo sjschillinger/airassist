@@ -1,0 +1,266 @@
+name: AirAssist
+options:
+  bundleIdPrefix: com.sjschillinger
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+  usesTabs: false
+  indentWidth: 4
+  tabWidth: 4
+
+packages: {}
+
+schemes:
+  AirAssist:
+    build:
+      targets:
+        AirAssist: all
+        AirAssistIntegrationRunner: all
+        AirAssistRescue: all
+    test:
+      targets:
+        - AirAssistTests
+        # AirAssistUITests stays in the scheme (so you can toggle it on in
+        # Xcode's Test Plan) but is skipped by default. macOS 15 Gatekeeper
+        # kills the unsigned XCUITest runner bundle under
+        # CODE_SIGNING_ALLOWED=NO with "damaged and can't be opened", which
+        # aborts the whole test session before unit tests can report.
+        # The accessibility audit still runs on demand via:
+        #   xcodebuild ... test -only-testing:AirAssistUITests
+        # with a signed build, or from Xcode's UI after re-enabling it in
+        # the scheme's Test action.
+        - name: AirAssistUITests
+          skipped: true
+      gatherCoverageData: false
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    ALWAYS_SEARCH_USER_PATHS: NO
+    CLANG_ENABLE_OBJC_WEAK: YES
+    ENABLE_HARDENED_RUNTIME: YES
+    ENABLE_STRICT_OBJC_MSGSEND: YES
+    GCC_C_LANGUAGE_STANDARD: gnu17
+    SWIFT_EMIT_LOC_STRINGS: YES
+    # Apple Silicon only
+    ARCHS: arm64
+    EXCLUDED_ARCHS[sdk=macosx*]: x86_64
+    # Ad-hoc signing for personal use
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGNING_REQUIRED: NO
+    CODE_SIGNING_ALLOWED: YES
+  configs:
+    Debug:
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+      DEBUG_INFORMATION_FORMAT: dwarf
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+
+targets:
+  AirAssistTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistTests
+    dependencies:
+      - target: AirAssist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjschillinger.airassist.tests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AirAssist.app/Contents/MacOS/AirAssist"
+
+  AirAssistIntegrationRunner:
+    # Runtime safety suite (#16/#17/#19/#34/#35/#36/#38 — see
+    # scripts/manual-tests/ runbooks). Replaces the shell-based
+    # runbooks for the cases that don't require a physical lid close
+    # or real system sleep. Launches AirAssist.app from BUILT_PRODUCTS_DIR
+    # via `open`, drives it through the `airassist://` URL scheme (inc.
+    # debug endpoints — only present in Debug builds), and reads state
+    # back via the `debug/export-state` endpoint.
+    #
+    # Packaged as a COMMAND-LINE TOOL, not an xctest bundle. Every
+    # xctest packaging (`bundle.unit-test` with/without TEST_HOST,
+    # `bundle.ui-testing`) routes signal delivery through the process
+    # running the tests — fatal for a suite whose whole purpose is
+    # SIGKILL-ing the process under test. A plain `tool` target
+    # produces a normal macOS executable; `scripts/run-integration.sh`
+    # builds AirAssist.app and this runner together, then invokes the
+    # runner directly. The runner spawns AirAssist as a child, so
+    # SIGKILL tests land on the child, not us.
+    #
+    # Not invoked by `xcodebuild test` — this target is excluded from
+    # the scheme's test action. Run it via `scripts/run-integration.sh`
+    # or `AirAssistIntegrationRunner --list` after a build.
+    type: tool
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistIntegrationTests
+    dependencies:
+      - target: AirAssist
+    settings:
+      base:
+        PRODUCT_NAME: AirAssistIntegrationRunner
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        # No sandbox, no hardened runtime — this is a dev-only CLI
+        # that needs to SIGKILL AirAssist, run `pmset`, spawn `yes`,
+        # etc. Never shipped to users.
+        ENABLE_HARDENED_RUNTIME: NO
+
+  AirAssistUITests:
+    # Accessibility audit + keyboard navigation checks (#14/#41).
+    # Separate from AirAssistIntegrationTests because XCUITest needs
+    # its own harness and can't share a launch with out-of-process
+    # integration tests.
+    type: bundle.ui-testing
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistUITests
+    dependencies:
+      - target: AirAssist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjschillinger.airassist.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        TEST_TARGET_NAME: AirAssist
+
+  AirAssistRescue:
+    # Tiny standalone CLI (~30KB) that SIGCONTs every pid in
+    # ~/Library/Application Support/AirAssist/inflight.json. Bundled at
+    # Contents/MacOS/airassist-rescue in the app and wired to a LaunchAgent
+    # (Contents/Library/LaunchAgents/com.sjschillinger.airassist.rescue.plist)
+    # that runs it once per login. Catches the case where AirAssist
+    # crashed with processes SIGSTOP'd and the user never relaunched.
+    # See AirAssistRescue/main.swift for the rationale.
+    type: tool
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistRescue
+    settings:
+      base:
+        PRODUCT_NAME: airassist-rescue
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        SKIP_INSTALL: NO
+        INSTALL_PATH: "$(LOCAL_LIBRARY_DIR)/AirAssistRescue"
+
+  AirAssist:
+    type: application
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssist
+        excludes:
+          - "**/.DS_Store"
+          - "Resources/LaunchAgents/**"
+          # LaunchAgents plist is copied into Contents/Library/LaunchAgents/
+          # by the post-compile script below, not Contents/Resources/.
+    resources:
+      - path: AirAssist/Assets.xcassets
+    dependencies:
+      - target: AirAssistRescue
+      - sdk: IOKit.framework
+      - sdk: ServiceManagement.framework
+      - sdk: AppIntents.framework
+      - sdk: MetricKit.framework
+    postCompileScripts:
+      - name: "Embed airassist-rescue into Contents/MacOS/"
+        # xcodegen's `embed: true` on a tool dependency doesn't land the
+        # binary in Contents/MacOS — it goes to Contents/Frameworks or
+        # nowhere at all depending on the phase. We need it at exactly
+        # Contents/MacOS/airassist-rescue because the LaunchAgent's
+        # `BundleProgram` key is hard-coded to that relative path (the
+        # plist ships signed inside the app bundle, so the path can't
+        # be a build-time template). Copy + re-sign via ad-hoc identity
+        # to keep the hardened runtime happy.
+        script: |
+          set -e
+          TOOL_SRC="${BUILT_PRODUCTS_DIR}/airassist-rescue"
+          TOOL_DEST="${CODESIGNING_FOLDER_PATH}/Contents/MacOS/airassist-rescue"
+          if [ ! -f "$TOOL_SRC" ]; then
+              echo "error: airassist-rescue not built at $TOOL_SRC" >&2
+              exit 1
+          fi
+          mkdir -p "$(dirname "$TOOL_DEST")"
+          cp -f "$TOOL_SRC" "$TOOL_DEST"
+          chmod +x "$TOOL_DEST"
+          # Ad-hoc signature so the hardened-runtime app can invoke it.
+          /usr/bin/codesign --force --sign - --preserve-metadata=entitlements "$TOOL_DEST" 2>/dev/null || \
+              /usr/bin/codesign --force --sign - "$TOOL_DEST"
+        outputFiles:
+          - "$(CODESIGNING_FOLDER_PATH)/Contents/MacOS/airassist-rescue"
+      - name: "Bundle LaunchAgent plist at Contents/Library/LaunchAgents/"
+        # SMAppService.agent(plistName:) reads from exactly this path
+        # inside the bundle. The plist is not a standard Resource —
+        # putting it in Contents/Resources/ makes SMAppService report
+        # `.notFound`, which silently disables the rescue agent.
+        script: |
+          set -e
+          SRC="${SRCROOT}/AirAssist/Resources/LaunchAgents/com.sjschillinger.airassist.rescue.plist"
+          DEST_DIR="${CODESIGNING_FOLDER_PATH}/Contents/Library/LaunchAgents"
+          mkdir -p "$DEST_DIR"
+          cp -f "$SRC" "$DEST_DIR/"
+        inputFiles:
+          - "$(SRCROOT)/AirAssist/Resources/LaunchAgents/com.sjschillinger.airassist.rescue.plist"
+        outputFiles:
+          - "$(CODESIGNING_FOLDER_PATH)/Contents/Library/LaunchAgents/com.sjschillinger.airassist.rescue.plist"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjschillinger.airassist
+        PRODUCT_NAME: AirAssist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_FILE: AirAssist/Info.plist
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_OBJC_BRIDGING_HEADER: AirAssist/IOKitBridge.h
+    info:
+      path: AirAssist/Info.plist
+      properties:
+        CFBundleName: Air Assist
+        CFBundleDisplayName: Air Assist
+        CFBundleIdentifier: com.sjschillinger.airassist
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "0.9.0"
+        CFBundlePackageType: APPL
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleDevelopmentRegion: en
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: "15.0"
+        # Hide dock icon — menu bar only
+        LSUIElement: true
+        NSPrincipalClass: NSApplication
+        NSHumanReadableCopyright: "Copyright © 2026. All rights reserved."
+        NSSupportsSuddenTermination: false
+        # IOKit access for thermal sensors
+        com.apple.security.temporary-exception.iokit-user-client-class:
+          - IOHIDEventSystemUserClient
+        # airassist:// URL scheme. Entry point for Shortcuts.app actions and
+        # ad-hoc automations (Raycast, Alfred, `open airassist://pause`).
+        CFBundleURLTypes:
+          - CFBundleURLName: com.sjschillinger.airassist.url
+            CFBundleTypeRole: Viewer
+            CFBundleURLSchemes:
+              - airassist

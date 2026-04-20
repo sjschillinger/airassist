@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Pre-commit guard — blocks commits that mention third-party reference
+# products by name. Covers the private dev repo so we never accidentally
+# hand-carry a reference into a future public export.
+#
+# Install via scripts/install-hooks.sh (symlinks into .git/hooks/).
+
+set -euo pipefail
+
+# Forbidden substrings. Add variants here when new references enter the
+# "studied locally, must not appear in tree" list.
+FORBIDDEN_PATTERN='App[[:space:]]*Tamer|AppTamer|TG[[:space:]]*Pro|TGPro|iStat[[:space:]]*Menus|Macs[[:space:]]*Fan[[:space:]]*Control|BGHUDAppKit|BBRLogger|BBRLayout|BBRUpdater'
+
+# Files this hook is allowed to mention the forbidden patterns in (itself
+# and the matching CI workflow), because they need to literally contain
+# those strings to do their jobs.
+HOOK_ALLOWLIST_REGEX='^(scripts/hooks/pre-commit|scripts/publish\.sh|\.github/workflows/forbidden-strings\.yml)$'
+
+# Work against the staged index only, not the working tree.
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+if [ -z "${STAGED_FILES}" ]; then
+  exit 0
+fi
+
+violations=()
+while IFS= read -r file; do
+  # Skip binaries and files not actually present (renames etc.).
+  [ -f "${file}" ] || continue
+  # Skip the hook/workflow files that legitimately list the strings.
+  if [[ "${file}" =~ ${HOOK_ALLOWLIST_REGEX} ]]; then
+    continue
+  fi
+  # git diff-index picks up only staged content, matching what's
+  # about to be committed.
+  if git show ":${file}" 2>/dev/null | grep -IEq "${FORBIDDEN_PATTERN}"; then
+    violations+=("${file}")
+  fi
+done <<< "${STAGED_FILES}"
+
+if [ ${#violations[@]} -gt 0 ]; then
+  echo "✖ pre-commit: forbidden reference detected in staged content."
+  echo ""
+  echo "These files mention a third-party product by name:"
+  for f in "${violations[@]}"; do
+    echo "  - ${f}"
+  done
+  echo ""
+  echo "Rephrase or remove before committing. If this is a false positive"
+  echo "(e.g. the hook itself), add the path to HOOK_ALLOWLIST_REGEX in"
+  echo "scripts/hooks/pre-commit."
+  exit 1
+fi
+
+exit 0

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    name: Build & Test
+    # macos-15 (Sequoia) ships with Xcode 16.x as the default, which is
+    # the minimum we need for Swift 6 + SDK 15 features used throughout
+    # the codebase. macos-14 still defaults to Xcode 15.x on some images,
+    # which can't compile our Swift 6 concurrency. Keep these in lockstep
+    # with the deployment target in project.yml.
+    runs-on: macos-15
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      # If the project uses XcodeGen to generate the .xcodeproj, regenerate
+      # here. Harmless when the project is already checked in.
+      - name: Install XcodeGen (if project.yml present)
+        if: hashFiles('project.yml') != ''
+        run: brew install xcodegen
+
+      - name: Generate Xcode project (if project.yml present)
+        if: hashFiles('project.yml') != ''
+        run: xcodegen generate
+
+      - name: Build & test
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project AirAssist.xcodeproj \
+            -scheme AirAssist \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            clean test | xcbeautify || xcodebuild \
+            -project AirAssist.xcodeproj \
+            -scheme AirAssist \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            clean test

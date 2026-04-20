@@ -1,0 +1,37 @@
+# macOS cruft
+.DS_Store
+**/.DS_Store
+
+# Xcode
+AirAssist.xcodeproj/xcuserdata/
+AirAssist.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+
+# Swift package manager (if we ever add one)
+.build/
+Packages/
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+
+# Local-only workspace artefacts — never commit, never publish
+_inbox/
+screenshots/
+graphify-out/
+.claude/
+
+# Third-party reference binaries kept locally for study.
+# MUST NOT be committed or redistributed.
+References/
+
+# Release / signing secrets
+*.p12
+*.p8
+*.cer
+.env
+.env.*
+!.env.example
+AuthKey_*.p8
