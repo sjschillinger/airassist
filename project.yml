@@ -9,18 +9,7 @@ options:
   indentWidth: 4
   tabWidth: 4
 
-packages:
-  # Sparkle 2.7.x — auto-update framework. Used for the "Check for
-  # Updates…" menu item and background checks. The integration is
-  # deliberately gated: UpdateService is a no-op unless SUFeedURL
-  # and SUPublicEDKey are populated in Info.plist AND the running
-  # binary is Developer-ID-signed. Personal builds (ad-hoc `-`
-  # identity) never contact the network. See `Services/UpdateService.swift`
-  # for the gate logic; the Sparkle repo's `generate_keys` CLI produces
-  # the appcast/EdDSA keypair in one step.
-  Sparkle:
-    url: https://github.com/sparkle-project/Sparkle
-    from: 2.7.0
+packages: {}
 
 schemes:
   AirAssist:
@@ -187,8 +176,6 @@ targets:
       - sdk: ServiceManagement.framework
       - sdk: AppIntents.framework
       - sdk: MetricKit.framework
-      - package: Sparkle
-        product: Sparkle
     postCompileScripts:
       - name: "Embed airassist-rescue into Contents/MacOS/"
         # xcodegen's `embed: true` on a tool dependency doesn't land the
@@ -267,26 +254,3 @@ targets:
             CFBundleTypeRole: Viewer
             CFBundleURLSchemes:
               - airassist
-        # ── Sparkle (auto-update) ──────────────────────────────────────
-        # UpdateService refuses to start unless SUFeedURL is non-empty AND
-        # SUPublicEDKey is a real key. Personal / ad-hoc builds leave these
-        # blank and the entire update subsystem is a no-op — no network,
-        # no Console spam. To enable updates:
-        #   1. Generate keys: `./Sparkle-2.7.x/bin/generate_keys`
-        #      (ships inside the Sparkle SPM checkout).
-        #   2. Paste the public key into SUPublicEDKey below.
-        #   3. Set SUFeedURL to the https://… appcast.xml URL.
-        #   4. Re-sign the app with a Developer ID certificate — ad-hoc
-        #      (`-`) signing fails Sparkle's installer validation.
-        # See Services/UpdateService.swift for the full gate logic.
-        SUFeedURL: ""
-        SUPublicEDKey: ""
-        # User opts in to automatic checks from Preferences. Keeping the
-        # default false avoids unexpected network I/O on first launch.
-        SUEnableAutomaticChecks: false
-        SUScheduledCheckInterval: 86400
-        # Sparkle requires the framework signature match the app's Team ID.
-        # For ad-hoc builds we suppress that check — Sparkle still won't
-        # perform an install without a Developer ID, but this prevents
-        # a crash during updater construction in dev builds.
-        SUEnableInstallerLauncherService: true

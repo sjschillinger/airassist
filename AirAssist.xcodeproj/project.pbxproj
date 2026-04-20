@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		013379CDC05A0E33F89DFC0D /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C970827BF50EE6FAF9CE8CA /* UpdateService.swift */; };
 		07DEAE60DE866AE450B0D168 /* SensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05664AF6DD35210D50D4D873 /* SensorService.swift */; };
 		099815B841513BF03BC53F73 /* PauseAndStayAwakeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */; };
 		09BFDA5470EAD62D85A3E335 /* DiagnosticBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F43EF95D16B0D67D0FD9028 /* DiagnosticBundle.swift */; };
@@ -67,7 +66,6 @@
 		ACFABCECFECDF629B1105134 /* GovernorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */; };
 		B0A47662747C2867086D592B /* SensorsPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD89C1534037D26554015A /* SensorsPrefsView.swift */; };
 		B183D1C124AAEE3F298C599F /* ThrottleIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C448FBE5B565F04825996475 /* ThrottleIntegrationTests.swift */; };
-		B26180C3CE1796E04201A4D4 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 7FE638BD3EBDB588B7913198 /* Sparkle */; };
 		B4BFE97F6E989309F39CEE60 /* SIGCONTFailureAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4375982E8251576076415A73 /* SIGCONTFailureAlert.swift */; };
 		B5FCBC00DE2EE807B11B27A0 /* SleepWakeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */; };
 		B77AD3CA5AE2AF1411D68173 /* SafetyCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */; };
@@ -133,7 +131,6 @@
 		02BA0BF3D6B9C098E7D51127 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		053C1F519C6EF5056C3BFC58 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		05664AF6DD35210D50D4D873 /* SensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorService.swift; sourceTree = "<group>"; };
-		0C970827BF50EE6FAF9CE8CA /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		0D2EA235795456EF4D733B04 /* MenuBarPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPrefs.swift; sourceTree = "<group>"; };
 		0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryReader.swift; sourceTree = "<group>"; };
 		16E8286BDB0C5E6AF90B6498 /* AirAssistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -235,7 +232,6 @@
 				EBE6C2163E1F9171F1E8F87E /* ServiceManagement.framework in Frameworks */,
 				DE977BF95BCAEC213B071E1B /* AppIntents.framework in Frameworks */,
 				C4793AB490B9ED1DF6CAE031 /* MetricKit.framework in Frameworks */,
-				B26180C3CE1796E04201A4D4 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -425,7 +421,6 @@
 				F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */,
 				730102034F0141285957EA50 /* ThermalGovernor.swift */,
 				9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */,
-				0C970827BF50EE6FAF9CE8CA /* UpdateService.swift */,
 				EB3CE8E0F5867CC85E9AF30C /* URLSchemeHandler.swift */,
 				81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */,
 			);
@@ -510,7 +505,6 @@
 			);
 			name = AirAssist;
 			packageProductDependencies = (
-				7FE638BD3EBDB588B7913198 /* Sparkle */,
 			);
 			productName = AirAssist;
 			productReference = 1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */;
@@ -607,9 +601,6 @@
 			);
 			mainGroup = 2E24B3DBCD6DB64E93F0D5EE;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-				3AD541AC01A3321F4FEB4336 /* XCRemoteSwiftPackageReference "Sparkle" */,
-			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E475C39220847B2C421D62B4 /* Products */;
 			projectDirPath = "";
@@ -779,7 +770,6 @@
 				8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */,
 				81EF92D16FD31086423E4B99 /* URLSchemeHandler+Debug.swift in Sources */,
 				D409F8F956BAF02BB00A41B5 /* URLSchemeHandler.swift in Sources */,
-				013379CDC05A0E33F89DFC0D /* UpdateService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1216,25 +1206,6 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		3AD541AC01A3321F4FEB4336 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.7.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		7FE638BD3EBDB588B7913198 /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3AD541AC01A3321F4FEB4336 /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F33C39F33672A17BC2A1E0D9 /* Project object */;
 }

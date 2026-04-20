@@ -55,12 +55,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // app lifecycle — miss it here and the payload is lost for good).
         MetricKitReporter.shared.start()
 
-        // Tier 2: start Sparkle updater if the build is configured for
-        // updates (SUFeedURL + SUPublicEDKey populated, Developer ID
-        // signed). Personal / ad-hoc builds no-op silently — see
-        // UpdateService for the gate.
-        UpdateService.shared.startIfConfigured()
-
         // Minimal main menu (#41 keyboard-nav) — gives ⌘W / ⌘Q / ⌘,
         // and the standard Edit shortcuts on any key window.
         AppMainMenu.install()
@@ -168,14 +162,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func exportDiagnosticsFromMenu(_ sender: Any?) {
         guard store != nil else { return }
         DiagnosticBundle.exportInteractively(store: store)
-    }
-
-    /// Action target for the "Check for Updates…" app-menu item. Installed
-    /// by `AppMainMenu.install()` only when `UpdateService.shouldShowMenuItem`
-    /// is true (the build has a configured feed + public key).
-    @MainActor
-    @objc func checkForUpdatesFromMenu(_ sender: Any?) {
-        UpdateService.shared.checkForUpdates(sender)
     }
 
     @MainActor

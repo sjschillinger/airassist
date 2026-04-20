@@ -45,16 +45,6 @@
 	<string>NSApplication</string>
 	<key>NSSupportsSuddenTermination</key>
 	<false/>
-	<key>SUEnableAutomaticChecks</key>
-	<false/>
-	<key>SUEnableInstallerLauncherService</key>
-	<true/>
-	<key>SUFeedURL</key>
-	<string></string>
-	<key>SUPublicEDKey</key>
-	<string></string>
-	<key>SUScheduledCheckInterval</key>
-	<integer>86400</integer>
 	<key>com.apple.security.temporary-exception.iokit-user-client-class</key>
 	<array>
 		<string>IOHIDEventSystemUserClient</string>
