@@ -97,6 +97,49 @@ struct GovernorConfig: Codable {
     var tempEnabled: Bool { mode == .temperature || mode == .both }
     var cpuEnabled:  Bool { mode == .cpu         || mode == .both }
     var isOff:       Bool { mode == .off }
+
+    init(
+        mode: GovernorMode = .off,
+        maxTempC: Double = 85,
+        maxCPUPercent: Double = 300,
+        tempHysteresisC: Double = 5,
+        cpuHysteresisPercent: Double = 50,
+        maxTargets: Int = 4,
+        minCPUForTargeting: Double = 15
+    ) {
+        self.mode = mode
+        self.maxTempC = maxTempC
+        self.maxCPUPercent = maxCPUPercent
+        self.tempHysteresisC = tempHysteresisC
+        self.cpuHysteresisPercent = cpuHysteresisPercent
+        self.maxTargets = maxTargets
+        self.minCPUForTargeting = minCPUForTargeting
+    }
+
+    /// Schema-evolution-safe decode. A persisted blob written by an older
+    /// release will be missing any field added later; the synthesized
+    /// `init(from:)` throws `keyNotFound` in that case even when the
+    /// property has a default, which would silently reset the user's
+    /// *entire* governor config on upgrade. Using `decodeIfPresent` for
+    /// every key preserves the struct-level defaults for absent fields
+    /// and keeps the rest of the user's settings intact.
+    private enum CodingKeys: String, CodingKey {
+        case mode, maxTempC, maxCPUPercent, tempHysteresisC,
+             cpuHysteresisPercent, maxTargets, minCPUForTargeting
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            mode: (try c.decodeIfPresent(GovernorMode.self, forKey: .mode)) ?? .off,
+            maxTempC: (try c.decodeIfPresent(Double.self, forKey: .maxTempC)) ?? 85,
+            maxCPUPercent: (try c.decodeIfPresent(Double.self, forKey: .maxCPUPercent)) ?? 300,
+            tempHysteresisC: (try c.decodeIfPresent(Double.self, forKey: .tempHysteresisC)) ?? 5,
+            cpuHysteresisPercent: (try c.decodeIfPresent(Double.self, forKey: .cpuHysteresisPercent)) ?? 50,
+            maxTargets: (try c.decodeIfPresent(Int.self, forKey: .maxTargets)) ?? 4,
+            minCPUForTargeting: (try c.decodeIfPresent(Double.self, forKey: .minCPUForTargeting)) ?? 15
+        )
+    }
 }
 
 enum GovernorConfigPersistence {
