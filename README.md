@@ -53,7 +53,7 @@ your shell has.
 - macOS 15 Sequoia or later
 - Apple Silicon (M1/M2/M3/M4). Intel Macs are not supported.
 - Built for MacBook Air. Non-Air Macs work but some features are dimmed
-  (see `NON_AIR_ROADMAP.md` in the development repo for what a proper
+  (see [NON_AIR_ROADMAP.md](NON_AIR_ROADMAP.md) for what a proper
   Pro/Studio port would look like — not yet implemented).
 
 ### Why MacBook Air only?

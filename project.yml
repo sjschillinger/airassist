@@ -21,7 +21,17 @@ schemes:
     test:
       targets:
         - AirAssistTests
-        - AirAssistUITests
+        # AirAssistUITests stays in the scheme (so you can toggle it on in
+        # Xcode's Test Plan) but is skipped by default. macOS 15 Gatekeeper
+        # kills the unsigned XCUITest runner bundle under
+        # CODE_SIGNING_ALLOWED=NO with "damaged and can't be opened", which
+        # aborts the whole test session before unit tests can report.
+        # The accessibility audit still runs on demand via:
+        #   xcodebuild ... test -only-testing:AirAssistUITests
+        # with a signed build, or from Xcode's UI after re-enabling it in
+        # the scheme's Test action.
+        - name: AirAssistUITests
+          skipped: true
       gatherCoverageData: false
     run:
       config: Debug

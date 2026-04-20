@@ -18,6 +18,14 @@ cask "airassist" do
   depends_on macos: ">= :sequoia"
   depends_on arch: :arm64
 
+  # `brew livecheck` and `brew bump-cask-pr` parse GitHub's latest-release
+  # tag (e.g. "v0.9.0") and normalize off the leading "v" to produce the
+  # next cask version. Matches the tagging convention release.yml expects.
+  livecheck do
+    url :url
+    strategy :github_latest
+  end
+
   # We ship ad-hoc signed builds (no $99/yr Developer ID). Homebrew
   # downloads via curl, which does NOT set com.apple.quarantine, so
   # Gatekeeper stays quiet on install. No `xattr` dance needed for

@@ -9,7 +9,18 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
-_No changes yet. See [0.9.0](#090--2026-04-19) for the initial release._
+### Planned for 0.10 (non-blocking backlog from the 0.9.0 pre-launch audit)
+
+- Fast user-switching awareness — observe
+  `NSWorkspace.sessionDidResignActiveNotification` so throttled PIDs are
+  released when the active session changes. Today the inflight
+  dead-man's-switch catches this on the next cold launch, but a paused
+  process can stay frozen until then.
+- `NSProcessInfo.thermalState` as an additional governor input, so the
+  OS's own thermal-throttling signal biases our aggression factor.
+- Power-source awareness at the governor tick, modulating caps tighter
+  on battery and looser on AC. Complements the existing
+  `BatteryAwareMode` preset swap.
 
 ---
 

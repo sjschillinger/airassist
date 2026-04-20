@@ -47,6 +47,7 @@ ALLOWLIST=(
   "CONTRIBUTING.md"
   "CODE_OF_CONDUCT.md"
   "SECURITY.md"
+  "NON_AIR_ROADMAP.md"
   "docs"
   "scripts/install-hooks.sh"
   "scripts/hooks"
