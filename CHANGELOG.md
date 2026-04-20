@@ -9,80 +9,121 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
-### Added
-- Natural sort for sensor names, so `CPU Die 2` sorts before `CPU Die 10`.
-- **Stay Awake** caffeinate-style modes: off, system-only (allow display sleep),
-  system + display, and a timed "display on for N minutes, then system only"
-  variant. Available from the menu bar right-click and Preferences → General.
-- SensorCategory reordered so the SoC group is first, keeping the most
-  actionable readings above long CPU Die lists on M-series Pros.
-- Dashboard and popover show an explicit "Sensors unavailable" state when
-  IOHIDEventSystemClient returns no readings after ≥5s.
-- All sensor name sorts use `localizedStandardCompare` for human-friendly
-  numeric ordering.
-- Preferences and Dashboard windows now remember their size and position
-  across launches.
-- GitHub Actions: CI build + test workflow, forbidden-strings guard,
-  tag-driven release skeleton.
-- Free-tier release pipeline: tagged pushes build an ad-hoc signed
-  `AirAssist-<version>.zip`, compute SHA256, and create a **draft**
-  GitHub Release ready to attach to a Homebrew cask.
-- Homebrew tap scaffold under `scripts/homebrew-tap-template/` (dev-only)
-  with a cask formula + README for the separate `homebrew-airassist` repo.
-- `docs/releasing.md` — end-to-end release flow (tag → draft →
-  publish → tap bump).
-- Allowlist-based `scripts/publish.sh` export to a separate public repo, plus
-  a pre-commit hook blocking stray references to third-party products.
-
-### Changed
-- **License: MIT → AGPL-3.0.** Non-commercial use remains free; any
-  fork or derivative must stay AGPL and share source. A separate
-  commercial license is available from the maintainer. Copyright
-  asserted as "Copyright (C) 2026 James Schillinger. All rights
-  reserved." Mirrors the dual-license stance used by projects like
-  WorldMonitor.
-- README: added prominent "USE AT YOUR OWN RISK" warning covering
-  SIGSTOP/SIGCONT behaviour, a "Not affiliated with Apple Inc."
-  disclaimer, and a license-terms table.
-- README sandboxing section corrected — distribution is ad-hoc signed
-  via Homebrew cask for 0.1.x, not Developer ID / notarized. Developer
-  ID + notarization is on the roadmap for 1.0.
-- First-launch disclosure: one-time modal on first run explaining what
-  the governor can do, that it's off by default, and that the software
-  is provided AS IS under AGPL-3.0. Idempotent, versioned so the
-  disclosure can be re-shown if capabilities expand.
-- README clarifies the sandboxing decision and the single outgoing
-  network request (Sparkle appcast).
-- Install instructions lead with `brew install --cask` and cover the
-  one-time `xattr -dr com.apple.quarantine` step for manual downloads.
-- Bundle identifier: `com.airAssist.app` → `com.sjschillinger.airassist`
-  (clean reverse-DNS, pre-launch). UserDefaults key for threshold
-  settings renamed accordingly; pre-1.0 users will see defaults on
-  first launch after upgrading.
-- README/CHANGELOG no longer promise a Sparkle in-app updater for
-  0.1.x — updates come via `brew upgrade`. In-app Sparkle stays on
-  the roadmap.
-- First launch hides obvious sensor noise by default (`CPU Die 5..N`
-  and the `Other` category) so the popover is readable on M-series
-  Pro/Max parts. All sensors remain re-enableable in
-  Preferences → Sensors. Governor default stays `off` — throttling
-  requires explicit opt-in.
-- Publish allowlist extended to include community health files
-  (CONTRIBUTING, SECURITY, CoC, CHANGELOG, issue/PR templates, docs/).
-- CONTRIBUTING clarifies that `project.yml` is the source of truth and
-  the generated `.xcodeproj` must be kept in sync via
-  `xcodegen generate`.
-
-### Fixed
-- Popover no longer renders a blank rectangle when all sensors are
-  disabled or have not yet loaded.
+_No changes yet. See [0.9.0](#090--2026-04-19) for the initial release._
 
 ---
 
-## [0.1.0] — TBD (first public release)
+## [0.9.0] — 2026-04-19
 
-Initial public release. See the `Unreleased` section above until this
-tag ships; content will be rolled forward on release day.
+Initial public release.
 
-[Unreleased]: https://github.com/sjschillinger/airassist/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/sjschillinger/airassist/releases/tag/v0.1.0
+### Added
+
+- **Thermal governor** — pauses user-owned processes via SIGSTOP/SIGCONT
+  when the hottest sensor crosses a configurable threshold, with a
+  foreground-app floor so your current work stays responsive. Off by
+  default; opt-in per-rule.
+- **Throttle rules** — pin per-process caps ("never let `Xcode` exceed 60%
+  CPU when SoC > 80°C"), with a daily fire counter and human-readable
+  "why this fired" surface.
+- **Live thermal dashboard** — every HID thermal sensor the Air exposes,
+  grouped by category (SoC / battery / ambient / PMIC), with sparkline
+  history.
+- **Menu bar readout** — one- or two-slot layout (hottest temp + CPU%)
+  with a heartbeat pulse when throttling is active.
+- **One-shot manual throttle** — right-click menu: "Throttle frontmost
+  app at 30%."
+- **Stay Awake** caffeinate-style modes: off, system-only (allow display
+  sleep), system + display, and a timed "display on for N minutes, then
+  system only" variant. Available from menu bar right-click and
+  Preferences → General.
+- **Global hotkey** — ⌘⌥P toggles pause/resume from anywhere, Carbon-based
+  so no Accessibility permission is required.
+- **Safety infrastructure** — rescue LaunchAgent, signal handlers on
+  SIGTERM/SIGINT/SIGHUP/SIGQUIT, inflight dead-man's-switch file for
+  crash recovery, 4 Hz stuck-cycle watchdog that force-SIGCONTs any PID
+  stopped longer than 500ms, MetricKit diagnostic capture, and a RSS
+  tripwire at 500MB.
+- **First-run risk disclosure** — one-time modal on first launch
+  explaining what the governor can do, that it's off by default, and
+  AGPL-3.0 terms. Idempotent and versioned for future capability
+  expansions.
+- **Quit confirmation** — if rules are live at ⌘Q, Air Assist asks
+  before releasing the paused PIDs. Suppressed by opt-quit (⌥⌘Q).
+- **Update notifier** — once per day, checks GitHub's Releases API for
+  a newer tag; surfaces a nudge in the menu-bar right-click when one
+  exists. Click → opens the release page. No binary replacement, no
+  installer, no telemetry. Opt-out in Preferences → Updates.
+- **`airassist://` URL scheme** for Shortcuts.app, Raycast, Alfred, or
+  `open airassist://pause` from the shell.
+- **Dashboard + Preferences** windows remember size and position across
+  launches.
+- **Diagnostic bundle export** — Help → Export Diagnostics… produces a
+  redacted zip suitable for bug reports.
+- **Free-tier release pipeline** — tagged pushes build an ad-hoc signed
+  `AirAssist-<version>.zip`, compute SHA256, and create a draft GitHub
+  Release ready to attach to a Homebrew cask. No Apple Developer account
+  required; uses `macos-15` runner with Xcode 16.
+- **Homebrew cask scaffold** under `scripts/homebrew-tap-template/` with
+  a formula targeting `:sequoia` + `:arm64`, and zap paths for clean
+  uninstall.
+- **Allowlist-based `scripts/publish.sh`** — mirrors the private
+  development repo to a public one without exposing internal-only
+  scripts, tests, or templates.
+- **Single-instance guard** — bringing an existing AirAssist forward if
+  the user double-launches.
+- **Natural sort** for sensor names (`CPU Die 2` before `CPU Die 10`)
+  via `localizedStandardCompare`.
+
+### Changed
+
+- **License: MIT → AGPL-3.0.** Non-commercial use remains free; any
+  fork or derivative must stay AGPL and share source. A separate
+  commercial license is available from the maintainer.
+- **macOS 15 (Sequoia) minimum.** Deployment target is 15.0; uses
+  Observation, strict concurrency (Swift 6), and modern SwiftUI.
+- **Distribution: ad-hoc signed, not notarized.** Deliberate choice —
+  Homebrew cask install skips the Gatekeeper/quarantine path cleanly,
+  and the AGPL position requires parity for forks. See
+  [docs/releasing.md](docs/releasing.md) for the full rationale.
+- **Bundle identifier:** `com.airAssist.app` → `com.sjschillinger.airassist`
+  (clean reverse-DNS, pre-launch).
+- **SoC sensor group first** in the category order, so the most
+  actionable readings stay above long `CPU Die` lists on M-series Pros.
+- **"Sensors unavailable" state** shown explicitly when
+  IOHIDEventSystemClient returns no readings after ≥ 5 s.
+- **First launch hides obvious sensor noise** (`CPU Die 5..N`, `Other`
+  category) so the popover is readable on M-series Pro/Max parts.
+  All sensors remain re-enableable in Preferences → Sensors.
+- **Governor default stays `off`** — throttling requires explicit opt-in.
+- **README:** prominent "USE AT YOUR OWN RISK" warning, Apple trademark
+  disclaimer, license-terms table, install section that leads with
+  Homebrew and covers the one-time `xattr -dr com.apple.quarantine`
+  step for manual downloads, and a SHA256 verification one-liner.
+- **Privacy section:** documents the one daily GitHub API call and
+  how to disable it.
+- **Schema-safe persistence** — `GovernorConfig` has a custom
+  `init(from:)` with `decodeIfPresent` for every field so older configs
+  survive schema additions without being silently wiped.
+
+### Removed
+
+- **Sparkle.** Sparkle's auto-installer requires a Developer ID
+  signature to replace the running binary cleanly — incompatible with
+  our ad-hoc signing stance. Replaced by the GitHub Releases API
+  notifier described above.
+
+### Security
+
+- **No root, ever.** The app operates entirely at user privilege and
+  refuses to target processes the user doesn't own.
+- **No kernel extension, no helper daemon, no `SMAppService`-installed
+  privileged component.**
+- **Graceful quit handlers** SIGCONT every paused PID before the
+  process exits. Hard-crash recovery replays the inflight file on
+  next launch.
+
+---
+
+[Unreleased]: https://github.com/sjschillinger/airassist/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/sjschillinger/airassist/releases/tag/v0.9.0

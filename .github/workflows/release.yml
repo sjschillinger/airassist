@@ -29,7 +29,9 @@ on:
 jobs:
   build:
     name: Build & publish release
-    runs-on: macos-14
+    # See ci.yml for rationale on macos-15 — Swift 6 + SDK 15 require
+    # Xcode 16, which is default on macos-15 runners but not macos-14.
+    runs-on: macos-15
     timeout-minutes: 30
 
     permissions:
