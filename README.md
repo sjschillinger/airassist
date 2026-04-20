@@ -193,6 +193,40 @@ A `SafetyCoordinator` watches the throttling loop. It does three things:
 If Air Assist is force-killed while processes are paused and you don't
 want to relaunch, `kill -CONT <pid>` releases them manually.
 
+## Automation (`airassist://` URL scheme)
+
+Air Assist registers a URL scheme so Shortcuts.app, Raycast, Alfred, or
+a plain shell `open` can drive it. Every action is the same thing the
+menu bar can do — nothing privileged, nothing the UI can't.
+
+| URL | What it does |
+|-----|--------------|
+| `airassist://pause` | Pause the governor + all rules. Defaults to "forever" (until you resume). |
+| `airassist://pause?duration=15m` | Pause for a bounded window, then auto-resume. |
+| `airassist://resume` | Resume anything paused. |
+| `airassist://throttle?bundle=com.apple.dt.Xcode&duty=0.3` | Apply a one-shot duty-cycle cap to a named app (here: 30% CPU). |
+| `airassist://throttle?bundle=<id>&duty=50%&duration=15m` | Same, but auto-releases after the window. |
+| `airassist://release?bundle=<id>` | Drop a one-shot throttle early. |
+
+**Format notes:**
+
+- `duration` accepts `forever`, `30s`, `15m`, `1h`. Omit for "forever".
+- `duty` accepts `0.3`, `30%`, or `30` (anything above 1 is read as a
+  percentage). Clamped to `[0.05, 1.0]`.
+- `bundle` is the reverse-DNS bundle identifier
+  (`com.apple.dt.Xcode`, not `Xcode.app`).
+
+**Shortcuts.app example.** Add an "Open URL" action with
+`airassist://throttle?bundle=com.apple.Safari&duty=50%&duration=10m`,
+assign it to a keyboard shortcut, and you have a one-key "quiet
+Safari for ten minutes" button.
+
+**Shell example.** `open 'airassist://pause?duration=1h'` from a
+pre-build script gives your next build an hour of unthrottled Mac.
+
+The ⌘⌥P global hotkey is the same thing as `airassist://pause` ↔
+`airassist://resume`; use whichever feels right.
+
 ## Privacy & network activity
 
 Air Assist reads thermal and CPU data locally and keeps it on your
@@ -210,6 +244,15 @@ No binary is ever downloaded or installed by the app itself — a
 newer version just surfaces a menu nudge that opens the release page
 in your browser. Confirm all of this for yourself with
 `lsof -p $(pgrep AirAssist)` or Little Snitch.
+
+**Data sources.** Temperatures come from `IOHIDEventSystemClient`, a
+public IOKit API for HID thermal sensors — the same interface that
+the `powermetrics` command-line tool uses. Air Assist does not call
+any private SPI, does not read from SMC directly, and does not ship
+any bundled binary blob to talk to the hardware. CPU usage comes from
+`proc_pid_rusage` (also public). Process listings come from
+`sysctl KERN_PROC`. No third-party telemetry SDKs are linked; run
+`otool -L AirAssist.app/Contents/MacOS/AirAssist` to confirm.
 
 ## Sandboxing
 

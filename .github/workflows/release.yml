@@ -139,8 +139,16 @@ jobs:
 
             ### Install (recommended)
 
+            First-time install:
+
             ```bash
             brew install --cask sjschillinger/airassist/airassist
+            ```
+
+            Already have Air Assist? Upgrade in place:
+
+            ```bash
+            brew upgrade --cask airassist
             ```
 
             ### Manual install
