@@ -50,7 +50,7 @@ your shell has.
 
 ## Requirements
 
-- macOS 14 or later
+- macOS 15 Sequoia or later
 - Apple Silicon (M1/M2/M3/M4). Intel Macs are not supported.
 - Built for MacBook Air. Non-Air Macs work but some features are dimmed
   (see `NON_AIR_ROADMAP.md` in the development repo for what a proper
@@ -119,9 +119,30 @@ xattr -dr com.apple.quarantine /Applications/AirAssist.app
 (Homebrew-installed copies skip this — `curl` doesn't set the
 quarantine attribute.)
 
-Updates: for 0.1.x, run `brew upgrade --cask airassist` (or
-`brew upgrade`) to pick up new releases. An in-app updater via
-Sparkle is on the roadmap but not wired up yet.
+**Verify the download (optional but recommended.)** Each release
+includes a `SHA256SUMS.txt` alongside the zip. Check the archive
+against it before unzipping:
+
+```bash
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+### Updates
+
+Air Assist checks GitHub's Releases API **once per day** for a new
+version. When one exists, a "↑ Version X.Y.Z available" item appears
+in the menu-bar right-click menu; clicking it opens the release page
+so you can download the new zip (manual users) or run
+`brew upgrade --cask airassist` (Homebrew users).
+
+The check is a single request to `api.github.com`, with no analytics
+and no other identifying data beyond a `User-Agent` header. You can
+disable automatic checks in **Preferences → General → Updates**;
+the "Check for Updates…" menu item still works manually.
+
+Air Assist never downloads or installs binaries on its own — it only
+surfaces the nudge. Actual upgrades happen through Homebrew or by
+repeating the manual-download step.
 
 ## Build from source
 
@@ -175,13 +196,19 @@ want to relaunch, `kill -CONT <pid>` releases them manually.
 ## Privacy & network activity
 
 Air Assist reads thermal and CPU data locally and keeps it on your
-Mac. No analytics, no telemetry, no accounts, and — as of 0.1.x —
-**no outgoing network requests at all**. Updates come via Homebrew
-(`brew upgrade`), not from inside the app.
+Mac. No analytics, no telemetry, no accounts.
 
-If and when an in-app Sparkle updater is added in a future release,
-this section will be updated and the update check will be opt-out in
-Preferences. Confirm the current behaviour for yourself with
+The **only** outbound network call in normal operation is one request
+per day to `api.github.com/repos/sjschillinger/airassist/releases/latest`
+to check whether a newer version has been published. The request
+carries a `User-Agent` of `AirAssist/<your-version>` (GitHub requires
+a UA) and no other identifying data. You can turn it off entirely in
+**Preferences → General → Updates**; the manual "Check for Updates…"
+menu item still works when automatic checks are disabled.
+
+No binary is ever downloaded or installed by the app itself — a
+newer version just surfaces a menu nudge that opens the release page
+in your browser. Confirm all of this for yourself with
 `lsof -p $(pgrep AirAssist)` or Little Snitch.
 
 ## Sandboxing
