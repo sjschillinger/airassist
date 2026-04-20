@@ -71,7 +71,7 @@ that fails its own README.
 
 The allowlist-filtered public working tree lives at
 `$PUBLIC_REPO_DIR` (default `../airassist-public`). It will be a
-git repo with one commit ("Release 0.9.0") and a local `0.9.0` tag.
+git repo with one commit ("Release 0.9.0") and a local `v0.9.0` tag.
 
 Create the remote and push:
 
@@ -80,7 +80,7 @@ cd ../airassist-public
 gh repo create sjschillinger/airassist --public \
     --description "Menu-bar thermal monitor + workload governor for fanless MacBook Air" \
     --source . --push
-git push origin 0.9.0   # push the tag — triggers release.yml
+git push origin v0.9.0   # push the tag — triggers release.yml
 ```
 
 `release.yml` will now run on the public repo's `macos-15` runner.
@@ -168,7 +168,7 @@ paths.
 ## If something goes wrong mid-bootstrap
 
 - **Failed release.yml run** — delete the tag on the public repo
-  (`git push --delete origin 0.9.0`), delete the draft release in
+  (`git push --delete origin v0.9.0`), delete the draft release in
   the UI, fix the problem, re-run the publish script, re-push.
 - **Wrong SHA in the cask** — commit the fix to the tap repo. No
   version bump needed for a same-day SHA correction if the underlying

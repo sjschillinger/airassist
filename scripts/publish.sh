@@ -35,6 +35,13 @@ PUBLIC_REPO_DIR="${PUBLIC_REPO_DIR:-$(cd "$(dirname "$0")/../.." && pwd)/airassi
 ALLOWLIST=(
   "AirAssist"
   "AirAssistTests"
+  # AirAssistRescue: helper binary the main app depends on (safety LaunchAgent).
+  # Omitting it breaks `xcodegen generate` on the public repo.
+  "AirAssistRescue"
+  # Integration + UI test harnesses are referenced by project.yml targets and
+  # by the AirAssist scheme. Drop them and xcodegen fails on the public repo.
+  "AirAssistIntegrationTests"
+  "AirAssistUITests"
   "AirAssist.xcodeproj"
   "project.yml"
   ".gitignore"
@@ -102,15 +109,15 @@ done
 # Warn (don't fail) on unexpected top-level entries. Useful if you add a
 # new file that should probably be on the allowlist.
 echo "→ Scanning top-level entries not on allowlist…"
+# macOS still ships bash 3.2 — no associative arrays. Use a sorted newline
+# list + fgrep for the lookup instead.
 known_top_level=$(printf '%s\n' "${ALLOWLIST[@]}" | awk -F/ '{print $1}' | sort -u)
-declare -A known_map=()
-while IFS= read -r k; do known_map["$k"]=1; done <<< "${known_top_level}"
 while IFS= read -r entry; do
   name=$(basename "${entry}")
   case "${name}" in
     .git|.DS_Store) continue ;;
   esac
-  if [ -z "${known_map[${name}]:-}" ]; then
+  if ! printf '%s\n' "${known_top_level}" | grep -qxF "${name}"; then
     echo "   · skipping (not on allowlist): ${name}"
   fi
 done < <(find . -mindepth 1 -maxdepth 1)
@@ -165,13 +172,15 @@ if $DO_COMMIT; then
   if git diff --cached --quiet; then
     echo "→ no changes to commit in public repo"
   else
+    # release.yml triggers on `v*.*.*` tags, so tag with the leading `v`.
+    TAG="v${VERSION}"
     git commit -m "Release ${VERSION}"
-    git tag -a "${VERSION}" -m "${VERSION}"
-    echo "✓ committed & tagged ${VERSION} in public repo"
+    git tag -a "${TAG}" -m "${TAG}"
+    echo "✓ committed & tagged ${TAG} in public repo"
   fi
   if $DO_PUSH; then
     git push origin HEAD
-    git push origin "${VERSION}"
+    git push origin "v${VERSION}"
     echo "✓ pushed ${VERSION}"
   fi
 fi

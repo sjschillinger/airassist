@@ -238,6 +238,17 @@ struct MenuBarPopoverView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            // Surface the governor's "why" string — otherwise states that
+            // don't flip a throttling flag (e.g. on-battery-only gate firing
+            // on AC) look identical to a generic "armed" and the user can't
+            // tell the toggle did anything.
+            if !governorReasonLine.isEmpty {
+                Text(governorReasonLine)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if !rows.isEmpty {
                 ForEach(rows.prefix(3)) { row in
                     let badge = sourceBadge(row.sources)
@@ -311,10 +322,26 @@ struct MenuBarPopoverView: View {
         if store.governor.isTempThrottling || store.governor.isCPUThrottling {
             return "Governor active"
         }
+        // On-battery-only gate firing on AC — governor is armed but
+        // deliberately silent. Flag it in the summary so the toggle has a
+        // visible effect.
+        if store.governorConfig.onBatteryOnly
+            && store.governor.reason.hasPrefix("Idle · on AC") {
+            return "Governor idle (on AC)"
+        }
         if !store.liveThrottledPIDs.isEmpty {
             return "Rules active"
         }
         return "Governor armed"
+    }
+
+    /// Secondary line under the summary: the governor's own plain-language
+    /// reason string. Hidden when empty / off / paused (the summary already
+    /// covers those).
+    private var governorReasonLine: String {
+        if store.isPauseActive { return "" }
+        if store.governorConfig.isOff { return "" }
+        return store.governor.reason
     }
     private var governorColor: Color {
         if store.isPauseActive { return .yellow }

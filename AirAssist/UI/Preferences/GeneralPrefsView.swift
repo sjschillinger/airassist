@@ -147,9 +147,9 @@ struct GeneralPrefsView: View {
                     Picker("", selection: stayAwakeModeBinding) {
                         Text("Off").tag(StayAwakeMode.off)
                         Text("Keep system awake").tag(StayAwakeMode.system)
-                            .help("Prevents idle sleep. Display follows its normal schedule. Like `caffeinate -i`.")
+                            .help("Prevents idle sleep. Display follows its normal schedule. Equivalent to caffeinate -i.")
                         Text("Keep system & display awake").tag(StayAwakeMode.display)
-                            .help("Prevents both system and display sleep. Like `caffeinate -id`.")
+                            .help("Prevents both system and display sleep. Equivalent to caffeinate -id.")
                         Text("Display on, then system only").tag(StayAwakeMode.displayThenSystem)
                             .help("Holds the display awake for the configured minutes, then lets it sleep while the system itself stays up for background work.")
                     }
