@@ -602,7 +602,7 @@ struct MenuBarPopoverView: View {
             // mode, caps, on-battery flag, and stay-awake mode.
             controlRow(icon: "wand.and.stars",
                        label: "Scenario",
-                       help: "Apply a one-click preset (Presenting / Quiet / Performance / Auto).") {
+                       help: "Apply a one-click preset (Presenting / Lap / Cool / Performance / Auto).") {
                 scenarioMenu
             }
         }

@@ -44,7 +44,7 @@ final class ThermalStore {
 
     /// Apply a one-click scenario preset. Bundles a governor config, a
     /// stay-awake mode, and the on-battery-only flag so the user can
-    /// switch context (Presenting / Quiet / Performance / Auto) without
+    /// switch context (Presenting / Lap / Cool / Performance / Auto) without
     /// reaching into Preferences. Per-app rules are intentionally
     /// untouched — they represent persistent user intent.
     func applyScenario(_ scenario: ScenarioPreset) {
@@ -56,9 +56,35 @@ final class ThermalStore {
             governorConfig = c
             setStayAwakeMode(.display)
         case .quiet:
-            c = GovernorPreset.aggressive.applied(to: c)
-            c.mode = .both
-            c.onBatteryOnly = false
+            // "Lap / Cool" — keep the chassis comfortable on the skin
+            // without throttling so early that normal use feels sluggish.
+            //
+            // Why these specific numbers:
+            //   - Apple Silicon Air chassis temperature tracks the SoC.
+            //     Below ~80°C SoC the palm rest stays in the ~32-35°C
+            //     range (lap-comfortable). Above ~85°C it climbs into
+            //     "noticeably warm." We aim for 78°C with 4°C
+            //     hysteresis, so the actual hold band is 74-78°C —
+            //     the comfortable zone, with 7-10°C of margin below
+            //     macOS's own thermal management.
+            //   - Mode is `.temperature` only (NOT `.both`). The CPU
+            //     cap is the wrong instrument here: a parallel build
+            //     using all 8 cores at moderate temperature shouldn't
+            //     be paused. Heat is what makes a fanless Air
+            //     uncomfortable; CPU% is just a proxy that misfires
+            //     during well-cooled bursts.
+            //   - maxCPUPercent stays in the config but is dormant
+            //     while mode = .temperature; we set a generous 600%
+            //     anyway so flipping the mode later doesn't surprise
+            //     the user with a too-tight cap.
+            c.mode                 = .temperature
+            c.maxTempC             = 78
+            c.tempHysteresisC      = 4
+            c.maxCPUPercent        = 600
+            c.cpuHysteresisPercent = 50
+            c.maxTargets           = 5
+            c.minCPUForTargeting   = 15
+            c.onBatteryOnly        = false
             governorConfig = c
         case .performance:
             // Distinct from Presenting: governor stays *armed* with the
@@ -317,6 +343,107 @@ final class ThermalStore {
     /// otherwise see a blank menu bar. The fallback keeps the slot useful
     /// without silently lying: the highest-overall reading is still a
     /// meaningful number, just not category-filtered.
+    /// Rich version of `temperature(category:value:)` — returns enough
+    /// context for the menu bar renderer to paint the source badge,
+    /// trend glyph, and headroom strip without round-tripping back here.
+    /// `temperature(...)` is kept for the few call sites that just want
+    /// the number (Shortcuts, URL scheme).
+    func resolveSlot(category: String, value: String) -> MenuBarSlotState {
+        switch category {
+        case "highest":
+            // "overall" → winner across all enabled sensors, regardless
+            // of category. Source badge follows the winner.
+            if value == "overall" {
+                if let winner = enabledSensors
+                    .filter({ $0.currentValue != nil })
+                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
+                    return MenuBarSlotState(
+                        value: winner.currentValue,
+                        sourceCategory: winner.category,
+                        headroom: headroom(value: winner.currentValue, category: winner.category),
+                        history: winner.history
+                    )
+                }
+                return .empty
+            }
+            // Category-pinned highest — winner *within* that category.
+            if let cat = SensorCategory(rawValue: value) {
+                if let winner = enabledSensors
+                    .filter({ $0.category == cat && $0.currentValue != nil })
+                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
+                    return MenuBarSlotState(
+                        value: winner.currentValue,
+                        sourceCategory: cat,
+                        headroom: headroom(value: winner.currentValue, category: cat),
+                        history: winner.history
+                    )
+                }
+                // Category empty — fall back to overall highest, same as
+                // `temperature(...)` does, so the user isn't staring at a
+                // blank slot when their preferred category has no sensors.
+                if let winner = enabledSensors
+                    .filter({ $0.currentValue != nil })
+                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
+                    return MenuBarSlotState(
+                        value: winner.currentValue,
+                        sourceCategory: winner.category,
+                        headroom: headroom(value: winner.currentValue, category: winner.category),
+                        history: winner.history
+                    )
+                }
+            }
+            return .empty
+        case "average":
+            // Average has no single source category, so the badge is
+            // suppressed. Trend can still be computed off the value
+            // itself — but we'd need a separate buffer for the average,
+            // and that's out of scope for now (the trend glyph is most
+            // useful on a single-sensor reading anyway). History is
+            // intentionally empty here.
+            if value == "all" {
+                return MenuBarSlotState(
+                    value: averageTemp(),
+                    sourceCategory: nil, headroom: nil, history: []
+                )
+            }
+            if let cat = SensorCategory(rawValue: value) {
+                return MenuBarSlotState(
+                    value: averageTemp(in: cat) ?? averageTemp(),
+                    sourceCategory: cat,
+                    headroom: headroom(value: averageTemp(in: cat), category: cat),
+                    history: []
+                )
+            }
+            return .empty
+        case "individual":
+            if let s = enabledSensors.first(where: { $0.id == value }) {
+                return MenuBarSlotState(
+                    value: s.currentValue,
+                    sourceCategory: s.category,
+                    headroom: headroom(value: s.currentValue, category: s.category),
+                    history: s.history
+                )
+            }
+            return .empty
+        default:
+            return .empty
+        }
+    }
+
+    /// Distance toward the *hot* threshold for `category`, clamped 0…1.
+    /// 0 = at-or-below the cool/warm boundary, 1 = at-or-above hot.
+    /// Returns nil if value or thresholds are missing. Used by the
+    /// menu-bar headroom strip — gives the user pre-warm visibility
+    /// rather than waiting for the tint to flip.
+    private func headroom(value: Double?, category: SensorCategory) -> Double? {
+        guard let value else { return nil }
+        let t = thresholds.thresholds(for: category)
+        let span = t.hot - t.warm
+        guard span > 0 else { return nil }
+        let raw = (value - t.warm) / span
+        return min(max(raw, 0), 1)
+    }
+
     func temperature(category: String, value: String) -> Double? {
         switch category {
         case "highest":

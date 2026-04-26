@@ -21,7 +21,12 @@ enum ScenarioPreset: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .presenting:  return "Presenting"
-        case .quiet:       return "Quiet"
+        // "Lap / Cool" speaks to both audiences without lying to either:
+        // fanless-Air users care about chassis-on-skin temperature ("Lap"),
+        // fan-equipped Macs get less fan noise as the side effect of the
+        // same temperature cap ("Cool"). The earlier "Quiet" name only
+        // worked for the fan crowd.
+        case .quiet:       return "Lap / Cool"
         case .performance: return "Performance"
         case .auto:        return "Auto (default)"
         }
@@ -30,7 +35,10 @@ enum ScenarioPreset: String, CaseIterable, Identifiable {
     var sfSymbol: String {
         switch self {
         case .presenting:  return "person.wave.2"
-        case .quiet:       return "wind"
+        // Snowflake-on-thermometer reads as "keep this thing cool" at a
+        // glance — neutral on whether the cooling comes from fans or
+        // just from running less hot.
+        case .quiet:       return "thermometer.snowflake"
         case .performance: return "bolt.fill"
         case .auto:        return "wand.and.stars"
         }
@@ -39,7 +47,7 @@ enum ScenarioPreset: String, CaseIterable, Identifiable {
     var tagline: String {
         switch self {
         case .presenting:  return "Governor off, display awake. No surprise pauses during a demo."
-        case .quiet:       return "Aggressive caps, runs on battery and AC. Library / café mode."
+        case .quiet:       return "Holds the chassis cool to the touch by capping sustained heat. Brief bursts pass through. Quieter on Macs with fans."
         case .performance: return "Gentle governor only — high heat ceiling, display awake. Get out of the workload's way."
         case .auto:        return "Balanced caps, on-battery only. Sensible everyday default."
         }

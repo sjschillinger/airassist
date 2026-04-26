@@ -5,6 +5,9 @@ struct MenuBarPrefsView: View {
 
     @AppStorage("tempUnit")             private var tempUnitRaw: Int    = TempUnit.celsius.rawValue
     @AppStorage("showMenuBarIcon")      private var showIcon: Bool      = true
+    @AppStorage("showMenuBarSourceBadge") private var showSourceBadge: Bool = true
+    @AppStorage("showMenuBarTrendGlyph")  private var showTrendGlyph: Bool  = true
+    @AppStorage("showMenuBarHeadroomStrip") private var showHeadroomStrip: Bool = true
     @AppStorage("menuBarLayout")        private var layoutRaw: String   = MenuBarLayout.single.rawValue
     @AppStorage("menuBarSlot1Category") private var slot1Cat: String    = SlotCategory.highest.rawValue
     @AppStorage("menuBarSlot1Value")    private var slot1Val: String    = SensorCategory.cpu.rawValue
@@ -17,7 +20,7 @@ struct MenuBarPrefsView: View {
     var body: some View {
         Form {
             Section("Temperature") {
-                LabeledContent("Unit") {
+                PrefRow("Unit") {
                     Picker("", selection: Binding(
                         get: { TempUnit(rawValue: tempUnitRaw) ?? .celsius },
                         set: { tempUnitRaw = $0.rawValue }
@@ -32,11 +35,17 @@ struct MenuBarPrefsView: View {
             }
 
             Section("Menu Bar") {
-                LabeledContent("Show icon") {
+                PrefRow("Show icon",
+                        info: "Show the Air Assist thermometer glyph alongside the temperature in the menu bar. Turn off if you only want the numbers.") {
                     Toggle("", isOn: $showIcon).labelsHidden()
                 }
 
-                LabeledContent("Layout") {
+                PrefRow("Layout",
+                        info: """
+                        Single — one slot with the icon and a single value.
+                        Side by Side — two slots laid out horizontally (e.g. CPU and GPU at a glance).
+                        Stacked — two compact values stacked vertically; text-only.
+                        """) {
                     Picker("", selection: Binding(
                         get: { layout },
                         set: { layoutRaw = $0.rawValue }
@@ -47,19 +56,48 @@ struct MenuBarPrefsView: View {
                     .frame(width: 140)
                 }
 
-                LabeledContent("Slot 1") {
+                PrefRow("Slot 1",
+                        info: """
+                        What the first slot displays.
+                        Highest — the hottest sensor (overall, or within a category).
+                        Average — the average across sensors (overall or by category).
+                        Individual — pick one specific sensor.
+                        None — hide the slot.
+                        """) {
                     SlotPicker(category: $slot1Cat, value: $slot1Val, sensors: store.sensors, slotLabel: "Slot 1")
                 }
 
-                LabeledContent("Slot 2") {
+                PrefRow("Slot 2",
+                        info: "What the second slot displays. Only used when Layout is Side by Side or Stacked.") {
                     SlotPicker(category: $slot2Cat, value: $slot2Val, sensors: store.sensors, slotLabel: "Slot 2")
                         .disabled(layout == .single)
                         .opacity(layout == .single ? 0.4 : 1)
                 }
+
+                // The remaining three are visual augments to slots already
+                // configured above — they only have an effect when their
+                // pre-conditions are met (e.g. badge needs a Highest slot).
+                // The help text spells out those preconditions so the user
+                // doesn't toggle them and wonder why nothing changed.
+                PrefRow("Source badge",
+                        info: "Prefix the value with a one-letter category badge (C CPU, G GPU, S SoC, B battery, D disk) when a Highest slot is showing. Tells you at a glance which sensor won the “hottest” race so 91° isn’t ambiguous.") {
+                    Toggle("", isOn: $showSourceBadge).labelsHidden()
+                }
+
+                PrefRow("Trend arrow",
+                        info: "Show a small ↑ or ↓ next to a slot when its recent history shows a clear rise or fall. Hidden when steady — the menu bar doesn’t flicker on sensor jitter.") {
+                    Toggle("", isOn: $showTrendGlyph).labelsHidden()
+                }
+
+                PrefRow("Headroom strip",
+                        info: "Thin bar across the bottom of the menu bar item. Fills left-to-right and ramps blue → orange → red as the hottest visible sensor approaches its hot threshold. Gives you advance warning before the icon turns orange. Hidden when the Mac is cool.") {
+                    Toggle("", isOn: $showHeadroomStrip).labelsHidden()
+                }
             }
 
             Section("Popover") {
-                LabeledContent("Sensor list") {
+                PrefRow("Sensor list",
+                        info: "Summary — compact list, one line per sensor.\nDetailed — adds per-sensor source, threshold, and history glyph.") {
                     Picker("", selection: Binding(
                         get: { SensorDisplayMode(rawValue: displayModeRaw) ?? .detailed },
                         set: { displayModeRaw = $0.rawValue }

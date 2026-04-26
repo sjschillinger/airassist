@@ -75,14 +75,20 @@ enum URLSchemeHandler {
             logger.info("throttle bundle=\(bundle, privacy: .public) duty=\(duty) affected=\(affected)")
 
         case "scenario":
-            guard let name = params["name"]?.lowercased(),
-                  let preset = ScenarioPreset(rawValue: name)
-            else {
-                logger.warning("scenario missing/invalid name (expected presenting/quiet/performance/auto)")
+            // `lap-cool` is the user-facing name; `quiet` is the legacy raw
+            // value still persisted on disk and accepted by the URL scheme.
+            let rawName = params["name"]?.lowercased() ?? ""
+            let normalized: String
+            switch rawName {
+            case "lap-cool", "lap", "cool", "lap/cool": normalized = "quiet"
+            default: normalized = rawName
+            }
+            guard let preset = ScenarioPreset(rawValue: normalized) else {
+                logger.warning("scenario missing/invalid name (expected presenting/lap-cool/performance/auto)")
                 return
             }
             store.applyScenario(preset)
-            logger.info("scenario applied=\(name, privacy: .public)")
+            logger.info("scenario applied=\(normalized, privacy: .public)")
 
         case "release":
             guard let bundle = params["bundle"], !bundle.isEmpty else {

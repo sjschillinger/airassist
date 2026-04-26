@@ -67,7 +67,7 @@ _airassist() {
   fi
   case ${words[2]} in
     pause)       _values 'duration' 30s 1m 5m 15m 1h 4h forever ;;
-    scenario)    _values 'preset' presenting quiet performance auto ;;
+    scenario)    _values 'preset' presenting lap-cool quiet performance auto ;;
     completions) _values 'shell' zsh bash fish ;;
     throttle)
       if (( CURRENT == 3 )); then
@@ -98,7 +98,7 @@ _airassist_complete() {
     fi
     case "${COMP_WORDS[1]}" in
       pause)       COMPREPLY=( $(compgen -W "30s 1m 5m 15m 1h 4h forever" -- "$cur") ) ;;
-      scenario)    COMPREPLY=( $(compgen -W "presenting quiet performance auto" -- "$cur") ) ;;
+      scenario)    COMPREPLY=( $(compgen -W "presenting lap-cool quiet performance auto" -- "$cur") ) ;;
       completions) COMPREPLY=( $(compgen -W "zsh bash fish" -- "$cur") ) ;;
       throttle)    COMPREPLY=( $(compgen -W "--duty --duration" -- "$cur") ) ;;
       status)      COMPREPLY=( $(compgen -W "--json" -- "$cur") ) ;;
@@ -124,7 +124,7 @@ complete -c airassist -n '__fish_use_subcommand' -a 'version'     -d 'Print vers
 complete -c airassist -n '__fish_use_subcommand' -a 'help'        -d 'Print help'
 
 complete -c airassist -n '__fish_seen_subcommand_from pause'       -a 'forever 30s 1m 5m 15m 1h 4h'
-complete -c airassist -n '__fish_seen_subcommand_from scenario'    -a 'presenting quiet performance auto'
+complete -c airassist -n '__fish_seen_subcommand_from scenario'    -a 'presenting lap-cool quiet performance auto'
 complete -c airassist -n '__fish_seen_subcommand_from completions' -a 'zsh bash fish'
 complete -c airassist -n '__fish_seen_subcommand_from throttle' -l duty     -d 'Cap percentage (e.g. 30%)'
 complete -c airassist -n '__fish_seen_subcommand_from throttle' -l duration -d 'Throttle duration (e.g. 1h)'
@@ -228,9 +228,19 @@ func cmdRelease(_ args: [String]) {
 }
 
 func cmdScenario(_ args: [String]) {
-    guard let name = args.first?.lowercased() else {
-        fputs("airassist scenario: missing <name> (presenting|quiet|performance|auto)\n", stderr)
+    guard let raw = args.first?.lowercased() else {
+        fputs("airassist scenario: missing <name> (presenting|lap-cool|performance|auto)\n", stderr)
         exit(64)
+    }
+    // `lap-cool` is the user-facing name as of the rename; the URL-scheme
+    // handler still keys on the underlying `quiet` raw value for back-compat
+    // with older shortcuts and persisted state. Normalize at the edge.
+    let name: String
+    switch raw {
+    case "lap-cool", "lap", "cool", "lap/cool":
+        name = "quiet"
+    default:
+        name = raw
     }
     open("\(scheme)://scenario?name=\(percentEscape(name))")
 }
@@ -423,8 +433,10 @@ func printUsage() {
                                             Duty: 0.5 or 50% (5%–100%).
                                             Default duration: 1h.
       release <bundle>                      Release CLI-issued throttle on a bundle.
-      scenario <name>                       Apply preset: presenting | quiet
+      scenario <name>                       Apply preset: presenting | lap-cool
                                             | performance | auto.
+                                            (`quiet` still accepted as an alias
+                                            for lap-cool.)
       status [--json]                       Print persisted preferences.
                                             With --json: machine-readable,
                                             includes appRunning + appVersion.

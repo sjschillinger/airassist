@@ -73,6 +73,7 @@ private struct GovernorSection: View {
             HStack {
                 Image(systemName: "gauge.with.dots.needle.67percent")
                 Text("Automatic governor").font(.headline)
+                InfoButton(text: "The governor watches sensors and total CPU% on a 1-second control loop. When a cap is breached, it picks the top N CPU processes (excluding ones covered by per-app rules and the never-throttle list) and applies a duty cycle to bring the readings back below cap minus hysteresis. It releases automatically when temps fall.")
                 Spacer()
                 statusChip
             }
@@ -420,8 +421,11 @@ private struct FrontmostThrottleSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Frontmost-app quick throttle")
-                .font(.headline)
+            HStack(spacing: 4) {
+                Text("Frontmost-app quick throttle")
+                    .font(.headline)
+                InfoButton(text: "Manual override for the popover's \"Throttle [app]\" button. Hits whatever app is currently in the front (Safari, Xcode, whatever you can see), with a fixed duty and duration you set here. Useful for one-off cooling without writing a permanent rule.")
+            }
             Text("Settings for the popover’s “Throttle [app]” button. The cap auto-releases after the chosen duration, or you can click the button again to release immediately.")
                 .font(.caption).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -479,6 +483,7 @@ private struct RulesSection: View {
             HStack {
                 Image(systemName: "tortoise")
                 Text("Per-app rules").font(.headline)
+                InfoButton(text: "Persistent caps on specific apps regardless of temperature. The governor leaves rule-covered PIDs alone (no double-throttling). Rules engage whenever a matching process spends sustained time above 5% CPU, and release automatically when the app idles. Re-applies on relaunch — survives quit/reopen of either app.")
                 Spacer()
                 Toggle("Enabled", isOn: Binding(
                     get: { store.throttleRules.enabled },
@@ -763,6 +768,7 @@ private struct NeverThrottleSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Never throttle these apps").font(.headline)
+                InfoButton(text: "Hard allowlist. The governor, per-app rules, and even an explicit \"Throttle [app]\" click will all refuse to touch processes whose names match. Use for anything where SIGSTOP would be catastrophic — backup tools, audio I/O, the foreground call you're on right now.")
                 Spacer()
                 Button {
                     showAddSheet = true

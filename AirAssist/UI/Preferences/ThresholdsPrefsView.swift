@@ -14,7 +14,11 @@ struct ThresholdsPrefsView: View {
                 thresholdRow("Other",   warm: \.other.warm,   hot: \.other.hot)
             } header: {
                 HStack {
-                    Text("Category").frame(maxWidth: .infinity, alignment: .leading)
+                    HStack(spacing: 4) {
+                        Text("Category")
+                        InfoButton(text: "These thresholds drive ONLY the color bands in the menu bar, popover, and dashboard — they don't trigger throttling. The governor's temperature ceiling lives in Throttling preferences. Each category gets its own pair because normal operating temperatures differ wildly (a 70°C battery is alarming; a 70°C CPU is mid-build).")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Warm (°C)").frame(width: 90)
                     Text("Hot (°C)").frame(width: 90)
                 }
