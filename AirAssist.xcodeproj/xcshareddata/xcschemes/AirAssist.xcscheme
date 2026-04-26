@@ -29,6 +29,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "40A29CF57875D6D5BC71DD02"
+               BuildableName = "AirAssistCLI"
+               BlueprintName = "AirAssistCLI"
+               ReferencedContainer = "container:AirAssist.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "D3E7E8AF4FE68F5932C885EE"
                BuildableName = "AirAssistIntegrationRunner"
                BlueprintName = "AirAssistIntegrationRunner"

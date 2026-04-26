@@ -18,6 +18,7 @@ schemes:
         AirAssist: all
         AirAssistIntegrationRunner: all
         AirAssistRescue: all
+        AirAssistCLI: all
     test:
       targets:
         - AirAssistTests
@@ -52,6 +53,7 @@ settings:
     ENABLE_STRICT_OBJC_MSGSEND: YES
     GCC_C_LANGUAGE_STANDARD: gnu17
     SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     # Apple Silicon only
     ARCHS: arm64
     EXCLUDED_ARCHS[sdk=macosx*]: x86_64
@@ -146,6 +148,28 @@ targets:
         SWIFT_STRICT_CONCURRENCY: minimal
         TEST_TARGET_NAME: AirAssist
 
+  AirAssistCLI:
+    # `airassist` command-line tool that bridges to the running menu
+    # bar app via the `airassist://` URL scheme. Same dispatch surface
+    # as the Shortcuts AppIntents; written separately because terminal
+    # users want a real binary on $PATH, not a Shortcut. Lives outside
+    # the app bundle — built as a sibling product so users can `cp` it
+    # into /usr/local/bin themselves (Air Assist isn't sandboxed-installer
+    # material). No AppKit linkage; uses `/usr/bin/open` for URL dispatch
+    # and CFPreferences for read-only state inspection.
+    type: tool
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistCLI
+    settings:
+      base:
+        PRODUCT_NAME: airassist
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        ENABLE_HARDENED_RUNTIME: NO
+        SKIP_INSTALL: YES
+
   AirAssistRescue:
     # Tiny standalone CLI (~30KB) that SIGCONTs every pid in
     # ~/Library/Application Support/AirAssist/inflight.json. Bundled at
@@ -180,6 +204,13 @@ targets:
           # by the post-compile script below, not Contents/Resources/.
     resources:
       - path: AirAssist/Assets.xcassets
+      # String catalog — currently empty. SWIFT_EMIT_LOC_STRINGS = YES
+      # already enabled at the project root, so every `String(localized:)`
+      # and `LocalizedStringKey` in Swift code is extracted at build time
+      # and merged into this catalog. No translations yet (English-only
+      # ships); the file exists so future contributors can add locales
+      # by populating its `strings` dict.
+      - path: AirAssist/Resources/Localizable.xcstrings
     dependencies:
       - target: AirAssistRescue
       - sdk: IOKit.framework
@@ -243,7 +274,7 @@ targets:
         CFBundleDisplayName: Air Assist
         CFBundleIdentifier: com.sjschillinger.airassist
         CFBundleVersion: "1"
-        CFBundleShortVersionString: "0.11.0"
+        CFBundleShortVersionString: "0.12.0"
         CFBundlePackageType: APPL
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleDevelopmentRegion: en

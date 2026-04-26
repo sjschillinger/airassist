@@ -245,7 +245,19 @@ struct MenuBarPopoverView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
+            // VoiceOver: pure-Path sparkline has no inherent label. Speak the
+            // first/last/peak as a one-line summary so non-sighted users get
+            // the trend without seeing the line.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(sparklineA11yLabel(samples))
         }
+    }
+
+    /// "Last minute hottest temp: started 62°C, now 71°C, peaked at 73°C."
+    private func sparklineA11yLabel(_ samples: [Double]) -> String {
+        guard let first = samples.first, let last = samples.last,
+              let peak = samples.max() else { return "" }
+        return "Last minute hottest sensor: started \(unit.format(first)), now \(unit.format(last)), peaked at \(unit.format(peak))."
     }
 
     // MARK: - Manual throttles strip (v0.10)
@@ -280,6 +292,13 @@ struct MenuBarPopoverView: View {
 
     /// Read `countdownTick` so SwiftUI re-evaluates when the timer
     /// fires. The value itself is only the trigger.
+    private func manualThrottleA11yLabel(_ row: ManualThrottleRow) -> String {
+        let pct = Int((row.duty * 100).rounded())
+        var s = "\(row.name), capped at \(pct) percent"
+        if let r = remainingLabel(for: row.deadline) { s += ", \(r)" }
+        return s
+    }
+
     private func remainingLabel(for deadline: Date?) -> String? {
         guard let deadline else { return nil }
         _ = countdownTick
@@ -327,8 +346,14 @@ struct MenuBarPopoverView: View {
                         }
                         .buttonStyle(.plain)
                         .help("Release this manual throttle now.")
+                        .accessibilityLabel("Release manual throttle for \(row.name)")
                     }
                     .font(.caption2)
+                    // Combine the row so VoiceOver reads name + duty + remaining
+                    // as a single unit, then exposes the release button as its
+                    // own actionable child.
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(manualThrottleA11yLabel(row))
                     .contextMenu {
                         Button("Show in Activity Monitor") {
                             Self.openActivityMonitor()
@@ -388,6 +413,7 @@ struct MenuBarPopoverView: View {
                         Image(systemName: badge.symbol)
                             .foregroundStyle(badge.tint)
                             .help(sourcesDescription(row.sources))
+                            .accessibilityHidden(true)   // covered by the row's combined label
                         Text(row.count > 1 ? "\(row.name) (×\(row.count))" : row.name)
                             .lineLimit(1)
                         Spacer()
@@ -397,6 +423,8 @@ struct MenuBarPopoverView: View {
                     .font(.caption2)
                     .contentShape(Rectangle())
                     .help(sourcesDescription(row.sources))
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(throttleRowA11yLabel(row))
                     // #44 Right-click / long-press context menu to adjust
                     // or release this app's throttle without opening prefs.
                     .contextMenu {
@@ -432,6 +460,12 @@ struct MenuBarPopoverView: View {
 
     /// Apply (or replace) a manual-source duty on every PID in the row.
     /// Used by the #44 context-menu quick adjustments.
+    private func throttleRowA11yLabel(_ row: ThrottleRow) -> String {
+        let pct = Int((row.duty * 100).rounded())
+        let nameWithCount = row.count > 1 ? "\(row.name), \(row.count) processes" : row.name
+        return "\(nameWithCount), capped at \(pct) percent. \(sourcesDescription(row.sources))"
+    }
+
     private func setManualDuty(row: ThrottleRow, duty: Double) {
         for pid in row.pids {
             store.processThrottler.setDuty(duty, for: pid, name: row.name, source: .manual)
@@ -584,6 +618,7 @@ struct MenuBarPopoverView: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
+        .accessibilityLabel("Apply scenario preset")
     }
 
     /// Standard row for a control whose trailing widget is a Toggle/Menu.
@@ -755,6 +790,7 @@ struct MenuBarPopoverView: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
+        .accessibilityLabel("Stay Awake mode: \(stayAwakeShortLabel)")
     }
 
     /// Short one-word-ish label for the menu's collapsed state — full

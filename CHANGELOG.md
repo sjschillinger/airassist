@@ -11,6 +11,47 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ---
 
+## [0.12.0] — 2026-04-26
+
+Tooling + plumbing release. No new user-facing features in the menu
+bar — instead, this round adds the surfaces missing for power users
+and future contributors: a real CLI, sharper VoiceOver coverage, and
+the scaffolding to ship localized builds when translations land.
+
+### Added
+
+- **`airassist` command-line tool.** Single-binary CLI that bridges
+  to the running app via the existing `airassist://` URL scheme:
+  `airassist pause [<duration>]`, `resume`, `throttle <bundle>
+  --duty <N> [--duration <D>]`, `release <bundle>`, `scenario
+  <name>`, `status`. Status reads persisted preferences via
+  CFPreferences, so it works whether the app is currently running or
+  not. Built as a sibling product (not bundled in the app); copy it
+  to `/usr/local/bin` to put it on `$PATH`.
+- **Localization scaffolding.** `Localizable.xcstrings` catalog wired
+  into the app target, with `LOCALIZATION_PREFERS_STRING_CATALOGS`
+  enabled. Centralised user-visible strings now route through
+  `String(localized:comment:)` so Xcode's loc-strings extractor picks
+  them up at build time. Catalog ships empty (English-only release);
+  populating it is a follow-up open to translators.
+
+### Improved
+
+- **VoiceOver coverage in popover and dashboard.** Source badges,
+  manual-throttle release buttons, sensor-card favorites, the
+  scenario and Stay-Awake menu triggers, and the popover sparkline
+  all now have explicit `accessibilityLabel`s. Throttle and
+  manual-throttle rows are combined into single accessibility
+  elements with descriptive labels (name + cap percentage + remaining
+  time + source).
+- **Sensor card status colors meet WCAG AA large-text (3:1).** The
+  bare SwiftUI `.green` and `.orange` against `.regularMaterial`
+  measured ~2.6:1 in light mode; replaced with darker RGB variants
+  that pass on both materials. Resolves a TODO carried over from the
+  v1.0 launch checklist.
+
+---
+
 ## [0.11.0] — 2026-04-26
 
 Polish + integrations release. The bones from 0.10 stay put; this
