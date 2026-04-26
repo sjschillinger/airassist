@@ -237,7 +237,7 @@ struct DashboardView: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(p.displayName), \(Int(p.cpuPercent)) percent CPU\(throttled ? ", throttled" : "")")
+        .accessibilityLabel("\(p.displayName), \(Int(p.cpuPercent)) percent CPU\(throttled ? ", currently throttled" : "")")
     }
 
     private func cpuTint(_ pct: Double) -> Color {
