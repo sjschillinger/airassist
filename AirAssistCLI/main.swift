@@ -32,7 +32,7 @@ import Foundation
 
 let bundleID = "com.sjschillinger.airassist"
 let scheme   = "airassist"
-let version  = "0.12.0-dev"
+let version  = "0.12.0"
 
 // MARK: - Entry
 

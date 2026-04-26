@@ -274,7 +274,7 @@ targets:
         CFBundleDisplayName: Air Assist
         CFBundleIdentifier: com.sjschillinger.airassist
         CFBundleVersion: "1"
-        CFBundleShortVersionString: "0.11.0"
+        CFBundleShortVersionString: "0.12.0"
         CFBundlePackageType: APPL
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleDevelopmentRegion: en

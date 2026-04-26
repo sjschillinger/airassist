@@ -21,6 +21,16 @@ enum WhatsNewSheet {
     /// an intermediate release.
     private static let entries: [(version: String, title: String, bullets: [String])] = [
         (
+            "0.12.0",
+            "What's new in 0.12",
+            [
+                "New `airassist` command-line tool — pause / throttle / scenarios from the terminal",
+                "Sharper VoiceOver coverage across the popover and dashboard",
+                "Sensor card colors now meet WCAG AA contrast in light mode",
+                "Localization scaffolding in place for future translated builds"
+            ]
+        ),
+        (
             "0.11.0",
             "What's new in 0.11",
             [
