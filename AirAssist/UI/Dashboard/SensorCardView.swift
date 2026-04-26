@@ -5,6 +5,9 @@ struct SensorCardView: View {
     let thresholds: ThresholdSettings
     let unit: TempUnit
 
+    @State private var isFavorite: Bool = false
+    @State private var defaultsObserver: NSObjectProtocol?
+
     private var state: ThresholdState { sensor.thresholdState(using: thresholds) }
 
     // TODO_POST_LAUNCH (#14 contrast): system `.green` against
@@ -29,6 +32,16 @@ struct SensorCardView: View {
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
+                Button {
+                    SensorFavorites.toggle(sensor.id)
+                    isFavorite = SensorFavorites.isFavorite(sensor.id)
+                } label: {
+                    Image(systemName: isFavorite ? "star.fill" : "star")
+                        .font(.system(size: 10))
+                        .foregroundStyle(isFavorite ? .yellow : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help(isFavorite ? "Remove from favorites" : "Pin to top")
                 Circle()
                     .fill(stateColor)
                     .frame(width: 8, height: 8)
@@ -61,6 +74,25 @@ struct SensorCardView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(accessibilityValue)
+        .onAppear {
+            isFavorite = SensorFavorites.isFavorite(sensor.id)
+            defaultsObserver = NotificationCenter.default.addObserver(
+                forName: UserDefaults.didChangeNotification,
+                object: UserDefaults.standard,
+                queue: .main
+            ) { _ in
+                Task { @MainActor in
+                    let fresh = SensorFavorites.isFavorite(sensor.id)
+                    if fresh != isFavorite { isFavorite = fresh }
+                }
+            }
+        }
+        .onDisappear {
+            if let o = defaultsObserver {
+                NotificationCenter.default.removeObserver(o)
+                defaultsObserver = nil
+            }
+        }
     }
 
     /// VoiceOver label: category + sensor + threshold state, in a form a

@@ -26,7 +26,16 @@ struct DashboardView: View {
     private let columns = [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 10)]
 
     private var sortedSensors: [Sensor] {
-        let base = store.enabledSensors
+        // Pinned (favorited) sensors always sort to the top, regardless of
+        // the picked sort order. Within each partition the chosen order
+        // applies normally.
+        let favs = SensorFavorites.ids()
+        let pinned    = store.enabledSensors.filter {  favs.contains($0.id) }
+        let unpinned  = store.enabledSensors.filter { !favs.contains($0.id) }
+        return sortPartition(pinned) + sortPartition(unpinned)
+    }
+
+    private func sortPartition(_ base: [Sensor]) -> [Sensor] {
         switch sortOrder {
         case .category:
             return base.sorted {
