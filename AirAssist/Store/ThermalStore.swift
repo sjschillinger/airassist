@@ -249,6 +249,8 @@ final class ThermalStore {
         processThrottler.releaseAll()
         safety.stopWatchdog()
         stayAwake.shutdown()
+        for (_, task) in manualExpiryTasks { task.cancel() }
+        manualExpiryTasks.removeAll()
     }
 
     /// Resolves a temperature from the two-part slot encoding stored in UserDefaults.
@@ -304,6 +306,16 @@ final class ThermalStore {
 
     // MARK: - Manual throttle (menu-bar escape hatch)
 
+    /// Pending auto-release timers for `throttleFrontmost` / `throttleBundle`.
+    /// Keyed by PID (frontmost) or lowercased bundle ID (bundle). On
+    /// re-invocation we cancel the prior task before scheduling a new one
+    /// — without this, two quick clicks create two sleepers and the first
+    /// fires early, clearing the cap the user just renewed. (audit Tier 0
+    /// item 2; Codex VERIFIED).
+    private var manualExpiryTasks: [String: Task<Void, Never>] = [:]
+    private static func manualExpiryKey(pid: pid_t) -> String { "pid:\(pid)" }
+    private static func manualExpiryKey(bundleID: String) -> String { "bundle:\(bundleID.lowercased())" }
+
     /// Fire-and-forget cap on a specific PID via the `.manual` source. Used
     /// by the "Throttle frontmost at X%" quick-menu action. Bypasses the
     /// foreground-duty floor because the whole point is to rein in the app
@@ -316,9 +328,14 @@ final class ThermalStore {
                            duration: TimeInterval = 60 * 60) {
         guard pid > 0, pid != getpid() else { return }
         processThrottler.setDuty(duty, for: pid, name: name, source: .manual)
-        Task { @MainActor [weak self] in
+
+        let key = Self.manualExpiryKey(pid: pid)
+        manualExpiryTasks[key]?.cancel()
+        manualExpiryTasks[key] = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(duration))
-            self?.processThrottler.clearDuty(source: .manual, for: pid)
+            guard !Task.isCancelled, let self else { return }
+            self.processThrottler.clearDuty(source: .manual, for: pid)
+            self.manualExpiryTasks[key] = nil
         }
     }
 
@@ -340,17 +357,25 @@ final class ThermalStore {
             processThrottler.setDuty(duty, for: p.id, name: p.name, source: .manual)
         }
         // Auto-release after the duration. Clear by bundle so we catch PIDs
-        // that were spawned after the initial call too.
-        Task { @MainActor [weak self] in
+        // that were spawned after the initial call too. Cancel any prior
+        // expiry for this bundle so back-to-back invocations don't have an
+        // old sleeper clear the new cap.
+        let key = Self.manualExpiryKey(bundleID: bundleID)
+        manualExpiryTasks[key]?.cancel()
+        manualExpiryTasks[key] = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(duration))
-            self?.releaseBundle(bundleID: bundleID)
+            guard !Task.isCancelled, let self else { return }
+            self.releaseBundle(bundleID: bundleID)
+            self.manualExpiryTasks[key] = nil
         }
         return pids.count
     }
 
     /// Release any manual throttles on processes matching `bundleID`.
     /// Called explicitly by URL scheme / Shortcuts, and automatically by
-    /// the `throttleBundle` expiry timer.
+    /// the `throttleBundle` expiry timer. Also cancels any pending expiry
+    /// task so an explicit release isn't followed by a stale auto-release
+    /// firing later for the same bundle.
     @discardableResult
     func releaseBundle(bundleID: String) -> Int {
         let target = bundleID.lowercased()
@@ -360,6 +385,9 @@ final class ThermalStore {
         for pid in pids {
             processThrottler.clearDuty(source: .manual, for: pid)
         }
+        let key = Self.manualExpiryKey(bundleID: bundleID)
+        manualExpiryTasks[key]?.cancel()
+        manualExpiryTasks[key] = nil
         return pids.count
     }
 
