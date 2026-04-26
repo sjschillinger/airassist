@@ -100,6 +100,7 @@
 		E2458B7CBBF8B4E03A83F9BA /* GovernorAggressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC8FE313121C2DEB4E782C2 /* GovernorAggressionTests.swift */; };
 		E421277A46C55704D12DEDB4 /* RunningProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EAF397631AE11D4B570EC4D /* RunningProcess.swift */; };
 		E9F23A842ABC54031BBAE6AB /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43403D677D51F2FAC26B14EA /* Constants.swift */; };
+		EA1995857953444009D36D3D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594B87D18140E652AA5F404E /* main.swift */; };
 		EB5A02FB05F0BD561A6D5495 /* ProcessThrottlerSignalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8142F86A470706E55D4E73D /* ProcessThrottlerSignalTests.swift */; };
 		EB79F540BA6F71D092CAA211 /* DashboardContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */; };
 		EBE6C2163E1F9171F1E8F87E /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */; };
@@ -177,6 +178,7 @@
 		586DB3B79D410ED45D4B6B80 /* AppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntents.swift; sourceTree = "<group>"; };
 		58CA07BBE53129D2A34A1589 /* Sensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sensor.swift; sourceTree = "<group>"; };
 		593A4CFD558F099804B37A98 /* MetricKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetricKit.framework; path = System/Library/Frameworks/MetricKit.framework; sourceTree = SDKROOT; };
+		594B87D18140E652AA5F404E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleScheduleTests.swift; sourceTree = "<group>"; };
 		5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPrefsView.swift; sourceTree = "<group>"; };
 		5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitSensorReader.swift; sourceTree = "<group>"; };
@@ -226,6 +228,7 @@
 		CE199B81B1884CF2BF1B4E1D /* UpdateCheckServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateCheckServiceTests.swift; sourceTree = "<group>"; };
 		CEE1EF1D22A6125D421D64C5 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D0BD89C1534037D26554015A /* SensorsPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorsPrefsView.swift; sourceTree = "<group>"; };
+		D25E7516E6A1CB4EF0285363 /* AirAssistCLI */ = {isa = PBXFileReference; includeInIndex = 0; path = AirAssistCLI; sourceTree = BUILT_PRODUCTS_DIR; };
 		D61AD1FEA0A5FA4BC671F221 /* AppMainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMainMenu.swift; sourceTree = "<group>"; };
 		D8142F86A470706E55D4E73D /* ProcessThrottlerSignalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottlerSignalTests.swift; sourceTree = "<group>"; };
 		D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinator.swift; sourceTree = "<group>"; };
@@ -320,6 +323,7 @@
 			isa = PBXGroup;
 			children = (
 				09669E238E58D811CA3E5D82 /* AirAssist */,
+				B1271473DD3210559667EE0A /* AirAssistCLI */,
 				45C947B0A195B87FD8F58270 /* AirAssistIntegrationTests */,
 				1C082D8711AE2C82668F54EA /* AirAssistRescue */,
 				BD6BE353B8FE8562FD7A8890 /* AirAssistTests */,
@@ -471,6 +475,14 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		B1271473DD3210559667EE0A /* AirAssistCLI */ = {
+			isa = PBXGroup;
+			children = (
+				594B87D18140E652AA5F404E /* main.swift */,
+			);
+			path = AirAssistCLI;
+			sourceTree = "<group>";
+		};
 		BD6BE353B8FE8562FD7A8890 /* AirAssistTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -496,6 +508,7 @@
 			isa = PBXGroup;
 			children = (
 				1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */,
+				D25E7516E6A1CB4EF0285363 /* AirAssistCLI */,
 				1F632647D859182626DE798B /* AirAssistIntegrationRunner */,
 				4F10B096D5A7B63BCCE9517B /* AirAssistRescue */,
 				16E8286BDB0C5E6AF90B6498 /* AirAssistTests.xctest */,
@@ -507,6 +520,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		40A29CF57875D6D5BC71DD02 /* AirAssistCLI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E11A5010BC6E8A2038C4BAA4 /* Build configuration list for PBXNativeTarget "AirAssistCLI" */;
+			buildPhases = (
+				03F75DFB35FB432D2C171449 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AirAssistCLI;
+			packageProductDependencies = (
+			);
+			productName = AirAssistCLI;
+			productReference = D25E7516E6A1CB4EF0285363 /* AirAssistCLI */;
+			productType = "com.apple.product-type.tool";
+		};
 		6F2D800A18743CABECA94C6F /* AirAssistRescue */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 38651E84598F18F7520FFC24 /* Build configuration list for PBXNativeTarget "AirAssistRescue" */;
@@ -610,6 +640,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					40A29CF57875D6D5BC71DD02 = {
+						ProvisioningStyle = Manual;
+					};
 					6F2D800A18743CABECA94C6F = {
 						ProvisioningStyle = Manual;
 					};
@@ -643,6 +676,7 @@
 			projectRoot = "";
 			targets = (
 				7BA1AA1EFB1012E94DD9A5FA /* AirAssist */,
+				40A29CF57875D6D5BC71DD02 /* AirAssistCLI */,
 				D3E7E8AF4FE68F5932C885EE /* AirAssistIntegrationRunner */,
 				6F2D800A18743CABECA94C6F /* AirAssistRescue */,
 				FD2D560CF513834C1517A36E /* AirAssistTests */,
@@ -717,6 +751,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		03F75DFB35FB432D2C171449 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA1995857953444009D36D3D /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3683FE711DB020A88B3406E4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -930,6 +972,25 @@
 				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
+		};
+		0E8F893092591637DCB4408B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.AirAssistCLI;
+				PRODUCT_NAME = airassist;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
 		};
 		124339E8066744C3BE566740 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1176,6 +1237,25 @@
 			};
 			name = Debug;
 		};
+		E1A88A083D07CFF833B10EC7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.AirAssistCLI;
+				PRODUCT_NAME = airassist;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
 		F1A9766117D338ED394E3611 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1240,6 +1320,15 @@
 			buildConfigurations = (
 				2D3C9AFD07F234597E2EBD5C /* Debug */,
 				F1A9766117D338ED394E3611 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E11A5010BC6E8A2038C4BAA4 /* Build configuration list for PBXNativeTarget "AirAssistCLI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E8F893092591637DCB4408B /* Debug */,
+				E1A88A083D07CFF833B10EC7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

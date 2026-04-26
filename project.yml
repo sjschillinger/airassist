@@ -18,6 +18,7 @@ schemes:
         AirAssist: all
         AirAssistIntegrationRunner: all
         AirAssistRescue: all
+        AirAssistCLI: all
     test:
       targets:
         - AirAssistTests
@@ -145,6 +146,28 @@ targets:
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: minimal
         TEST_TARGET_NAME: AirAssist
+
+  AirAssistCLI:
+    # `airassist` command-line tool that bridges to the running menu
+    # bar app via the `airassist://` URL scheme. Same dispatch surface
+    # as the Shortcuts AppIntents; written separately because terminal
+    # users want a real binary on $PATH, not a Shortcut. Lives outside
+    # the app bundle — built as a sibling product so users can `cp` it
+    # into /usr/local/bin themselves (Air Assist isn't sandboxed-installer
+    # material). No AppKit linkage; uses `/usr/bin/open` for URL dispatch
+    # and CFPreferences for read-only state inspection.
+    type: tool
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: AirAssistCLI
+    settings:
+      base:
+        PRODUCT_NAME: airassist
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: minimal
+        ENABLE_HARDENED_RUNTIME: NO
+        SKIP_INSTALL: YES
 
   AirAssistRescue:
     # Tiny standalone CLI (~30KB) that SIGCONTs every pid in
