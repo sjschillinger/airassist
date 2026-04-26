@@ -11,6 +11,44 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ---
 
+## [0.12.1] — 2026-04-26
+
+Polish release on the heels of 0.12.0. The CLI gets the rough edges
+sanded off, the localization catalog is now populated with the app's
+English strings, and a few VoiceOver labels read more naturally.
+
+### Added
+
+- **`scripts/install-cli.sh`.** One-shot installer that copies the
+  built `airassist` binary to `~/.local/bin` (or a target dir you
+  pass), seeds shell completion in the right spot for your current
+  shell (zsh / bash / fish), and warns if the target dir isn't on
+  `$PATH`. Builds Debug if no binary is found in DerivedData.
+  `--uninstall` reverses everything.
+- **Shell completions.** `airassist completions <zsh|bash|fish>`
+  emits a completion script for the chosen shell. The install script
+  drops it in the conventional path automatically; manual users can
+  redirect to wherever their shell expects it.
+- **`airassist status --json`.** Machine-readable status output
+  (appRunning, appVersion, scenario, batteryAware, onboarding,
+  governor) for scripting and dashboards. Default output is still
+  the human-readable form.
+
+### Improved
+
+- **Localization catalog populated.** `Localizable.xcstrings` now
+  contains 281 extracted English source strings, ready for
+  translators. Source language stays English; no other languages
+  shipped in this release.
+- **Sharper VoiceOver labels in popover and dashboard.** Pause menu
+  splits state from action ("Pause throttling" + "Activate to choose
+  a pause duration"). Sparkline trend reads as one sentence. Dashboard
+  process row says "currently throttled" instead of bare "throttled".
+  Decorative popover header glyph is now `accessibilityHidden` since
+  the "Air Assist" text already speaks.
+
+---
+
 ## [0.12.0] — 2026-04-26
 
 Tooling + plumbing release. No new user-facing features in the menu
