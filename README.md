@@ -82,7 +82,7 @@ not control surfaces*. Quick differentiation by category:
 |---------------|---------------------|----------------------------------|
 | **Fan-control utilities** | Read sensors, spin fans faster to clear heat. | The Air has no fans. AirAssist reads the same sensors but acts on *processes* — pausing the hottest background workloads instead of spinning metal that isn't there. |
 | **Turbo-Boost togglers** | Disable the P-cores' turbo bin system-wide, usually via a kernel extension run as root. | User-privilege only. No kernel extension, no helper daemon. Pauses only processes your user owns, and per-app rather than disabling a whole CPU feature. |
-| **Commercial per-app CPU cappers** | Set a static percentage cap on named apps. | Open source (AGPL-3.0), free for personal use, and *reactive* — the cap is driven by measured temperature, not a fixed number. Temps cool off, the cap lifts. |
+| **Commercial per-app CPU cappers** | Set a static percentage cap on named apps. | Open source (AGPL-3.0) and *reactive* — the cap is driven by measured temperature, not a fixed number. Temps cool off, the cap lifts. |
 | **`nice` / SIGSTOP loops in a shell** | One-off CLI niceness or hand-rolled pause/resume loops. | A well-behaved version of the same idea: dead-man's-switch resume on crash, 4 Hz stuck-cycle watchdog, sleep/wake handling, and a UI you can hand to someone who isn't a terminal user. |
 
 **Shortest answer for HN / Reddit:** "It's the fanless-Mac equivalent
@@ -313,15 +313,20 @@ xcodebuild -project AirAssist.xcodeproj -scheme AirAssist \
 
 ## License
 
-**AGPL-3.0** for non-commercial use.
+**AGPL-3.0-or-later.** See [LICENSE](LICENSE) for the full terms.
 
-| Use case | Allowed? |
-|----------|----------|
-| Personal / research / educational | Yes |
-| Self-hosted / self-built (non-commercial) | Yes, with attribution |
-| Fork and modify (non-commercial) | Yes — derivatives must stay AGPL-3.0 and share source |
-| Commercial use / paid redistribution / rebranding | Requires a separate commercial license — contact the maintainer |
+AGPL permits any use — personal, research, internal, or commercial —
+provided that derivatives remain under AGPL-3.0 and that source is made
+available to anyone the software is conveyed to, *including users who
+interact with a modified version over a network*. That network clause
+is the main practical difference from GPL and the reason AGPL was
+chosen here.
 
-See [LICENSE](LICENSE) for the full terms.
+A separate commercial license is available from the author for parties
+who want to use or redistribute Air Assist without AGPL's copyleft
+obligations (for example, bundling it into a closed-source product).
+Email the address in [SECURITY.md](SECURITY.md) to discuss terms. The
+AGPL track is not going away — the commercial license is additive, for
+people who genuinely can't comply with AGPL, not a tier above it.
 
-Copyright (C) 2026 James Schillinger. All rights reserved.
+Copyright (C) 2026 James Schillinger.

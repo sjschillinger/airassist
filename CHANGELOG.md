@@ -109,9 +109,12 @@ Initial public release.
 
 ### Changed
 
-- **License: MIT → AGPL-3.0.** Non-commercial use remains free; any
-  fork or derivative must stay AGPL and share source. A separate
-  commercial license is available from the maintainer.
+- **License: MIT → AGPL-3.0-or-later.** AGPL permits all use,
+  including commercial, provided derivatives stay AGPL and source is
+  shared with users — including users of a modified version reached
+  over a network. A separate commercial license is available from the
+  maintainer for parties who want to redistribute or embed Air Assist
+  without AGPL's copyleft obligations.
 - **macOS 15 (Sequoia) minimum.** Deployment target is 15.0; uses
   Observation, strict concurrency (Swift 6), and modern SwiftUI.
 - **Distribution: ad-hoc signed, not notarized.** Deliberate choice —
