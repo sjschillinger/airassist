@@ -79,6 +79,27 @@ menu bar icon.
 - Dashboard sort partitions favorites first, then applies the chosen
   sort order within each partition. Pinned sensors always appear above
   unpinned, even under "hottest first" or alphabetical.
+- `Performance` scenario no longer fully disables the governor. It now
+  applies the **gentle** governor preset — armed with a high heat
+  ceiling — so a long render or compile isn't gratuitously paused but
+  the Mac still has a thermal safety net before it cooks itself.
+  `Presenting` keeps the old "governor fully off" behaviour for demos
+  where a surprise pause is unacceptable.
+
+### Fixed
+
+- First-run + What's New sheets no longer block `airassist://` URL
+  handling on launch. Previously, `NSAlert.runModal()` ran the runloop
+  in `.modalPanel` mode and starved `application(_:open:)` of Apple
+  Events — a Shortcut or `open airassist://...` invocation that *triggered*
+  a cold launch sat queued behind the modal until the user dismissed.
+  Replaced with a non-modal floating window that keeps the runloop
+  spinning.
+- `ProcessThrottler.clearDuty` no longer logs phantom `.release` events
+  in the activity log. Previously, calling `clearDuty` with a source
+  that wasn't actually a requester (e.g. a `.manual` rejection from
+  the never-throttle list when only `.governor` held the PID) would
+  still log a release for that absent source.
 
 ---
 
