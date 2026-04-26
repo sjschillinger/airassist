@@ -23,6 +23,7 @@
 		1D99B043A174F61732F796F8 /* PreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE69B36A4A78E82AFCE02EA /* PreferencesWindowController.swift */; };
 		1FBEFE6AFC18FA9F73206F50 /* GeneralPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */; };
 		20CE73D53778FC656E48A9C7 /* AirAssistRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B822BE93D058B83394F59536 /* AirAssistRunner.swift */; };
+		210BBAFA3091DE2798BEAED3 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7FD7E7B4D4B10808873ADDBA /* Localizable.xcstrings */; };
 		23E76F3C783FC9160017310E /* ThermalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E2A65A91770B1DB2B928FA /* ThermalStore.swift */; };
 		24F6786F7227631D1C081DF9 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68ECE41B669EE247996A79BF /* PreferencesView.swift */; };
 		254DB2E2FACDA67A078A87BC /* DisplayPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E549E666DE63625227F2ED /* DisplayPrefsView.swift */; };
@@ -194,6 +195,7 @@
 		73665E744DF97F6A87703F65 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		7DDD72924D522D0C57068D59 /* AppIcon.svg */ = {isa = PBXFileReference; path = AppIcon.svg; sourceTree = "<group>"; };
+		7FD7E7B4D4B10808873ADDBA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URLSchemeHandler+Debug.swift"; sourceTree = "<group>"; };
 		8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
 		84E549E666DE63625227F2ED /* DisplayPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayPrefsView.swift; sourceTree = "<group>"; };
@@ -470,6 +472,7 @@
 			children = (
 				4629A6D06B14E1E69D71A6E0 /* AppIcon-composed.svg */,
 				7DDD72924D522D0C57068D59 /* AppIcon.svg */,
+				7FD7E7B4D4B10808873ADDBA /* Localizable.xcstrings */,
 				A7B17DD0F122F70084C97529 /* MenuBarGlyph.svg */,
 			);
 			path = Resources;
@@ -701,6 +704,7 @@
 				47390C305B3C9D72F38E8383 /* AppIcon-composed.svg in Resources */,
 				1D00491EC4021413E4A200D8 /* AppIcon.svg in Resources */,
 				133CBE6FAE9AA07D61B348B5 /* Assets.xcassets in Resources */,
+				210BBAFA3091DE2798BEAED3 /* Localizable.xcstrings in Resources */,
 				9B4B56353080E959F327AC06 /* MenuBarGlyph.svg in Resources */,
 				1D5EE13550B068A72B2531A2 /* AirAssistRescue in Resources */,
 			);
@@ -961,6 +965,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -1206,6 +1211,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;

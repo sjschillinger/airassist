@@ -53,6 +53,7 @@ settings:
     ENABLE_STRICT_OBJC_MSGSEND: YES
     GCC_C_LANGUAGE_STANDARD: gnu17
     SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     # Apple Silicon only
     ARCHS: arm64
     EXCLUDED_ARCHS[sdk=macosx*]: x86_64
@@ -203,6 +204,13 @@ targets:
           # by the post-compile script below, not Contents/Resources/.
     resources:
       - path: AirAssist/Assets.xcassets
+      # String catalog — currently empty. SWIFT_EMIT_LOC_STRINGS = YES
+      # already enabled at the project root, so every `String(localized:)`
+      # and `LocalizedStringKey` in Swift code is extracted at build time
+      # and merged into this catalog. No translations yet (English-only
+      # ships); the file exists so future contributors can add locales
+      # by populating its `strings` dict.
+      - path: AirAssist/Resources/Localizable.xcstrings
     dependencies:
       - target: AirAssistRescue
       - sdk: IOKit.framework
