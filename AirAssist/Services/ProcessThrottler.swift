@@ -146,20 +146,30 @@ final class ProcessThrottler {
                  for pid: pid_t,
                  name: String,
                  source: ThrottleSource) {
-        guard pid > 0 else { return }
-        // Safety: never throttle excluded system processes.
-        if ProcessInspector.excludedNames.contains(name) {
+        guard pid > 0 else {
+            Self.logger.error("setDuty rejected: pid=\(pid, privacy: .public) (non-positive)")
+            return
+        }
+        // Safety: convenience allowlist that protects dev tools and a few
+        // terminal apps from accidental auto-throttle by rules and the
+        // governor. Explicit `.manual` clicks are user intent — bypass
+        // this list. The hard rails (own-user, no-ancestor, no-self)
+        // below still apply to everyone.
+        if source != .manual && ProcessInspector.excludedNames.contains(name) {
+            Self.logger.notice("setDuty rejected: pid=\(pid) name=\(name, privacy: .public) (excluded system process)")
             clearDuty(source: source, for: pid)
             return
         }
         // Safety: never touch processes we don't own.
         var uid: uid_t = 0
         if !ownedByCurrentUser(pid: pid, uidOut: &uid) {
+            Self.logger.notice("setDuty rejected: pid=\(pid) name=\(name, privacy: .public) (not owned by current user, uid=\(uid))")
             clearDuty(source: source, for: pid)
             return
         }
         // Safety: never throttle self or any ancestor (shell, launcher, etc.)
         if protectAncestors && SafetyCoordinator.isAncestorOrSelf(pid: pid) {
+            Self.logger.notice("setDuty rejected: pid=\(pid) name=\(name, privacy: .public) (ancestor or self)")
             clearDuty(source: source, for: pid)
             return
         }
