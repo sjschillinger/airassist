@@ -34,6 +34,99 @@ let bundleID = "com.sjschillinger.airassist"
 let scheme   = "airassist"
 let version  = "0.12.0"
 
+// Completion script literals are declared up-front because top-level
+// `let` in main.swift initializes in source order; if they lived
+// below the dispatch `switch`, the completions verb fired through
+// uninitialized empty values and printed a single newline.
+
+let zshCompletion = #"""
+#compdef airassist
+# zsh completion for airassist. Install with:
+#   airassist completions zsh > ~/.zsh/completions/_airassist
+#   # ensure the dir is on $fpath, e.g. in ~/.zshrc:
+#   #   fpath=(~/.zsh/completions $fpath)
+#   #   autoload -Uz compinit && compinit
+_airassist() {
+  local -a verbs
+  verbs=(
+    'pause:Pause governor + throttles'
+    'resume:Undo pause'
+    'throttle:Throttle a bundle ID'
+    'release:Release CLI throttle on a bundle'
+    'scenario:Apply a scenario preset'
+    'status:Print persisted preferences'
+    'completions:Emit shell completion script'
+    'version:Print version'
+    'help:Print help'
+  )
+  if (( CURRENT == 2 )); then
+    _describe -t verbs 'airassist verb' verbs
+    return
+  fi
+  case ${words[2]} in
+    pause)       _values 'duration' 30s 1m 5m 15m 1h 4h forever ;;
+    scenario)    _values 'preset' presenting quiet performance auto ;;
+    completions) _values 'shell' zsh bash fish ;;
+    throttle)
+      if (( CURRENT == 3 )); then
+        _message 'bundle id (e.g. com.apple.Safari)'
+      else
+        _values 'flag' --duty --duration
+      fi ;;
+    release)
+      if (( CURRENT == 3 )); then _message 'bundle id'; fi ;;
+    status)      _values 'flag' --json ;;
+  esac
+}
+_airassist "$@"
+"""#
+
+let bashCompletion = #"""
+# bash completion for airassist. Install with:
+#   airassist completions bash > ~/.local/share/bash-completion/completions/airassist
+_airassist_complete() {
+    local cur prev verbs
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    verbs="pause resume throttle release scenario status completions version help"
+    if [ "$COMP_CWORD" -eq 1 ]; then
+        COMPREPLY=( $(compgen -W "$verbs" -- "$cur") )
+        return
+    fi
+    case "${COMP_WORDS[1]}" in
+      pause)       COMPREPLY=( $(compgen -W "30s 1m 5m 15m 1h 4h forever" -- "$cur") ) ;;
+      scenario)    COMPREPLY=( $(compgen -W "presenting quiet performance auto" -- "$cur") ) ;;
+      completions) COMPREPLY=( $(compgen -W "zsh bash fish" -- "$cur") ) ;;
+      throttle)    COMPREPLY=( $(compgen -W "--duty --duration" -- "$cur") ) ;;
+      status)      COMPREPLY=( $(compgen -W "--json" -- "$cur") ) ;;
+    esac
+}
+complete -F _airassist_complete airassist
+"""#
+
+let fishCompletion = #"""
+# fish completion for airassist. Install with:
+#   airassist completions fish > ~/.config/fish/completions/airassist.fish
+complete -c airassist -f
+complete -c airassist -n '__fish_use_subcommand' -a 'pause'       -d 'Pause governor + throttles'
+complete -c airassist -n '__fish_use_subcommand' -a 'resume'      -d 'Undo pause'
+complete -c airassist -n '__fish_use_subcommand' -a 'throttle'    -d 'Throttle a bundle ID'
+complete -c airassist -n '__fish_use_subcommand' -a 'release'     -d 'Release CLI throttle'
+complete -c airassist -n '__fish_use_subcommand' -a 'scenario'    -d 'Apply scenario preset'
+complete -c airassist -n '__fish_use_subcommand' -a 'status'      -d 'Print persisted preferences'
+complete -c airassist -n '__fish_use_subcommand' -a 'completions' -d 'Emit shell completion script'
+complete -c airassist -n '__fish_use_subcommand' -a 'version'     -d 'Print version'
+complete -c airassist -n '__fish_use_subcommand' -a 'help'        -d 'Print help'
+
+complete -c airassist -n '__fish_seen_subcommand_from pause'       -a 'forever 30s 1m 5m 15m 1h 4h'
+complete -c airassist -n '__fish_seen_subcommand_from scenario'    -a 'presenting quiet performance auto'
+complete -c airassist -n '__fish_seen_subcommand_from completions' -a 'zsh bash fish'
+complete -c airassist -n '__fish_seen_subcommand_from throttle' -l duty     -d 'Cap percentage (e.g. 30%)'
+complete -c airassist -n '__fish_seen_subcommand_from throttle' -l duration -d 'Throttle duration (e.g. 1h)'
+complete -c airassist -n '__fish_seen_subcommand_from status'   -l json     -d 'Machine-readable output'
+"""#
+
 // MARK: - Entry
 
 let argv = CommandLine.arguments
@@ -52,6 +145,7 @@ case "throttle":           cmdThrottle(rest)
 case "release":            cmdRelease(rest)
 case "scenario":           cmdScenario(rest)
 case "status":             cmdStatus(rest)
+case "completions":        cmdCompletions(rest)
 case "help", "-h", "--help":
     printUsage()
 case "version", "-v", "--version":
@@ -138,29 +232,62 @@ func cmdScenario(_ args: [String]) {
 func cmdStatus(_ args: [String]) {
     // Reads only persisted state — anything live (active throttles,
     // current sensor reads) requires IPC we deliberately don't expose.
-    if !args.isEmpty {
-        fputs("airassist status: unexpected arguments: \(args.joined(separator: " "))\n", stderr)
-        exit(64)
+    var jsonOutput = false
+    for a in args {
+        switch a {
+        case "--json": jsonOutput = true
+        default:
+            fputs("airassist status: unknown flag '\(a)'\n", stderr)
+            exit(64)
+        }
     }
 
-    let scenario = readPref("scenarioPreset.last") as? String ?? "(unset)"
-    let batteryAware = (readPref("batteryAware.enabled") as? Bool) ?? false
+    let scenario       = readPref("scenarioPreset.last") as? String ?? ""
+    let batteryAware   = (readPref("batteryAware.enabled") as? Bool) ?? false
     let onboardingDone = (readPref("onboarding.hasCompleted") as? Bool) ?? false
 
-    print("Air Assist — persisted state")
-    print("  scenario.last:  \(scenario)")
-    print("  batteryAware:   \(batteryAware)")
-    print("  onboarding:     \(onboardingDone ? "complete" : "not complete")")
-
+    var governor: [String: Any] = [:]
     if let data = readPref("governorConfig.v1") as? Data,
        let obj  = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+        governor = obj
+    }
+
+    if jsonOutput {
+        // Schema is intentionally narrow — only the persisted fields
+        // we already document via `status`. Live state is omitted.
+        // `appRunning` is a simple sysctl/process check so scripts
+        // can branch on whether IPC is available.
+        let payload: [String: Any] = [
+            "appRunning":    isAirAssistRunning(),
+            "appVersion":    version,
+            "scenario":      scenario.isEmpty ? NSNull() : (scenario as Any),
+            "batteryAware":  batteryAware,
+            "onboarding":    onboardingDone,
+            "governor":      governor,
+        ]
+        if let data = try? JSONSerialization.data(
+            withJSONObject: payload,
+            options: [.prettyPrinted, .sortedKeys]),
+           let s = String(data: data, encoding: .utf8) {
+            print(s)
+        }
+        return
+    }
+
+    print("Air Assist — persisted state")
+    print("  scenario.last:  \(scenario.isEmpty ? "(unset)" : scenario)")
+    print("  batteryAware:   \(batteryAware)")
+    print("  onboarding:     \(onboardingDone ? "complete" : "not complete")")
+    print("  appRunning:     \(isAirAssistRunning())")
+
+    if !governor.isEmpty {
         print("  governor:")
         let keys = ["mode", "maxTempC", "maxCPUPercent",
                     "tempHysteresisC", "cpuHysteresisPercent",
                     "maxTargets", "minCPUForTargeting",
                     "onBatteryOnly", "respectOSThermalState"]
         for k in keys {
-            if let v = obj[k] {
+            if let v = governor[k] {
                 print("    \(k): \(v)")
             }
         }
@@ -171,6 +298,27 @@ func cmdStatus(_ args: [String]) {
     print("")
     print("Note: live throttle state and sensor readings are not")
     print("persisted; open the dashboard to view them.")
+}
+
+func cmdCompletions(_ args: [String]) {
+    // Print a static completion script for the requested shell.
+    // Hand-rolled because pulling in swift-argument-parser for one CLI
+    // is overkill — the verb set is small and mostly stable.
+    guard let shell = args.first?.lowercased() else {
+        fputs("airassist completions: missing shell (zsh|bash|fish)\n", stderr)
+        exit(64)
+    }
+    switch shell {
+    case "zsh":
+        print(zshCompletion)
+    case "bash":
+        print(bashCompletion)
+    case "fish":
+        print(fishCompletion)
+    default:
+        fputs("airassist completions: unsupported shell '\(shell)' (expected zsh|bash|fish)\n", stderr)
+        exit(64)
+    }
 }
 
 // MARK: - Helpers
@@ -207,6 +355,30 @@ func percentEscape(_ s: String) -> String {
     return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
 }
 
+func isAirAssistRunning() -> Bool {
+    // sysctl -based process scan. Cheap and synchronous; avoids
+    // pulling in AppKit's NSWorkspace (which would force the CLI to
+    // link AppKit just to check whether a sibling app is up).
+    var name = [CTL_KERN, KERN_PROC, KERN_PROC_ALL]
+    var size: size_t = 0
+    if sysctl(&name, u_int(name.count), nil, &size, nil, 0) != 0 { return false }
+    let count = size / MemoryLayout<kinfo_proc>.size
+    let buf = UnsafeMutablePointer<kinfo_proc>.allocate(capacity: count)
+    defer { buf.deallocate() }
+    if sysctl(&name, u_int(name.count), buf, &size, nil, 0) != 0 { return false }
+    let actual = size / MemoryLayout<kinfo_proc>.size
+    for i in 0..<actual {
+        var p = buf[i]
+        let comm = withUnsafePointer(to: &p.kp_proc.p_comm) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 17) {
+                String(cString: $0)
+            }
+        }
+        if comm == "AirAssist" { return true }
+    }
+    return false
+}
+
 func readPref(_ key: String) -> Any? {
     // CFPreferencesCopyAppValue reads from the *target* bundle's
     // domain rather than the CLI's own (which would be empty). This
@@ -237,8 +409,13 @@ func printUsage() {
       release <bundle>                      Release CLI-issued throttle on a bundle.
       scenario <name>                       Apply preset: presenting | quiet
                                             | performance | auto.
-      status                                Print persisted preferences.
-      version                                Print version.
+      status [--json]                       Print persisted preferences.
+                                            With --json: machine-readable,
+                                            includes appRunning + appVersion.
+      completions <shell>                   Emit shell completion script
+                                            (zsh | bash | fish).
+                                            Pipe into your fpath / source.
+      version                               Print version.
       help                                  Print this message.
 
     EXAMPLES:
@@ -252,3 +429,4 @@ func printUsage() {
     """
     print(usage)
 }
+
