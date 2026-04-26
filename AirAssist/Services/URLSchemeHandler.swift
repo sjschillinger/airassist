@@ -13,6 +13,8 @@ import os
 ///   airassist://resume
 ///   airassist://throttle?bundle=<id>&duty=<0.05-1.0>[&duration=15m]
 ///   airassist://release?bundle=<id>
+///   airassist://open-dashboard
+///   airassist://open-preferences
 ///
 /// Duration format:
 ///   - `forever`  → until the app quits (nil duration)
@@ -89,6 +91,14 @@ enum URLSchemeHandler {
             }
             let n = store.releaseBundle(bundleID: bundle)
             logger.info("release bundle=\(bundle, privacy: .public) released=\(n)")
+
+        case "open-dashboard":
+            // Window controllers handle their own NSApp.activate; no
+            // need to flip activation policy. App stays .accessory.
+            DashboardWindowController.shared(store: store).show()
+
+        case "open-preferences":
+            PreferencesWindowController.shared(store: store).show()
 
         default:
             logger.warning("Unknown action: \(action, privacy: .public)")

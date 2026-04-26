@@ -23,8 +23,8 @@ import Foundation
 // Live runtime state (active throttles, paused-until timestamp, the
 // instantaneous governor decision) is *not* persisted, so the CLI
 // can't show it without IPC. We deliberately don't add IPC for that:
-// the dashboard window is the right surface, and `airassist
-// open-dashboard` (TODO) is a saner UX than a CLI table.
+// the dashboard window is the right surface, exposed as `airassist
+// open-dashboard`. A CLI table would just rot whenever the UI changes.
 //
 // Single file, no external deps. Intentionally low-magic.
 
@@ -56,6 +56,8 @@ _airassist() {
     'scenario:Apply a scenario preset'
     'status:Print persisted preferences'
     'completions:Emit shell completion script'
+    'open-dashboard:Open the Dashboard window'
+    'open-preferences:Open the Preferences window'
     'version:Print version'
     'help:Print help'
   )
@@ -89,7 +91,7 @@ _airassist_complete() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    verbs="pause resume throttle release scenario status completions version help"
+    verbs="pause resume throttle release scenario status completions open-dashboard open-preferences version help"
     if [ "$COMP_CWORD" -eq 1 ]; then
         COMPREPLY=( $(compgen -W "$verbs" -- "$cur") )
         return
@@ -116,6 +118,8 @@ complete -c airassist -n '__fish_use_subcommand' -a 'release'     -d 'Release CL
 complete -c airassist -n '__fish_use_subcommand' -a 'scenario'    -d 'Apply scenario preset'
 complete -c airassist -n '__fish_use_subcommand' -a 'status'      -d 'Print persisted preferences'
 complete -c airassist -n '__fish_use_subcommand' -a 'completions' -d 'Emit shell completion script'
+complete -c airassist -n '__fish_use_subcommand' -a 'open-dashboard'   -d 'Open the Dashboard window'
+complete -c airassist -n '__fish_use_subcommand' -a 'open-preferences' -d 'Open the Preferences window'
 complete -c airassist -n '__fish_use_subcommand' -a 'version'     -d 'Print version'
 complete -c airassist -n '__fish_use_subcommand' -a 'help'        -d 'Print help'
 
@@ -146,6 +150,8 @@ case "release":            cmdRelease(rest)
 case "scenario":           cmdScenario(rest)
 case "status":             cmdStatus(rest)
 case "completions":        cmdCompletions(rest)
+case "open-dashboard":     cmdOpen(rest, kind: "open-dashboard")
+case "open-preferences":   cmdOpen(rest, kind: "open-preferences")
 case "help", "-h", "--help":
     printUsage()
 case "version", "-v", "--version":
@@ -300,6 +306,16 @@ func cmdStatus(_ args: [String]) {
     print("persisted; open the dashboard to view them.")
 }
 
+func cmdOpen(_ args: [String], kind: String) {
+    // `airassist open-dashboard` / `airassist open-preferences`.
+    // Both verbs are zero-arg — anything else is a typo.
+    if !args.isEmpty {
+        fputs("airassist \(kind): unexpected arguments: \(args.joined(separator: " "))\n", stderr)
+        exit(64)
+    }
+    open("\(scheme)://\(kind)")
+}
+
 func cmdCompletions(_ args: [String]) {
     // Print a static completion script for the requested shell.
     // Hand-rolled because pulling in swift-argument-parser for one CLI
@@ -415,6 +431,8 @@ func printUsage() {
       completions <shell>                   Emit shell completion script
                                             (zsh | bash | fish).
                                             Pipe into your fpath / source.
+      open-dashboard                        Open the Dashboard window.
+      open-preferences                      Open the Preferences window.
       version                               Print version.
       help                                  Print this message.
 
