@@ -22,6 +22,43 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ---
 
+## [0.9.1] — 2026-04-26
+
+Tier 0 safety hardening. No user-visible feature changes; all five fixes
+target failure modes that could leave processes paused or silently lose
+diagnostic signal. Audited internally and verified independently via
+Codex CLI before landing.
+
+### Fixed
+
+- **Duty cycler runs off the main actor.** `ProcessThrottler.runCycle`
+  was main-actor isolated; under UI pressure the SIGCONT half of a
+  duty cycle could be delayed hundreds of ms while a process sat
+  SIGSTOPped. Cycler is now a `nonisolated` synchronous function over
+  `OSAllocatedUnfairLock`-guarded state, sleeping via `nanosleep(2)`
+  so signal delivery is never gated on main-actor work.
+- **Manual-throttle expiry tasks no longer stack.** Back-to-back
+  `throttleFrontmost` / `throttleBundle` calls layered multiple
+  auto-release sleepers per target, so the earliest one fired and
+  released the manual duty mid-window. Pending tasks are now cancelled
+  before scheduling a new one.
+- **History writes log failures.** `HistoryLogger` previously
+  swallowed every write error with `try?`; on a full disk the
+  dashboard appeared frozen with no signal. Errors now log once per
+  distinct cause via `os.Logger`, so diagnostic bundles capture the
+  failure without flooding unified log.
+- **Dead-man's-switch write is durable.** `SafetyCoordinator`'s
+  inflight-record write now loops partial writes on `EINTR`, checks
+  `fsync` and `rename` results, and fsyncs the parent directory so
+  the rename itself survives power loss. Falls back to non-durable
+  atomic write if the durable path fails.
+- **Signal-send failures are logged.** Failed `signal()` calls other
+  than `ESRCH` were silently swallowed; logs once per
+  `(pid, signal, errno)` tuple so permission/state issues surface
+  without log floods.
+
+---
+
 ## [0.9.0] — 2026-04-20
 
 Initial public release.
