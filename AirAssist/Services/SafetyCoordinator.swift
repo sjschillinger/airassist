@@ -88,38 +88,114 @@ final class SafetyCoordinator {
             return
         }
         let rec = InflightRecord(pids: pids.map { Int32($0) }, writtenAt: Date())
-        if let data = try? JSONEncoder().encode(rec) {
-            writeAtomicWithFsync(data: data, to: url)
+        do {
+            let data = try JSONEncoder().encode(rec)
+            if !writeAtomicWithFsync(data: data, to: url) {
+                // Last-resort fallback. Logged inside the helper.
+                try? data.write(to: url, options: .atomic)
+            }
+        } catch {
+            Self.logger.error("encode inflight record failed: \(String(describing: error), privacy: .public)")
         }
         updateSignalHandlerPIDs(pids)
     }
 
-    /// Atomic write + fsync. `Data.write(to:options:.atomic)` uses rename-atomic
-    /// which survives a crash between tmp-write and rename, but the tmp-write
-    /// itself is not guaranteed flushed to disk before rename — a kernel panic
-    /// within milliseconds of rename can leave the rename on disk but the file
-    /// contents empty. `fsync` closes that window.
-    private static func writeAtomicWithFsync(data: Data, to url: URL) {
+    /// Atomic write + fsync of the dead-man's-switch inflight file.
+    ///
+    /// `Data.write(to:options:.atomic)` uses rename-atomic which survives a
+    /// crash between tmp-write and rename, but the tmp-write itself is not
+    /// guaranteed flushed to disk before rename — a kernel panic within
+    /// milliseconds of rename can leave the rename on disk but the file
+    /// contents empty. `fsync` (on the file *and* parent directory) closes
+    /// that window.
+    ///
+    /// Returns `true` only if the data is durably persisted at `url`.
+    /// Callers can retry / fall back when this returns `false`.
+    ///
+    /// Audit Tier 0 item 4 (Codex PARTIAL): the previous version silently
+    /// ignored short writes, fsync return, and rename return. The durability
+    /// comments above were stronger than the code — this version checks
+    /// every step, retries partial writes, fsyncs the parent dir, and logs
+    /// each distinct failure class once.
+    @discardableResult
+    private static func writeAtomicWithFsync(data: Data, to url: URL) -> Bool {
         let tmp = url.appendingPathExtension("tmp-\(UUID().uuidString.prefix(8))")
         let path = tmp.path
         let fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0o600)
         guard fd >= 0 else {
-            // Fall back to non-fsync path rather than drop the write entirely.
-            try? data.write(to: url, options: .atomic)
-            return
+            logFsyncFailure("open(\(path))", err: errno)
+            return false
         }
-        defer { close(fd) }
-        let written = data.withUnsafeBytes { buf -> Int in
-            guard let base = buf.baseAddress else { return 0 }
-            return Darwin.write(fd, base, buf.count)
+
+        // 1. Write the full payload, looping over short / EINTR returns.
+        let writeOK = data.withUnsafeBytes { buf -> Bool in
+            guard let base = buf.baseAddress else { return false }
+            var remaining = buf.count
+            var ptr = base.assumingMemoryBound(to: UInt8.self)
+            while remaining > 0 {
+                let n = Darwin.write(fd, ptr, remaining)
+                if n > 0 {
+                    remaining -= n
+                    ptr = ptr.advanced(by: n)
+                    continue
+                }
+                if n == -1 && errno == EINTR { continue }
+                logFsyncFailure("write", err: n == -1 ? errno : 0)
+                return false
+            }
+            return true
         }
-        guard written == data.count else {
+        guard writeOK else {
+            close(fd)
             unlink(path)
-            return
+            return false
         }
-        _ = fsync(fd)
-        // Rename is atomic on HFS+/APFS.
-        _ = rename(path, url.path)
+
+        // 2. fsync the file before rename so the rename can't outrun the data.
+        if fsync(fd) != 0 {
+            logFsyncFailure("fsync(file)", err: errno)
+            close(fd)
+            unlink(path)
+            return false
+        }
+        close(fd)
+
+        // 3. Rename is atomic on APFS / HFS+.
+        if rename(path, url.path) != 0 {
+            logFsyncFailure("rename", err: errno)
+            unlink(path)
+            return false
+        }
+
+        // 4. fsync the parent directory so the rename itself is durable
+        //    across a crash. Without this, on some filesystems the directory
+        //    entry can be lost even though the inode survives. Failure here
+        //    is logged but not treated as fatal — the data IS on disk.
+        let parentPath = url.deletingLastPathComponent().path
+        let dirFd = open(parentPath, O_RDONLY)
+        if dirFd >= 0 {
+            if fsync(dirFd) != 0 {
+                logFsyncFailure("fsync(parent)", err: errno)
+            }
+            close(dirFd)
+        } else {
+            logFsyncFailure("open(parent)", err: errno)
+        }
+        return true
+    }
+
+    /// One log line per distinct (op, errno) pair. A permanently-full disk
+    /// hits this ~once per safety event otherwise; this caps the noise.
+    private static let loggedFsyncFailures = OSAllocatedUnfairLock<Set<String>>(initialState: [])
+    private static func logFsyncFailure(_ op: String, err: Int32) {
+        let key = "\(op):\(err)"
+        let firstTime = loggedFsyncFailures.withLock { $0.insert(key).inserted }
+        guard firstTime else { return }
+        if err == 0 {
+            logger.error("inflight-write \(op, privacy: .public) failed (no errno set)")
+        } else {
+            logger.error("inflight-write \(op, privacy: .public) failed: errno=\(err, privacy: .public) (\(String(cString: strerror(err)), privacy: .public))")
+        }
     }
 
     /// Call very early in app launch (before starting any throttler). Reads
