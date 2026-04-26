@@ -9,7 +9,64 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
-### Planned for 0.10 (non-blocking backlog)
+---
+
+## [0.10.0] — 2026-04-26
+
+Popover-level quick controls. Everything that previously required a
+right-click, a Preferences trip, or both is now one click away from
+the menu bar icon.
+
+### Added
+
+- **Stay Awake quick picker in the popover.** Off / system-only /
+  system + display / display-on-N-min-then-system, with a ✓ on the
+  current mode and a live countdown when the timeout variant is
+  running. Mirrors the right-click submenu so single-click users
+  reach it too.
+- **Governor master toggle in the popover.** One-click on/off; turning
+  off remembers the prior mode (`temperature` / `cpu` / `both`) and
+  restores it on the next on, so flipping the governor never silently
+  downgrades a tuned configuration.
+- **"On battery only" toggle inline.** Same flag that lives in
+  Preferences → Throttling, surfaced next to the master toggle.
+  Disabled when the governor itself is off.
+- **"Throttle frontmost" button with click-to-release.** Caps whichever
+  app you're currently using at the configured duty for the configured
+  duration. Click again to release immediately — the row swaps to
+  "Release [app]". Refuses to target Air Assist itself. Label reflects
+  the captured frontmost app name (snapshotted before the popover
+  steals focus, so the button targets the app you were *just* in, not
+  Air Assist).
+- **Frontmost-app quick throttle preferences.** Preferences →
+  Throttling now has a slider (10–85%, 5% steps) and a duration picker
+  (15 min / 1 h / 4 h / "Until I clear it") for the popover's quick
+  button. Defaults are 30% / 1 hour.
+- **"Quick throttles" visibility strip.** When any app is under a
+  manual cap, the popover shows a purple strip listing each one with
+  the duty %, a live countdown ("47m left"), and an inline ✕ to
+  release. Updates once per second while the popover is open.
+
+### Changed
+
+- **Manual throttles bypass the convenience allowlist.** The
+  `excludedNames` list (Claude Code, Xcode, Terminal, iTerm2, …)
+  protected dev tools from accidental auto-throttle by rules and the
+  governor. Manual user clicks are explicit consent, so they now skip
+  this gate. The hard safety rails (own-user-only, no-ancestors,
+  no-self) still apply to every source.
+- **Throttler logs rejected `setDuty` calls.** Each rejection path
+  (excluded name, foreign user, ancestor) now emits a single
+  `os.Logger` notice with the pid + name. Rate-limited at the
+  unified-log level.
+
+### Notes
+
+- No behavior changes to the governor, the cycler, or the safety
+  coordinator. All quick controls write through the same store APIs
+  the right-click menu and Preferences already use.
+
+---
 
 - Fast user-switching awareness — observe
   `NSWorkspace.sessionDidResignActiveNotification` so throttled PIDs are

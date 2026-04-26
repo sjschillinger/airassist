@@ -251,6 +251,7 @@ final class ThermalStore {
         stayAwake.shutdown()
         for (_, task) in manualExpiryTasks { task.cancel() }
         manualExpiryTasks.removeAll()
+        manualExpiryDeadlines.removeAll()
     }
 
     /// Resolves a temperature from the two-part slot encoding stored in UserDefaults.
@@ -312,9 +313,45 @@ final class ThermalStore {
     /// — without this, two quick clicks create two sleepers and the first
     /// fires early, clearing the cap the user just renewed. (audit Tier 0
     /// item 2; Codex VERIFIED).
+    /// Snapshot of the frontmost app captured by `MenuBarController`
+    /// just before it opens the popover. Calling `NSWorkspace.shared
+    /// .frontmostApplication` from inside the popover returns Air
+    /// Assist itself (the popover's `makeKey()` activates us), so the
+    /// "Throttle [frontmost]" button can't trust a live query — it
+    /// has to read from this captured value.
+    struct FrontmostSnapshot: Sendable, Equatable {
+        let pid: pid_t
+        let name: String
+    }
+    var capturedFrontmost: FrontmostSnapshot?
+
     private var manualExpiryTasks: [String: Task<Void, Never>] = [:]
+    /// Wall-clock deadlines paired with `manualExpiryTasks`. Surfaced
+    /// to the UI so the popover can show "47m left" next to each
+    /// active manual throttle. `nil`-valued entries (sentinel: very
+    /// large duration treated as "until cleared") render with no
+    /// countdown.
+    private(set) var manualExpiryDeadlines: [String: Date] = [:]
     private static func manualExpiryKey(pid: pid_t) -> String { "pid:\(pid)" }
     private static func manualExpiryKey(bundleID: String) -> String { "bundle:\(bundleID.lowercased())" }
+
+    /// Returns the wall-clock deadline (if any) for a manual throttle
+    /// on this PID. UI uses this for the countdown badge.
+    func manualThrottleDeadline(pid: pid_t) -> Date? {
+        manualExpiryDeadlines[Self.manualExpiryKey(pid: pid)]
+    }
+
+    /// Release a manual throttle on this PID and cancel its pending
+    /// auto-release task. Use this from UI instead of calling
+    /// `processThrottler.clearDuty` directly so the deadline tracker
+    /// stays in sync.
+    func releaseManualThrottle(pid: pid_t) {
+        processThrottler.clearDuty(source: .manual, for: pid)
+        let key = Self.manualExpiryKey(pid: pid)
+        manualExpiryTasks[key]?.cancel()
+        manualExpiryTasks[key] = nil
+        manualExpiryDeadlines[key] = nil
+    }
 
     /// Fire-and-forget cap on a specific PID via the `.manual` source. Used
     /// by the "Throttle frontmost at X%" quick-menu action. Bypasses the
@@ -331,11 +368,17 @@ final class ThermalStore {
 
         let key = Self.manualExpiryKey(pid: pid)
         manualExpiryTasks[key]?.cancel()
+        // Treat very long durations (≥ 30 days) as "until I clear it"
+        // — no deadline shown in the UI countdown.
+        manualExpiryDeadlines[key] = duration < 60 * 60 * 24 * 30
+            ? Date().addingTimeInterval(duration)
+            : nil
         manualExpiryTasks[key] = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled, let self else { return }
             self.processThrottler.clearDuty(source: .manual, for: pid)
             self.manualExpiryTasks[key] = nil
+            self.manualExpiryDeadlines[key] = nil
         }
     }
 
@@ -362,11 +405,15 @@ final class ThermalStore {
         // old sleeper clear the new cap.
         let key = Self.manualExpiryKey(bundleID: bundleID)
         manualExpiryTasks[key]?.cancel()
+        manualExpiryDeadlines[key] = duration < 60 * 60 * 24 * 30
+            ? Date().addingTimeInterval(duration)
+            : nil
         manualExpiryTasks[key] = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled, let self else { return }
             self.releaseBundle(bundleID: bundleID)
             self.manualExpiryTasks[key] = nil
+            self.manualExpiryDeadlines[key] = nil
         }
         return pids.count
     }
@@ -388,6 +435,7 @@ final class ThermalStore {
         let key = Self.manualExpiryKey(bundleID: bundleID)
         manualExpiryTasks[key]?.cancel()
         manualExpiryTasks[key] = nil
+        manualExpiryDeadlines[key] = nil
         return pids.count
     }
 
