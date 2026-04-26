@@ -112,6 +112,10 @@ final class ProcessThrottler {
     /// followed by reads from the cycler — well-defined on arm64.
     nonisolated(unsafe) var safety: SafetyCoordinator?
 
+    /// Optional ring-buffer log of apply/release events for the dashboard's
+    /// "Recent activity" panel. Set once during store init.
+    var activityLog: ThrottleActivityLog?
+
     /// Refuse throttling of our own PID or any ancestor in our parent chain.
     /// Layered on top of the excluded-name list because ancestors are often
     /// generic process names (zsh, Terminal) that could slip past a name check.
@@ -148,6 +152,15 @@ final class ProcessThrottler {
                  source: ThrottleSource) {
         guard pid > 0 else {
             Self.logger.error("setDuty rejected: pid=\(pid, privacy: .public) (non-positive)")
+            return
+        }
+        // Safety: user-managed "never throttle" list. Strong form — applies
+        // to every source including manual. The user has explicitly said
+        // "leave this app alone," so even an explicit click bounces rather
+        // than silently ignoring the list.
+        if NeverThrottleList.contains(name) {
+            Self.logger.notice("setDuty rejected: pid=\(pid) name=\(name, privacy: .public) (user never-throttle list)")
+            clearDuty(source: source, for: pid)
             return
         }
         // Safety: convenience allowlist that protects dev tools and a few
@@ -191,7 +204,10 @@ final class ProcessThrottler {
             }
             return false
         }
-        if updated { return }
+        if updated {
+            activityLog?.record(kind: .apply, source: source, pid: pid, name: name, duty: duty)
+            return
+        }
 
         // SAFETY ORDERING — persist intent BEFORE spawning the cycler.
         //
@@ -231,6 +247,8 @@ final class ProcessThrottler {
             // Released between publish and here (extremely rare reentrancy).
             // Cancel the cycler we just spawned.
             task.cancel()
+        } else {
+            activityLog?.record(kind: .apply, source: source, pid: pid, name: name, duty: duty)
         }
     }
 
@@ -287,18 +305,33 @@ final class ProcessThrottler {
     /// wants the PID throttled, it's released. Rule engine / governor use
     /// this (not `release`) so they only retract their own requests.
     func clearDuty(source: ThrottleSource, for pid: pid_t) {
-        let shouldRelease = state.withLock { s -> Bool in
-            guard var entry = s.active[pid] else { return false }
-            entry.sources.removeValue(forKey: source)
+        // Single locked region: figure out (a) was this source actually a
+        // requester, (b) the entry's display name to log, (c) whether the
+        // entry is now empty and the PID should be released. We *only* log
+        // a `.release` event if `removeValue` actually removed something —
+        // otherwise a setDuty rejection (e.g. NeverThrottleList) on a PID
+        // that another source was already throttling would log a phantom
+        // release for a source that never held the PID.
+        let result: (loggedName: String?, shouldRelease: Bool) = state.withLock { s in
+            guard var entry = s.active[pid] else { return (nil, false) }
+            guard entry.sources.removeValue(forKey: source) != nil else {
+                // This source wasn't a requester — nothing to log, nothing
+                // to release. Other sources (if any) keep their requests.
+                return (nil, false)
+            }
+            let name = entry.name
             if entry.sources.isEmpty {
                 // Defer the release to outside the lock so we don't reenter.
-                return true
+                return (name, true)
             } else {
                 s.active[pid] = entry
-                return false
+                return (name, false)
             }
         }
-        if shouldRelease { release(pid: pid) }
+        if let name = result.loggedName {
+            activityLog?.record(kind: .release, source: source, pid: pid, name: name, duty: 1.0)
+        }
+        if result.shouldRelease { release(pid: pid) }
     }
 
     /// Remove *all* requests from a single source. Used on engine

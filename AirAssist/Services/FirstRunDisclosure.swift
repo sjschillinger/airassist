@@ -18,10 +18,12 @@ enum FirstRunDisclosure {
         let seen = UserDefaults.standard.integer(forKey: seenKey)
         guard seen < currentVersion else { return }
 
-        let alert = NSAlert()
-        alert.alertStyle = .informational
-        alert.messageText = "Welcome to Air Assist"
-        alert.informativeText = """
+        // Non-modal floating window (see InfoSheetWindow) — replaced the
+        // previous `NSAlert.runModal()` because that ran the runloop in
+        // `.modalPanel` mode and starved `application(_:open:)` of Apple
+        // Events, so a Shortcut/`open airassist://...` that *triggered*
+        // the cold launch would sit queued until the user dismissed.
+        let body = """
         Air Assist monitors your Mac's thermal sensors and, when you enable \
         the governor, can pause and resume processes you own by sending \
         SIGSTOP and SIGCONT signals. This is a standard Unix technique — \
@@ -36,16 +38,19 @@ enum FirstRunDisclosure {
 
         Not affiliated with Apple Inc.
         """
-        alert.addButton(withTitle: "I Understand")
-        alert.addButton(withTitle: "View License")
-
-        let response = alert.runModal()
-        if response == .alertSecondButtonReturn {
-            if let url = URL(string: "https://www.gnu.org/licenses/agpl-3.0.html") {
-                NSWorkspace.shared.open(url)
+        InfoSheetWindow.present(
+            title: "Welcome to Air Assist",
+            body: body,
+            primaryButton: "I Understand",
+            secondaryButton: "View License",
+            secondaryAction: {
+                if let url = URL(string: "https://www.gnu.org/licenses/agpl-3.0.html") {
+                    NSWorkspace.shared.open(url)
+                }
+            },
+            onClose: {
+                UserDefaults.standard.set(currentVersion, forKey: seenKey)
             }
-        }
-
-        UserDefaults.standard.set(currentVersion, forKey: seenKey)
+        )
     }
 }

@@ -72,6 +72,16 @@ enum URLSchemeHandler {
             let affected = store.throttleBundle(bundleID: bundle, duty: duty, duration: duration)
             logger.info("throttle bundle=\(bundle, privacy: .public) duty=\(duty) affected=\(affected)")
 
+        case "scenario":
+            guard let name = params["name"]?.lowercased(),
+                  let preset = ScenarioPreset(rawValue: name)
+            else {
+                logger.warning("scenario missing/invalid name (expected presenting/quiet/performance/auto)")
+                return
+            }
+            store.applyScenario(preset)
+            logger.info("scenario applied=\(name, privacy: .public)")
+
         case "release":
             guard let bundle = params["bundle"], !bundle.isEmpty else {
                 logger.warning("release missing bundle")

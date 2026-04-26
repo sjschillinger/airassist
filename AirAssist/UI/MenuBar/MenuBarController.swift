@@ -200,24 +200,32 @@ final class MenuBarController {
             targetLength = MenuBarIconRenderer.widthStacked
         }
 
-        // Throttle indicator dot: red if cap is breached, orange if only rules.
+        // Throttle indicator dot: red if cap is breached, orange if only
+        // rules, blue ("armed") if the governor is enabled but not yet
+        // doing anything. The armed dot does not pulse — it's a static
+        // ready-light, not an alarm.
+        let isThrottling: Bool
         let throttleDot: NSColor? = {
             if store.isPauseActive { return nil }
             if store.governor.isTempThrottling { return .systemRed }
             if store.governor.isCPUThrottling  { return .systemOrange }
             if !store.liveThrottledPIDs.isEmpty { return .systemOrange }
+            if store.governorConfig.mode != .off { return .systemBlue }
             return nil
         }()
+        switch throttleDot {
+        case .some(.systemRed), .some(.systemOrange): isThrottling = true
+        default: isThrottling = false
+        }
 
-        // Start or stop the pulse depending on whether a throttle dot is
-        // being drawn this frame. pulsePhase is sampled from the pulse's
-        // start time so the fade is monotonic and frame-rate independent.
-        if throttleDot != nil {
+        // Pulse only when actively throttling. Armed-but-idle stays
+        // static so it doesn't draw the eye like an alarm would.
+        if isThrottling {
             startPulseIfNeeded()
         } else {
             stopPulse()
         }
-        let phase = currentPulsePhase()
+        let phase = isThrottling ? currentPulsePhase() : 1.0
 
         let rendered = MenuBarIconRenderer.render(
             layout: layout,
@@ -304,6 +312,7 @@ final class MenuBarController {
             _ = store.governor.isCPUThrottling
             _ = store.liveThrottledPIDs.count
             _ = store.isPauseActive
+            _ = store.governorConfig.mode
         } onChange: { [weak self] in
             Task { @MainActor [weak self] in
                 self?.syncButton()

@@ -42,13 +42,53 @@ final class ThermalStore {
         StayAwakePersistence.save(mode)
     }
 
+    /// Apply a one-click scenario preset. Bundles a governor config, a
+    /// stay-awake mode, and the on-battery-only flag so the user can
+    /// switch context (Presenting / Quiet / Performance / Auto) without
+    /// reaching into Preferences. Per-app rules are intentionally
+    /// untouched — they represent persistent user intent.
+    func applyScenario(_ scenario: ScenarioPreset) {
+        var c = governorConfig
+        switch scenario {
+        case .presenting:
+            c.mode = .off
+            c.onBatteryOnly = false
+            governorConfig = c
+            setStayAwakeMode(.display)
+        case .quiet:
+            c = GovernorPreset.aggressive.applied(to: c)
+            c.mode = .both
+            c.onBatteryOnly = false
+            governorConfig = c
+        case .performance:
+            // Distinct from Presenting: governor stays *armed* with the
+            // gentle preset — only intervenes at extreme temps, so a
+            // long render or compile isn't gratuitously paused but the
+            // Mac still has a safety net before it cooks itself.
+            c = GovernorPreset.gentle.applied(to: c)
+            c.mode = .both
+            c.onBatteryOnly = false
+            governorConfig = c
+            setStayAwakeMode(.display)
+        case .auto:
+            c = GovernorPreset.balanced.applied(to: c)
+            c.mode = .both
+            c.onBatteryOnly = true
+            governorConfig = c
+            setStayAwakeMode(.off)
+        }
+        UserDefaults.standard.set(scenario.rawValue, forKey: "scenarioPreset.last")
+    }
+
     // MARK: - CPU / Governor subsystem
     let processInspector = ProcessInspector()
     let processThrottler = ProcessThrottler()
+    let throttleActivityLog = ThrottleActivityLog()
     let safety = SafetyCoordinator()
     private var frontmostObserver: FrontmostAppObserver!
     let snapshots: ProcessSnapshotPublisher
     private(set) var governor: ThermalGovernor!
+    private(set) var governorNotifier: GovernorNotifier?
     private(set) var ruleEngine: ThrottleRuleEngine!
     /// Shared 1Hz driver — refreshes the snapshot publisher, then ticks both
     /// engines in deterministic order (rules first, governor second, so the
@@ -141,6 +181,7 @@ final class ThermalStore {
         self.governorConfig = GovernorConfigPersistence.load()
         self.throttleRules  = ThrottleRulesPersistence.load()
         self.processThrottler.safety = safety
+        self.processThrottler.activityLog = throttleActivityLog
         self.snapshots = ProcessSnapshotPublisher(inspector: processInspector)
         // Capture self weakly in the hottest-temp closure.
         self.governor = ThermalGovernor(
@@ -163,6 +204,7 @@ final class ThermalStore {
         self.governor.isRuleCoveredPID = { [weak self] pid in
             self?.ruleEngine.managedPIDs.contains(pid) ?? false
         }
+        self.governorNotifier = GovernorNotifier(governor: governor)
         // Foreground-app protection: the throttler uses this to clamp
         // effective duty up to `foregroundDutyFloor` for the active window.
         self.frontmostObserver = FrontmostAppObserver { [weak self] pid in
@@ -229,6 +271,7 @@ final class ThermalStore {
                 self.snapshots.refresh()
                 self.ruleEngine.tick()
                 self.governor.tick()
+                self.governorNotifier?.evaluate()
                 self.appendSparklineSample()
             }
         }

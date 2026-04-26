@@ -95,6 +95,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // show the onboarding window so users get a productive default
         // instead of a blank menu-bar icon. Idempotent via its own key.
         OnboardingWindow.presentIfNeeded(store: store)
+        // Per-version "what's new" sheet. Skips the very first launch
+        // (seeds the version marker silently); fires once after each
+        // upgrade. Order matters: must come *after* FirstRunDisclosure
+        // so a brand-new install doesn't see both stacked.
+        WhatsNewSheet.presentIfNeeded()
     }
 
     /// Handler for `airassist://` URLs. Registered via `CFBundleURLTypes` in

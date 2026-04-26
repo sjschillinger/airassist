@@ -76,6 +76,7 @@ enum DiagnosticBundle {
         try writeSystemInfo(to: stage.appendingPathComponent("system.txt"))
         try writeConfig(to: stage.appendingPathComponent("config.json"))
         try writeLiveState(store: store, to: stage.appendingPathComponent("live-state.json"))
+        try writeActivityLog(store: store, to: stage.appendingPathComponent("throttle-activity.json"))
         try copyHistoryIfPresent(to: stage.appendingPathComponent("thermal_history.ndjson"))
         // #P1-1: pull AirAssist crashlogs from the last 7 days into a
         // `crashlogs/` subdirectory. Critical for a SIGSTOP tool where
@@ -157,6 +158,12 @@ enum DiagnosticBundle {
             GlobalHotkeyService.enabledDefaultsKey,
             "firstRunDisclosure.seenVersion",
             "onboarding.seenVersion",
+            "whatsNew.lastSeenVersion",
+            "neverThrottleNames",
+            "scenarioPreset.last",
+            "notifications.governor",
+            "throttleFrontmost.duty",
+            "throttleFrontmost.durationMinutes",
         ]
         var out: [String: Any] = [:]
         for k in keys {
@@ -212,6 +219,32 @@ enum DiagnosticBundle {
         ]
         let data = try JSONSerialization.data(
             withJSONObject: state,
+            options: [.prettyPrinted, .sortedKeys]
+        )
+        try data.write(to: url)
+    }
+
+    /// Capture the in-memory throttle activity ring buffer. Memory-only,
+    /// so this is the only path the bundle has into apply/release events
+    /// short of trawling unified-log.
+    private static func writeActivityLog(store: ThermalStore, to url: URL) throws {
+        let entries = store.throttleActivityLog.entries.map { e -> [String: Any] in
+            [
+                "timestamp": ISO8601DateFormatter().string(from: e.timestamp),
+                "kind": e.kind.rawValue,
+                "source": String(describing: e.source),
+                "pid": Int(e.pid),
+                "name": e.name,
+                "duty": e.duty,
+            ]
+        }
+        let payload: [String: Any] = [
+            "exportedAt": ISO8601DateFormatter().string(from: Date()),
+            "count": entries.count,
+            "entries": entries,
+        ]
+        let data = try JSONSerialization.data(
+            withJSONObject: payload,
             options: [.prettyPrinted, .sortedKeys]
         )
         try data.write(to: url)

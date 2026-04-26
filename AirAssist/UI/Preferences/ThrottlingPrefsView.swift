@@ -13,6 +13,8 @@ struct ThrottlingPrefsView: View {
                 Divider()
                 FrontmostThrottleSection()
                 Divider()
+                NeverThrottleSection(store: store)
+                Divider()
                 RulesSection(store: store)
             }
             .padding(16)
@@ -741,5 +743,179 @@ private struct AddRuleSheet: View {
                 processes = store.ruleEngine.availableProcesses()
             }
         }
+    }
+}
+
+// MARK: - Never throttle list
+
+/// User-managed allowlist. Apps listed here are rejected by `setDuty` for
+/// every source, including manual clicks. Sits between the auto-throttle
+/// sections and the per-app rules — visually it reads "and these apps are
+/// always off-limits."
+private struct NeverThrottleSection: View {
+    @Bindable var store: ThermalStore
+
+    @State private var entries: [String] = NeverThrottleList.names()
+    @State private var defaultsObserver: NSObjectProtocol?
+    @State private var showAddSheet = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Never throttle these apps").font(.headline)
+                Spacer()
+                Button {
+                    showAddSheet = true
+                } label: {
+                    Label("Add…", systemImage: "plus")
+                }
+                .buttonStyle(.borderless)
+            }
+            Text("Apps in this list are always off-limits — auto rules, the governor, and even an explicit “Throttle [app]” click will refuse to touch them.")
+                .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if entries.isEmpty {
+                Text("No protected apps. Click Add… to pick one.")
+                    .font(.callout)
+                    .foregroundStyle(.tertiary)
+                    .padding(.vertical, 4)
+            } else {
+                VStack(spacing: 4) {
+                    ForEach(entries, id: \.self) { name in
+                        HStack(spacing: 8) {
+                            Image(systemName: "shield.fill")
+                                .foregroundStyle(.tint)
+                                .frame(width: 16)
+                            Text(name)
+                                .font(.callout)
+                            Spacer()
+                            Button {
+                                NeverThrottleList.remove(name)
+                                entries = NeverThrottleList.names()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Remove \(name) from the never-throttle list")
+                        }
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(Color.secondary.opacity(0.06),
+                                    in: RoundedRectangle(cornerRadius: 6))
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showAddSheet) {
+            AddNeverThrottleSheet(store: store) {
+                entries = NeverThrottleList.names()
+            }
+        }
+        .onAppear {
+            // UserDefaults.didChangeNotification fires for any pref write, so
+            // the list updates if something else (e.g. a future CLI command)
+            // mutates it while Preferences is open.
+            defaultsObserver = NotificationCenter.default.addObserver(
+                forName: UserDefaults.didChangeNotification,
+                object: UserDefaults.standard,
+                queue: .main
+            ) { _ in
+                Task { @MainActor in
+                    let fresh = NeverThrottleList.names()
+                    if fresh != entries { entries = fresh }
+                }
+            }
+        }
+        .onDisappear {
+            if let o = defaultsObserver {
+                NotificationCenter.default.removeObserver(o)
+                defaultsObserver = nil
+            }
+        }
+    }
+}
+
+private struct AddNeverThrottleSheet: View {
+    @Bindable var store: ThermalStore
+    var onAdded: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var processes: [RunningProcess] = []
+    @State private var customName: String = ""
+    @State private var search: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Add app to never-throttle list").font(.headline)
+            Text("Pick from running processes, or type an executable name. Names are matched exactly (case-sensitive).")
+                .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            TextField("Search or type a name…", text: $search)
+                .textFieldStyle(.roundedBorder)
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(filtered) { proc in
+                        Button {
+                            NeverThrottleList.add(proc.name)
+                            onAdded()
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(proc.name).font(.callout)
+                                Spacer()
+                                Text("\(Int(proc.cpuPercent))%")
+                                    .font(.caption.monospacedDigit())
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .frame(height: 220)
+            .background(Color.secondary.opacity(0.05),
+                        in: RoundedRectangle(cornerRadius: 6))
+
+            HStack {
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Spacer()
+                Button("Add typed name") {
+                    let trimmed = search.trimmingCharacters(in: .whitespaces)
+                    guard !trimmed.isEmpty else { return }
+                    NeverThrottleList.add(trimmed)
+                    onAdded()
+                    dismiss()
+                }
+                .disabled(search.trimmingCharacters(in: .whitespaces).isEmpty)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+        .frame(width: 380)
+        .onAppear { refresh() }
+    }
+
+    private var filtered: [RunningProcess] {
+        let s = search.trimmingCharacters(in: .whitespaces).lowercased()
+        let alreadyExcluded = Set(NeverThrottleList.names())
+        let visible = processes.filter { !alreadyExcluded.contains($0.name) }
+        guard !s.isEmpty else { return visible }
+        return visible.filter { $0.name.lowercased().contains(s) }
+    }
+
+    private func refresh() {
+        processes = Array(
+            store.processInspector
+                .topUserProcessesByCPU(limit: 200, minPercent: 0.0)
+        )
     }
 }

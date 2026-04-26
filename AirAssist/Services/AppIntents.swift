@@ -180,6 +180,45 @@ struct AirAssistFocusFilter: SetFocusFilterIntent {
     }
 }
 
+/// Bridge `ScenarioPreset` cases into Shortcuts as a picker. AppIntents
+/// can't infer enum bindings from a model that doesn't conform to
+/// `AppEnum`, so we mirror the cases here. Keep in sync with
+/// `ScenarioPreset` — the test pass would catch a divergence at the
+/// `init(scenario:)` switch below.
+@available(macOS 13.0, *)
+enum AirAssistScenarioChoice: String, AppEnum {
+    case presenting, quiet, performance, auto
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Scenario"
+    static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
+        .presenting:  "Presenting",
+        .quiet:       "Quiet",
+        .performance: "Performance",
+        .auto:        "Auto",
+    ]
+}
+
+@available(macOS 13.0, *)
+struct ApplyScenarioIntent: AppIntent {
+    static let title: LocalizedStringResource = "Apply AirAssist Scenario"
+    static let description = IntentDescription(
+        "Switch to a one-click setup (Presenting / Quiet / Performance / Auto). Bundles governor mode, caps, on-battery gating, and stay-awake."
+    )
+    static let openAppWhenRun: Bool = false
+
+    @Parameter(title: "Scenario")
+    var scenario: AirAssistScenarioChoice
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        let url = "airassist://scenario?name=\(scenario.rawValue)"
+        if let u = URL(string: url) {
+            NSWorkspace.shared.open(u)
+        }
+        return .result()
+    }
+}
+
 @available(macOS 13.0, *)
 struct AirAssistShortcutsProvider: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
@@ -209,6 +248,15 @@ struct AirAssistShortcutsProvider: AppShortcutsProvider {
             ],
             shortTitle: "Throttle Frontmost",
             systemImageName: "speedometer"
+        )
+        AppShortcut(
+            intent: ApplyScenarioIntent(),
+            phrases: [
+                "Apply scenario in \(.applicationName)",
+                "Switch \(.applicationName) scenario"
+            ],
+            shortTitle: "Apply Scenario",
+            systemImageName: "wand.and.stars"
         )
     }
 }

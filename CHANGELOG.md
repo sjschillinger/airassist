@@ -11,6 +11,98 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ---
 
+## [0.11.0] — 2026-04-26
+
+Polish + integrations release. The bones from 0.10 stay put; this
+round fills in the corners — first-run + What's-New sheets, governor
+notifications, a never-throttle list, scenario presets, sensor
+favorites, an activity log, Shortcuts.app intents, and a state-aware
+menu bar icon.
+
+### Added
+
+- **First-run welcome + "What's new" sheets.** A short onboarding on
+  first launch covering what the app does and what permissions to
+  expect; on every subsequent version bump, a one-time "What's new"
+  sheet summarising the release. Both keyed in UserDefaults so they
+  never repeat.
+- **Governor notifications (opt-in).** When the governor auto-throttles
+  on temperature or CPU, fire a system notification ("Air Assist is
+  throttling — \<reason>"). Off by default; toggle in
+  Preferences → General. 60-second cooldown to avoid spam during
+  oscillation, and only fires on the rising edge of a throttle event.
+- **Never-Throttle list.** A user-managed allowlist in
+  Preferences → Throttling. Anything on it is exempt from *every*
+  throttle source — governor, per-app rules, and even an explicit
+  manual click. Stronger than the built-in `excludedNames` (which
+  protects only system-critical bundles); intended for "this is mine,
+  hands off" cases like a build, a render, or a meeting client.
+  Add by picking from running processes or by free-form name entry.
+- **Scenario presets.** One-click bundles in the popover and
+  Preferences → Throttling: Presenting (governor off, display awake),
+  Quiet (aggressive thresholds, both modes, ignores battery), 
+  Performance (governor off, display awake), Auto (balanced + 
+  battery-only). Persists last-applied scenario across launches.
+  Per-app rules are deliberately untouched — different lifecycle.
+- **Recent activity panel on the dashboard.** Horizontal strip of the
+  last 20 throttle events: kind (apply/release), source 
+  (governor/rule/manual), process name, duty. Backed by an in-memory
+  ring buffer with coalescing — the 10 Hz reapply tick can't drown it.
+  Clear button included.
+- **Sensor favorites.** Star icon on every sensor card; pinned sensors
+  sort to the top of the dashboard grid regardless of the active sort
+  order. Backed by UserDefaults; updates live via
+  `UserDefaults.didChangeNotification`.
+- **State-aware status item icon.** The menu bar icon's accent dot now
+  reflects governor state: red pulse during temperature throttling,
+  orange pulse during CPU throttling or any active manual cap, static
+  blue when the governor is armed but idle, no dot when fully off or
+  paused.
+- **"Show in Activity Monitor" + context actions on manual throttles.**
+  Right-click any active manual throttle row in the popover for: open
+  Activity Monitor, copy process name, or "Add to Never-Throttle list"
+  (which also releases the cap).
+- **Shortcuts.app integration.** Four intents — Pause, Resume, Throttle
+  Frontmost App, Apply Scenario — wired through the existing
+  `airassist://` URL scheme so Shortcuts and the URL handler share one
+  code path and one test suite. Plus a Focus Filter that can pause or
+  resume on Focus mode changes (e.g. pause throttling when "Gaming"
+  Focus turns on).
+- **Diagnostic bundle export polish.** Bundle now includes the throttle
+  activity log (`throttle-activity.json`) and the new preference keys
+  (`whatsNew.lastSeenVersion`, `neverThrottleNames`,
+  `scenarioPreset.last`, `notifications.governor`,
+  `throttleFrontmost.duty`, `throttleFrontmost.durationMinutes`).
+
+### Changed
+
+- Dashboard sort partitions favorites first, then applies the chosen
+  sort order within each partition. Pinned sensors always appear above
+  unpinned, even under "hottest first" or alphabetical.
+- `Performance` scenario no longer fully disables the governor. It now
+  applies the **gentle** governor preset — armed with a high heat
+  ceiling — so a long render or compile isn't gratuitously paused but
+  the Mac still has a thermal safety net before it cooks itself.
+  `Presenting` keeps the old "governor fully off" behaviour for demos
+  where a surprise pause is unacceptable.
+
+### Fixed
+
+- First-run + What's New sheets no longer block `airassist://` URL
+  handling on launch. Previously, `NSAlert.runModal()` ran the runloop
+  in `.modalPanel` mode and starved `application(_:open:)` of Apple
+  Events — a Shortcut or `open airassist://...` invocation that *triggered*
+  a cold launch sat queued behind the modal until the user dismissed.
+  Replaced with a non-modal floating window that keeps the runloop
+  spinning.
+- `ProcessThrottler.clearDuty` no longer logs phantom `.release` events
+  in the activity log. Previously, calling `clearDuty` with a source
+  that wasn't actually a requester (e.g. a `.manual` rejection from
+  the never-throttle list when only `.governor` held the PID) would
+  still log a release for that absent source.
+
+---
+
 ## [0.10.0] — 2026-04-26
 
 Popover-level quick controls. Everything that previously required a

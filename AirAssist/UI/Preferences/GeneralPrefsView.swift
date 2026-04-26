@@ -221,6 +221,25 @@ struct GeneralPrefsView: View {
                 }
             }
 
+            Section("Notifications") {
+                LabeledContent("Notify when governor engages") {
+                    Toggle("", isOn: Binding(
+                        get: { UserDefaults.standard.bool(forKey: "notifications.governor") },
+                        set: { newValue in
+                            UserDefaults.standard.set(newValue, forKey: "notifications.governor")
+                            if newValue {
+                                GovernorNotifier.requestAuthorizationIfNeeded()
+                            }
+                        }
+                    ))
+                    .labelsHidden()
+                    .accessibilityLabel("Show a system notification when the thermal governor first engages")
+                }
+                Text("Posts a system notification the first time the governor breaches a cap after a quiet period. Useful when Air Assist is hidden and you want to know the OS is being throttled. macOS asks for permission the first time you turn this on.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             Section("Updates") {
                 LabeledContent("Check automatically") {
                     Toggle("", isOn: Binding(

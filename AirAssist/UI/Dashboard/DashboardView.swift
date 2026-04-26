@@ -26,7 +26,16 @@ struct DashboardView: View {
     private let columns = [GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 10)]
 
     private var sortedSensors: [Sensor] {
-        let base = store.enabledSensors
+        // Pinned (favorited) sensors always sort to the top, regardless of
+        // the picked sort order. Within each partition the chosen order
+        // applies normally.
+        let favs = SensorFavorites.ids()
+        let pinned    = store.enabledSensors.filter {  favs.contains($0.id) }
+        let unpinned  = store.enabledSensors.filter { !favs.contains($0.id) }
+        return sortPartition(pinned) + sortPartition(unpinned)
+    }
+
+    private func sortPartition(_ base: [Sensor]) -> [Sensor] {
         switch sortOrder {
         case .category:
             return base.sorted {
@@ -59,8 +68,76 @@ struct DashboardView: View {
                 Divider()
                 throttlePanel
             }
+            if !store.throttleActivityLog.entries.isEmpty {
+                Divider()
+                recentActivityPanel
+            }
         }
         .frame(minWidth: 760, minHeight: 460)
+    }
+
+    // MARK: - Recent activity panel
+
+    private var recentActivityPanel: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .foregroundStyle(.secondary)
+                Text("Recent throttle activity").font(.headline)
+                Spacer()
+                Text("\(store.throttleActivityLog.entries.count) events")
+                    .font(.caption).foregroundStyle(.secondary)
+                Button("Clear") { store.throttleActivityLog.clear() }
+                    .controlSize(.small)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(store.throttleActivityLog.entries.prefix(20)) { entry in
+                        activityRow(entry: entry)
+                        Divider().padding(.vertical, 4)
+                    }
+                }
+            }
+            .frame(height: 56)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+    }
+
+    private func activityRow(entry: ThrottleActivityLog.Entry) -> some View {
+        let icon: String = entry.kind == .apply ? "pause.circle.fill" : "play.circle.fill"
+        let tint: Color = {
+            switch entry.source {
+            case .governor: return .red
+            case .rule:     return .orange
+            case .manual:   return .purple
+            }
+        }()
+        return HStack(spacing: 6) {
+            Image(systemName: icon).foregroundStyle(tint)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(entry.name).font(.caption).lineLimit(1)
+                HStack(spacing: 4) {
+                    Text(sourceLabel(entry.source))
+                        .font(.caption2).foregroundStyle(.secondary)
+                    if entry.kind == .apply {
+                        Text("· \(Int((entry.duty * 100).rounded()))%")
+                            .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                    }
+                }
+                Text(entry.timestamp, style: .relative)
+                    .font(.caption2).foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.horizontal, 8)
+        .frame(width: 150, alignment: .leading)
+    }
+
+    private func sourceLabel(_ s: ThrottleSource) -> String {
+        switch s {
+        case .governor: return "Governor"
+        case .rule:     return "Rule"
+        case .manual:   return "Manual"
+        }
     }
 
     // MARK: - Top CPU panel (right column)
