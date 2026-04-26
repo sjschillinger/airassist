@@ -61,7 +61,12 @@ final class ThermalStore {
             c.onBatteryOnly = false
             governorConfig = c
         case .performance:
-            c.mode = .off
+            // Distinct from Presenting: governor stays *armed* with the
+            // gentle preset — only intervenes at extreme temps, so a
+            // long render or compile isn't gratuitously paused but the
+            // Mac still has a safety net before it cooks itself.
+            c = GovernorPreset.gentle.applied(to: c)
+            c.mode = .both
             c.onBatteryOnly = false
             governorConfig = c
             setStayAwakeMode(.display)

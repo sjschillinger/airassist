@@ -305,24 +305,33 @@ final class ProcessThrottler {
     /// wants the PID throttled, it's released. Rule engine / governor use
     /// this (not `release`) so they only retract their own requests.
     func clearDuty(source: ThrottleSource, for pid: pid_t) {
-        // Snapshot the name before mutating so the activity log entry is
-        // accurate even after the entry is fully removed.
-        let snapshotName: String? = state.withLock { s in s.active[pid]?.name }
-        let shouldRelease = state.withLock { s -> Bool in
-            guard var entry = s.active[pid] else { return false }
-            entry.sources.removeValue(forKey: source)
+        // Single locked region: figure out (a) was this source actually a
+        // requester, (b) the entry's display name to log, (c) whether the
+        // entry is now empty and the PID should be released. We *only* log
+        // a `.release` event if `removeValue` actually removed something —
+        // otherwise a setDuty rejection (e.g. NeverThrottleList) on a PID
+        // that another source was already throttling would log a phantom
+        // release for a source that never held the PID.
+        let result: (loggedName: String?, shouldRelease: Bool) = state.withLock { s in
+            guard var entry = s.active[pid] else { return (nil, false) }
+            guard entry.sources.removeValue(forKey: source) != nil else {
+                // This source wasn't a requester — nothing to log, nothing
+                // to release. Other sources (if any) keep their requests.
+                return (nil, false)
+            }
+            let name = entry.name
             if entry.sources.isEmpty {
                 // Defer the release to outside the lock so we don't reenter.
-                return true
+                return (name, true)
             } else {
                 s.active[pid] = entry
-                return false
+                return (name, false)
             }
         }
-        if let name = snapshotName {
+        if let name = result.loggedName {
             activityLog?.record(kind: .release, source: source, pid: pid, name: name, duty: 1.0)
         }
-        if shouldRelease { release(pid: pid) }
+        if result.shouldRelease { release(pid: pid) }
     }
 
     /// Remove *all* requests from a single source. Used on engine

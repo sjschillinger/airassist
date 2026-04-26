@@ -52,6 +52,7 @@
 		704A38ED1043918BE5782CD2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22B8A97982FB78D94D328FDB /* IOKit.framework */; };
 		72FE15AFF7FE2FD18EBD5B04 /* ThresholdPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */; };
 		746541589DF0935BB87134CA /* WatchdogForceSIGCONTTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2846BAB3600EC7C4F7697750 /* WatchdogForceSIGCONTTests.swift */; };
+		74D6CEF6E0A209D8AE335167 /* InfoSheetWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ED29039D60153CEBDADDE6 /* InfoSheetWindow.swift */; };
 		7DFDBE9AFB240F2EA89400D4 /* ThrottleActivityLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3AE9374600EBF84EE6A7CB /* ThrottleActivityLog.swift */; };
 		81EF92D16FD31086423E4B99 /* URLSchemeHandler+Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */; };
 		84A2245698D5145A2CF258F1 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4734EA368915E7C48BCC2534 /* main.swift */; };
@@ -140,6 +141,7 @@
 
 /* Begin PBXFileReference section */
 		02BA0BF3D6B9C098E7D51127 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		04ED29039D60153CEBDADDE6 /* InfoSheetWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoSheetWindow.swift; sourceTree = "<group>"; };
 		053C1F519C6EF5056C3BFC58 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		05664AF6DD35210D50D4D873 /* SensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorService.swift; sourceTree = "<group>"; };
 		0D2EA235795456EF4D733B04 /* MenuBarPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPrefs.swift; sourceTree = "<group>"; };
@@ -433,6 +435,7 @@
 				FE9C2F08AC070CE2A01E6E25 /* GovernorNotifier.swift */,
 				F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */,
 				0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */,
+				04ED29039D60153CEBDADDE6 /* InfoSheetWindow.swift */,
 				5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */,
 				3EAD7FCA44F3E19EC9BC2BAD /* LaunchAtLoginService.swift */,
 				94E3121354051F583FCBB426 /* MemoryWatchdog.swift */,
@@ -769,6 +772,7 @@
 				C43FB882937BC5D2E7FACF2B /* HistoryReader.swift in Sources */,
 				FAB74801EE74233DE341FF9C /* HistoryView.swift in Sources */,
 				2E8787E468BA9D77080343A2 /* IOKitSensorReader.swift in Sources */,
+				74D6CEF6E0A209D8AE335167 /* InfoSheetWindow.swift in Sources */,
 				99CCB4C7F83F69F150A2594D /* LaunchAtLoginService.swift in Sources */,
 				BCCAB1901E878170437146FF /* MemoryWatchdog.swift in Sources */,
 				C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */,

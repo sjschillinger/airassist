@@ -40,7 +40,7 @@ enum ScenarioPreset: String, CaseIterable, Identifiable {
         switch self {
         case .presenting:  return "Governor off, display awake. No surprise pauses during a demo."
         case .quiet:       return "Aggressive caps, runs on battery and AC. Library / café mode."
-        case .performance: return "Governor off, display awake. Get out of the workload's way."
+        case .performance: return "Gentle governor only — high heat ceiling, display awake. Get out of the workload's way."
         case .auto:        return "Balanced caps, on-battery only. Sensible everyday default."
         }
     }

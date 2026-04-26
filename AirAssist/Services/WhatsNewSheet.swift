@@ -77,21 +77,23 @@ enum WhatsNewSheet {
 
     private static func present(entry: (version: String, title: String, bullets: [String]),
                                 more: Int) {
-        let alert = NSAlert()
-        alert.alertStyle = .informational
-        alert.messageText = entry.title
+        // Non-modal — see InfoSheetWindow for why we don't use NSAlert.runModal()
+        // here. Same UX, no runloop block, no queued URLs.
         var body = entry.bullets.map { "•  \($0)" }.joined(separator: "\n")
         if more > 0 {
             body += "\n\n(\(more) earlier release\(more == 1 ? "" : "s") since you last opened the app — see the full changelog on GitHub.)"
         }
-        alert.informativeText = body
-        alert.addButton(withTitle: "Got it")
-        alert.addButton(withTitle: "View Changelog")
-
-        if alert.runModal() == .alertSecondButtonReturn {
-            if let url = URL(string: "https://github.com/sjschillinger/airassist/blob/main/CHANGELOG.md") {
-                NSWorkspace.shared.open(url)
-            }
-        }
+        InfoSheetWindow.present(
+            title: entry.title,
+            body: body,
+            primaryButton: "Got it",
+            secondaryButton: "View Changelog",
+            secondaryAction: {
+                if let url = URL(string: "https://github.com/sjschillinger/airassist/blob/main/CHANGELOG.md") {
+                    NSWorkspace.shared.open(url)
+                }
+            },
+            onClose: {}  // marker is set unconditionally by the caller's `defer`
+        )
     }
 }
