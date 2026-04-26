@@ -11,6 +11,8 @@ struct ThrottlingPrefsView: View {
                 pauseBanner
                 GovernorSection(store: store)
                 Divider()
+                FrontmostThrottleSection()
+                Divider()
                 RulesSection(store: store)
             }
             .padding(16)
@@ -393,6 +395,60 @@ private struct GovernorSection: View {
 enum CPUScaleMode: String, Hashable {
     case normalized
     case perCore
+}
+
+// MARK: - Frontmost quick throttle (v0.10)
+
+/// Settings for the popover's "Throttle [frontmost]" quick button.
+/// The user picks the duty (cap) and how long the cap stays in place
+/// before auto-releasing. Both values are read live by
+/// `MenuBarPopoverView` so a slider change applies on the next click.
+private struct FrontmostThrottleSection: View {
+    @AppStorage("throttleFrontmost.duty") private var duty: Double = 0.30
+    @AppStorage("throttleFrontmost.durationMinutes") private var durationMinutes: Int = 60
+
+    /// Allowed durations. -1 sentinel = "until I clear it" (no
+    /// auto-release). Same convention as the right-click pause submenu.
+    private let durationOptions: [(label: String, minutes: Int)] = [
+        ("15 minutes",      15),
+        ("1 hour",          60),
+        ("4 hours",         4 * 60),
+        ("Until I clear it", -1),
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Frontmost-app quick throttle")
+                .font(.headline)
+            Text("Settings for the popover’s “Throttle [app]” button. The cap auto-releases after the chosen duration, or you can click the button again to release immediately.")
+                .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Form {
+                LabeledContent("Cap") {
+                    HStack(spacing: 8) {
+                        Slider(value: $duty, in: 0.10...0.85, step: 0.05)
+                            .frame(maxWidth: 220)
+                        Text("\(Int((duty * 100).rounded()))%")
+                            .monospacedDigit()
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                }
+                .help("Process runs this fraction of the time and is paused the rest. 30% means it gets ~30% of the CPU it would otherwise use.")
+
+                LabeledContent("Duration") {
+                    Picker("", selection: $durationMinutes) {
+                        ForEach(durationOptions, id: \.minutes) { opt in
+                            Text(opt.label).tag(opt.minutes)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .frame(width: 180)
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Rules

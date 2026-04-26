@@ -1,5 +1,7 @@
 import SwiftUI
+import AppKit
 import Darwin
+import os
 
 struct MenuBarPopoverView: View {
     let store: ThermalStore
@@ -15,6 +17,25 @@ struct MenuBarPopoverView: View {
         SensorDisplayMode(rawValue: displayModeRaw) ?? .detailed
     }
 
+    /// Last non-off governor mode the user had selected. Used by the
+    /// master toggle in `controlsSection` so flipping the governor off
+    /// then back on restores their previous mode rather than always
+    /// landing on `.both`. Stored as the raw string of `GovernorMode`.
+    @AppStorage("governor.lastActiveMode") private var lastActiveGovernorModeRaw: String = GovernorMode.both.rawValue
+
+    /// Live prefs for the "Throttle frontmost" quick button. Edited in
+    /// Preferences → Throttling → Frontmost-app quick throttle. Read
+    /// each click so a slider change applies immediately.
+    @AppStorage("throttleFrontmost.duty") private var frontmostDuty: Double = 0.30
+    @AppStorage("throttleFrontmost.durationMinutes") private var frontmostDurationMinutes: Int = 60
+
+    /// Tick used to refresh manual-throttle countdowns once per second
+    /// while the popover is visible. The popover only renders while
+    /// open, so this is a cheap timer that costs nothing the rest of
+    /// the time.
+    @State private var countdownTick: Date = Date()
+    private let countdownTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -22,10 +43,14 @@ struct MenuBarPopoverView: View {
             sensorList
             sparklineRow
             Divider()
+            manualThrottlesSection
             throttleSection
+            Divider()
+            controlsSection
             Divider()
             actionButtons
         }
+        .onReceive(countdownTimer) { countdownTick = $0 }
         // #42 Tighten width. Previously fixed at 280; summary-mode popovers
         // felt oversized for a single-sensor readout. 260 is the width the
         // category headers + throttle rows were actually designed against.
@@ -223,6 +248,96 @@ struct MenuBarPopoverView: View {
         }
     }
 
+    // MARK: - Manual throttles strip (v0.10)
+
+    /// Rows for any PIDs currently running under a `.manual` cap.
+    /// These are the apps the user threw under the bus via the
+    /// "Throttle [frontmost]" button, the right-click quick menu, or
+    /// the URL scheme. Surfaced separately from the main throttle
+    /// list so the user always knows exactly what they put down.
+    private struct ManualThrottleRow: Identifiable {
+        let id: pid_t
+        let pid: pid_t
+        let name: String
+        let duty: Double
+        let deadline: Date?
+    }
+
+    private var manualThrottleRows: [ManualThrottleRow] {
+        store.processThrottler.throttleDetail
+            .filter { $0.sources[.manual] != nil && kill($0.pid, 0) == 0 }
+            .map { d in
+                ManualThrottleRow(
+                    id: d.pid,
+                    pid: d.pid,
+                    name: d.name,
+                    duty: d.sources[.manual] ?? 1.0,
+                    deadline: store.manualThrottleDeadline(pid: d.pid)
+                )
+            }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    /// Read `countdownTick` so SwiftUI re-evaluates when the timer
+    /// fires. The value itself is only the trigger.
+    private func remainingLabel(for deadline: Date?) -> String? {
+        guard let deadline else { return nil }
+        _ = countdownTick
+        let secs = Int(deadline.timeIntervalSinceNow.rounded())
+        if secs <= 0 { return "0s" }
+        if secs < 60 { return "\(secs)s left" }
+        let m = secs / 60
+        if m < 60 { return "\(m)m left" }
+        let h = m / 60
+        let rm = m % 60
+        return rm == 0 ? "\(h)h left" : "\(h)h \(rm)m left"
+    }
+
+    @ViewBuilder
+    private var manualThrottlesSection: some View {
+        let rows = manualThrottleRows
+        if !rows.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Image(systemName: "hand.point.up.left.fill")
+                        .foregroundStyle(.purple)
+                    Text("Quick throttles")
+                        .font(.caption).bold()
+                    Spacer()
+                    Text("\(rows.count) active")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                ForEach(rows) { row in
+                    HStack(spacing: 6) {
+                        Text(row.name)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Spacer(minLength: 4)
+                        Text("\(Int((row.duty * 100).rounded()))%")
+                            .monospacedDigit().foregroundStyle(.secondary)
+                        if let label = remainingLabel(for: row.deadline) {
+                            Text("· \(label)")
+                                .foregroundStyle(.secondary)
+                        }
+                        Button {
+                            store.releaseManualThrottle(pid: row.pid)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Release this manual throttle now.")
+                    }
+                    .font(.caption2)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color.purple.opacity(0.06))
+            Divider()
+        }
+    }
+
     @ViewBuilder
     private var throttleSection: some View {
         let rows = throttleRows
@@ -360,6 +475,261 @@ struct MenuBarPopoverView: View {
         let f = RelativeDateTimeFormatter()
         f.unitsStyle = .abbreviated
         return f.localizedString(for: date, relativeTo: Date())
+    }
+
+    // MARK: - Controls section (v0.10)
+
+    /// Quick controls: governor master toggle, on-battery-only gate,
+    /// throttle the frontmost app, and the Stay Awake mode picker.
+    /// One control per row — at 260px wide, two-up toggles wrap their
+    /// labels and the section feels disorganized. Vertical rhythm
+    /// matches the action buttons below.
+    private var controlsSection: some View {
+        VStack(spacing: 0) {
+            // Governor master toggle.
+            controlRow(icon: "gauge.with.dots.needle.67percent",
+                       label: "Governor",
+                       help: "Enable or disable the system-wide thermal/CPU governor.") {
+                Toggle("", isOn: governorEnabledBinding)
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .labelsHidden()
+            }
+
+            // On-battery-only gate (sub-control of the governor).
+            controlRow(icon: "battery.75percent",
+                       label: "Only on battery",
+                       indent: true,
+                       help: "Only act while on battery; armed-but-silent on AC.") {
+                Toggle("", isOn: Binding(
+                    get: { store.governorConfig.onBatteryOnly },
+                    set: { store.governorConfig.onBatteryOnly = $0 }
+                ))
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .labelsHidden()
+                .disabled(store.governorConfig.isOff)
+            }
+
+            // Throttle frontmost — toggles. If the frontmost app is
+            // already manually throttled, click clears it. Otherwise
+            // applies the user-configured duty for the user-configured
+            // duration (or indefinitely if duration == -1).
+            Button(action: toggleFrontmostThrottle) {
+                rowContent(icon: isFrontmostManuallyThrottled
+                                 ? "hand.raised.slash"
+                                 : "hand.point.up.left",
+                           iconTint: isFrontmostManuallyThrottled ? .purple : nil,
+                           label: throttleFrontmostLabel,
+                           indent: false) {
+                    Text(isFrontmostManuallyThrottled
+                         ? "Release"
+                         : "\(Int((frontmostDuty * 100).rounded()))%")
+                        .font(.callout).monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(!canThrottleFrontmost)
+            .help(throttleFrontmostHelp)
+            .modifier(HoverHighlight())
+
+            // Stay Awake quick picker.
+            controlRow(icon: store.stayAwake.isActive ? "cup.and.saucer.fill" : "cup.and.saucer",
+                       iconTint: store.stayAwake.isActive ? .yellow : nil,
+                       label: "Stay Awake",
+                       help: "Keep the Mac awake — system, display, or with a timeout.") {
+                stayAwakeMenu
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    /// Standard row for a control whose trailing widget is a Toggle/Menu.
+    /// Mirrors `MenuBarButton`'s padding so toggles and buttons share a
+    /// vertical rhythm.
+    @ViewBuilder
+    private func controlRow<Trailing: View>(
+        icon: String,
+        iconTint: Color? = nil,
+        label: String,
+        indent: Bool = false,
+        help: String? = nil,
+        @ViewBuilder trailing: () -> Trailing
+    ) -> some View {
+        rowContent(icon: icon, iconTint: iconTint, label: label, indent: indent, trailing: trailing)
+            .help(help ?? "")
+    }
+
+    /// Shared row layout — icon + label on the left, trailing widget on
+    /// the right. Used by both the toggle rows and the throttle-frontmost
+    /// button so they line up pixel-for-pixel.
+    @ViewBuilder
+    private func rowContent<Trailing: View>(
+        icon: String,
+        iconTint: Color? = nil,
+        label: String,
+        indent: Bool,
+        @ViewBuilder trailing: () -> Trailing
+    ) -> some View {
+        HStack(spacing: 8) {
+            if indent { Spacer().frame(width: 14) }
+            Image(systemName: icon)
+                .frame(width: 16)
+                .foregroundStyle(iconTint ?? .primary)
+            Text(label)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            Spacer(minLength: 4)
+            trailing()
+        }
+        .font(.callout)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+    }
+
+    /// Master governor toggle. Off → `.off`. On → restore last non-off
+    /// mode (defaults to `.both` on first run). Writing back to
+    /// `governorConfig` triggers the persistence + governor.updateConfig
+    /// chain in the store's didSet.
+    private var governorEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { !store.governorConfig.isOff },
+            set: { newOn in
+                if newOn {
+                    let restored = GovernorMode(rawValue: lastActiveGovernorModeRaw) ?? .both
+                    store.governorConfig.mode = (restored == .off) ? .both : restored
+                } else {
+                    if !store.governorConfig.isOff {
+                        lastActiveGovernorModeRaw = store.governorConfig.mode.rawValue
+                    }
+                    store.governorConfig.mode = .off
+                }
+            }
+        )
+    }
+
+    /// Frontmost-app snapshot, captured by `MenuBarController` *before*
+    /// the popover steals focus. A live `NSWorkspace.frontmost…` query
+    /// from inside the view would return Air Assist (because the
+    /// popover's `makeKey()` activates us), so the button has to use
+    /// this captured value. `nil` when the popover was opened with
+    /// nothing else frontmost (e.g. cold launch).
+    private var frontmost: ThermalStore.FrontmostSnapshot? {
+        store.capturedFrontmost
+    }
+    private var canThrottleFrontmost: Bool { frontmost != nil }
+
+    /// True when the captured frontmost app currently has any
+    /// manual-source duty applied. Drives the icon swap and the
+    /// click-to-release path.
+    private var isFrontmostManuallyThrottled: Bool {
+        guard let pid = frontmost?.pid else { return false }
+        return store.processThrottler.throttleDetail
+            .first { $0.pid == pid }?
+            .sources.keys.contains(.manual) ?? false
+    }
+
+    private var throttleFrontmostLabel: String {
+        guard let name = frontmost?.name else { return "Throttle frontmost" }
+        return isFrontmostManuallyThrottled ? "Release \(name)" : "Throttle \(name)"
+    }
+
+    private var throttleFrontmostHelp: String {
+        if isFrontmostManuallyThrottled {
+            return "Release the manual cap on this app."
+        }
+        let pct = Int((frontmostDuty * 100).rounded())
+        let dur: String = {
+            if frontmostDurationMinutes < 0 { return "until you clear it" }
+            if frontmostDurationMinutes >= 60 {
+                let h = frontmostDurationMinutes / 60
+                return "for \(h) hour\(h > 1 ? "s" : "")"
+            }
+            return "for \(frontmostDurationMinutes) minutes"
+        }()
+        return "Cap the frontmost app at \(pct)% \(dur). Adjust in Preferences → Throttling."
+    }
+
+    /// Click handler. Throttles or releases depending on current state.
+    private func toggleFrontmostThrottle() {
+        let log = os.Logger(subsystem: "com.sjschillinger.airassist", category: "QuickThrottle")
+        guard let app = frontmost else {
+            log.error("toggleFrontmostThrottle: frontmost is nil — capturedFrontmost was not set")
+            return
+        }
+        log.notice("toggleFrontmostThrottle pid=\(app.pid) name=\(app.name) duty=\(frontmostDuty) alreadyThrottled=\(isFrontmostManuallyThrottled)")
+        if isFrontmostManuallyThrottled {
+            store.releaseManualThrottle(pid: app.pid)
+            return
+        }
+        // -1 sentinel from the duration picker = "until I clear it".
+        // Pass a very long duration so the auto-release effectively
+        // never fires; the user releases via the same button.
+        let duration: TimeInterval = frontmostDurationMinutes < 0
+            ? 60 * 60 * 24 * 365   // 1 year
+            : TimeInterval(frontmostDurationMinutes * 60)
+        store.throttleFrontmost(
+            pid: app.pid,
+            name: app.name,
+            duty: frontmostDuty,
+            duration: duration
+        )
+    }
+
+    /// Stay Awake mode picker. Mirrors the right-click quick menu but
+    /// lives in the popover so single-click users can reach it. The
+    /// display-timeout variant uses the user's saved minutes preference
+    /// (defaults to 10) so it's a one-click toggle, not a fresh decision.
+    private var stayAwakeMenu: some View {
+        Menu {
+            Button(action: { store.setStayAwakeMode(.off) }) {
+                Label("Off", systemImage: store.stayAwake.currentMode == .off ? "checkmark" : "")
+            }
+            Button(action: { store.setStayAwakeMode(.system) }) {
+                Label("Keep system awake (allow display sleep)",
+                      systemImage: store.stayAwake.currentMode == .system ? "checkmark" : "")
+            }
+            Button(action: { store.setStayAwakeMode(.display) }) {
+                Label("Keep system & display awake",
+                      systemImage: store.stayAwake.currentMode == .display ? "checkmark" : "")
+            }
+            let mins = stayAwakeTimeoutMinutes
+            let timeoutMode = StayAwakeService.Mode.displayThenSystem(minutes: mins)
+            Button(action: { store.setStayAwakeMode(timeoutMode) }) {
+                Label("Display on \(mins) min, then system only",
+                      systemImage: store.stayAwake.currentMode == timeoutMode ? "checkmark" : "")
+            }
+            if let remaining = store.stayAwake.displayTimerRemaining, remaining > 0 {
+                Divider()
+                let m = Int(remaining / 60)
+                let s = Int(remaining.truncatingRemainder(dividingBy: 60))
+                Text(String(format: "Display sleeps in %d:%02d", m, s))
+            }
+        } label: {
+            Text(stayAwakeShortLabel)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+    }
+
+    /// Short one-word-ish label for the menu's collapsed state — full
+    /// `menuLabel` is too long for a 260px-wide popover row.
+    private var stayAwakeShortLabel: String {
+        switch store.stayAwake.currentMode {
+        case .off:                           return "Off"
+        case .system:                        return "System"
+        case .display:                       return "System & display"
+        case .displayThenSystem(let m):      return "\(m) min then system"
+        }
+    }
+
+    private var stayAwakeTimeoutMinutes: Int {
+        let m = UserDefaults.standard.integer(forKey: "stayAwake.displayTimeoutMinutes")
+        return m > 0 ? m : 10
     }
 
     private var actionButtons: some View {
