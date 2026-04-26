@@ -68,6 +68,7 @@ struct MenuBarPopoverView: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 22, height: 22)
                 .foregroundStyle(.primary)
+                .accessibilityHidden(true)   // decorative; "Air Assist" text speaks
             Text(AppStrings.appName)
                 .font(.headline)
             Spacer()
@@ -101,7 +102,12 @@ struct MenuBarPopoverView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help(hotkeyTooltip)
-        .accessibilityLabel(store.isPauseActive ? "Throttling paused. Click to resume." : "Pause throttling menu")
+        // Label voices state; hint voices the affordance. VoiceOver
+        // already announces "menu" via the trait, so we don't say it.
+        .accessibilityLabel(store.isPauseActive ? "Throttling paused" : "Pause throttling")
+        .accessibilityHint(store.isPauseActive
+                           ? "Activate to resume immediately"
+                           : "Activate to choose a pause duration")
     }
 
     /// Combined tooltip for the pause menu: state + hotkey when enabled.
@@ -253,11 +259,13 @@ struct MenuBarPopoverView: View {
         }
     }
 
-    /// "Last minute hottest temp: started 62°C, now 71°C, peaked at 73°C."
+    /// Trend summary read aloud in place of the silent Path drawing.
+    /// Kept short — VoiceOver users navigating the popover don't want
+    /// a paragraph here, just the orientation.
     private func sparklineA11yLabel(_ samples: [Double]) -> String {
         guard let first = samples.first, let last = samples.last,
               let peak = samples.max() else { return "" }
-        return "Last minute hottest sensor: started \(unit.format(first)), now \(unit.format(last)), peaked at \(unit.format(peak))."
+        return "Hottest sensor trend: now \(unit.format(last)), was \(unit.format(first)) one minute ago, peaked at \(unit.format(peak))."
     }
 
     // MARK: - Manual throttles strip (v0.10)
