@@ -1,7 +1,912 @@
 {
   "sourceLanguage" : "en",
-  "version" : "1.0",
   "strings" : {
+    "" : {
 
-  }
+    },
+    "–" : {
+
+    },
+    "—" : {
+
+    },
+    "· %@" : {
+
+    },
+    "· %lld" : {
+
+    },
+    "· %lld%%" : {
+
+    },
+    "· resumes %@ from now" : {
+
+    },
+    "% of system" : {
+
+    },
+    "%@ · %lld%% CPU" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$lld%% CPU"
+          }
+        }
+      }
+    },
+    "%@ category" : {
+
+    },
+    "%@ value" : {
+
+    },
+    "%@, %lld percent CPU%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$lld percent CPU%3$@"
+          }
+        }
+      }
+    },
+    "%@, PID %d, capped at %lld percent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, PID %2$d, capped at %3$lld percent"
+          }
+        }
+      }
+    },
+    "%@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%d" : {
+
+    },
+    "%lld active" : {
+
+    },
+    "%lld events" : {
+
+    },
+    "%lld min" : {
+
+    },
+    "%lld of %lld sensors shown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld sensors shown"
+          }
+        }
+      }
+    },
+    "%lld samples" : {
+
+    },
+    "%lld sensors" : {
+
+    },
+    "%lld%%" : {
+
+    },
+    "%lld× · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld× · %2$@"
+          }
+        }
+      }
+    },
+    "°C" : {
+
+    },
+    "°F" : {
+
+    },
+    "+ %lld more" : {
+
+    },
+    "1 hour" : {
+
+    },
+    "4 hours" : {
+
+    },
+    "5%" : {
+
+    },
+    "15 minutes" : {
+
+    },
+    "40°C" : {
+
+    },
+    "50%" : {
+
+    },
+    "100%" : {
+
+    },
+    "100% ≈ one core." : {
+
+    },
+    "100%% = every core on this Mac fully used (%lld cores online)." : {
+
+    },
+    "100°C" : {
+
+    },
+    "A two-minute setup. Nothing throttles until you enable it." : {
+
+    },
+    "Add" : {
+
+    },
+    "Add \"%@\" to Never-Throttle list" : {
+
+    },
+    "Add app to never-throttle list" : {
+
+    },
+    "Add Rule…" : {
+
+    },
+    "Add Throttle Rule" : {
+
+    },
+    "Add throttle rule for this app" : {
+
+    },
+    "Add typed name" : {
+
+    },
+    "Add…" : {
+
+    },
+    "Advanced" : {
+
+    },
+    "Air Assist — Dashboard" : {
+      "comment" : "Dashboard window title"
+    },
+    "Air Assist — Preferences" : {
+      "comment" : "Preferences window title"
+    },
+    "Air Assist lives in your menu bar — click it for the live thermal popover, or right-click for the quick menu. Preferences are in the popover's gear icon." : {
+
+    },
+    "AirAssist" : {
+
+    },
+    "AirAssist Focus Action" : {
+
+    },
+    "All sensors hidden" : {
+
+    },
+    "Allowed" : {
+
+    },
+    "Allowed CPU" : {
+
+    },
+    "App" : {
+
+    },
+    "Apple Silicon begins its own thermal management in the mid-90s °C. Caps near 100°C overlap with that — set lower to intervene first." : {
+
+    },
+    "Apply a CPU duty cap to the currently-frontmost application. Expires automatically after the duration." : {
+
+    },
+    "Apply AirAssist Scenario" : {
+
+    },
+    "Apply an AirAssist behavior whenever this Focus turns on. Useful for pausing throttling during gaming or rendering Focus modes, or letting it run during Work." : {
+
+    },
+    "Apply Scenario" : {
+
+    },
+    "Apply scenario preset" : {
+
+    },
+    "Apply…" : {
+
+    },
+    "Apps in this list are always off-limits — auto rules, the governor, and even an explicit “Throttle [app]” click will refuse to touch them." : {
+
+    },
+    "Auto" : {
+
+    },
+    "Auto-release after this duration (e.g. 30m, 1h). Default 1h." : {
+
+    },
+    "Automatic governor" : {
+
+    },
+    "Automatically throttles top CPU processes when a sensor or total CPU usage crosses a cap." : {
+
+    },
+    "Battery-aware thresholds" : {
+
+    },
+    "Bundles your current configuration, live throttle state, and recent thermal history into a single .zip you can attach to a GitHub issue. Nothing is uploaded — the file is saved locally." : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Cap" : {
+
+    },
+    "Cap at" : {
+
+    },
+    "Cap at 50%" : {
+
+    },
+    "Cap how much CPU a specific app can use. 100% means no throttle; 50% means it runs half the wall-clock time." : {
+
+    },
+    "Category" : {
+
+    },
+    "Check automatically" : {
+
+    },
+    "Check for updates automatically every day" : {
+
+    },
+    "Check Now" : {
+
+    },
+    "Clear" : {
+
+    },
+    "Clear manual throttle" : {
+
+    },
+    "Collapse %@ sensors" : {
+
+    },
+    "Consider processes ≥ %lld%% CPU" : {
+
+    },
+    "Copy process name" : {
+
+    },
+    "CPU" : {
+
+    },
+    "CPU cap" : {
+
+    },
+    "CPU%" : {
+
+    },
+    "Currently throttled" : {
+
+    },
+    "Currently throttling %lld process%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Currently throttling %1$lld process%2$@"
+          }
+        }
+      }
+    },
+    "Dashboard" : {
+      "comment" : "Menu bar item: opens the Dashboard window"
+    },
+    "Delete" : {
+
+    },
+    "Diagnostics" : {
+
+    },
+    "Disable All" : {
+
+    },
+    "Display on %lld min, then system only" : {
+
+    },
+    "Display on, then system only" : {
+
+    },
+    "Display sleeps in" : {
+
+    },
+    "Do nothing" : {
+
+    },
+    "Duration" : {
+
+    },
+    "Duty (%)" : {
+
+    },
+    "Enable All" : {
+
+    },
+    "Enable battery-aware threshold swapping" : {
+
+    },
+    "Enable global pause hotkey Command Option P" : {
+
+    },
+    "Enabled" : {
+
+    },
+    "Export Diagnostic Bundle…" : {
+
+    },
+    "Factor in the OS thermal state" : {
+
+    },
+    "Filter sensors" : {
+
+    },
+    "Fired %lld time%@ today, total %@ of active throttling" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fired %1$lld time%2$@ today, total %3$@ of active throttling"
+          }
+        }
+      }
+    },
+    "Fixed caps for specific apps. 100% = no throttle, 50% = runs half the wall-clock time." : {
+
+    },
+    "Frontmost-app quick throttle" : {
+
+    },
+    "General" : {
+      "comment" : "Preferences tab: General"
+    },
+    "Get started" : {
+
+    },
+    "Global hotkey ⌘⌥P" : {
+
+    },
+    "Global hotkey ⌘⌥P to pause/resume" : {
+
+    },
+    "Global hotkey: ⌘⌥P" : {
+
+    },
+    "History" : {
+
+    },
+    "Holds the display awake for the configured minutes, then lets it sleep while the system itself stays up for background work." : {
+
+    },
+    "Hot" : {
+
+    },
+    "Hot (°C)" : {
+
+    },
+    "How long to pause (e.g. 15m, 1h). Leave blank for indefinite." : {
+
+    },
+    "Hysteresis: %@" : {
+
+    },
+    "Hysteresis: %lld%%" : {
+
+    },
+    "Hysteresis: %lld°C" : {
+
+    },
+    "IOKit unavailable" : {
+      "comment" : "Error shown when IOKit can't be reached"
+    },
+    "Keep system & display awake" : {
+
+    },
+    "Keep system awake" : {
+
+    },
+    "Keep system awake (allow display sleep)" : {
+
+    },
+    "Last min" : {
+
+    },
+    "Launch at login" : {
+      "comment" : "Preferences toggle"
+    },
+    "Layout" : {
+
+    },
+    "Leave AirAssist as-is" : {
+
+    },
+    "Lift any active pause and let the governor + per-app rules take effect again." : {
+
+    },
+    "live" : {
+
+    },
+    "macOS didn't return any thermal sensors. Re-launch Air Assist, and if it persists, check Preferences → Sensors for details." : {
+
+    },
+    "macOS returned no thermal sensors. Quit and re-launch Air Assist. If this persists on a signed release build, file a bug with your Mac model (`sysctl hw.model`) and macOS version." : {
+
+    },
+    "Max" : {
+
+    },
+    "Max simultaneous targets: %lld" : {
+
+    },
+    "Max: %@" : {
+
+    },
+    "Max: %lld°C" : {
+
+    },
+    "Menu Bar" : {
+      "comment" : "Preferences tab: Menu Bar"
+    },
+    "Mode" : {
+
+    },
+    "Monitoring" : {
+
+    },
+    "Never checked" : {
+
+    },
+    "Never throttle these apps" : {
+
+    },
+    "No frontmost app bundle available to throttle." : {
+
+    },
+    "No history yet" : {
+
+    },
+    "No process currently meets the targeting threshold. Lower “Consider processes ≥ …% CPU” to preview more candidates." : {
+
+    },
+    "No protected apps. Click Add… to pick one." : {
+
+    },
+    "No rules yet" : {
+
+    },
+    "Notifications" : {
+
+    },
+    "Notify when governor engages" : {
+
+    },
+    "now %@" : {
+
+    },
+    "now %lld°C" : {
+
+    },
+    "Off" : {
+
+    },
+    "On" : {
+
+    },
+    "On AC" : {
+
+    },
+    "On battery" : {
+
+    },
+    "One daily request to api.github.com to see if a newer release exists. No telemetry, no personal data — just the version tag. Turning this off leaves the \"Check for Updates…\" menu item working for manual checks." : {
+
+    },
+    "Open Release Page" : {
+
+    },
+    "Pause" : {
+
+    },
+    "Pause AirAssist" : {
+
+    },
+    "Pause for" : {
+
+    },
+    "Pause indefinitely — until you click Resume, or relaunch the app." : {
+
+    },
+    "Pause throttling" : {
+
+    },
+    "Pause throttling for" : {
+
+    },
+    "Pause throttling menu" : {
+
+    },
+    "Paused" : {
+
+    },
+    "Per-app rules" : {
+
+    },
+    "Per-core sum" : {
+
+    },
+    "Percent of CPU time the app is allowed — 5 to 100." : {
+
+    },
+    "Performance" : {
+
+    },
+    "Pick a threshold profile. You can fine-tune individual numbers in Preferences later." : {
+
+    },
+    "Pick from running processes, or type an executable name. Names are matched exactly (case-sensitive)." : {
+
+    },
+    "PID" : {
+
+    },
+    "PID %d" : {
+
+    },
+    "Pin %@ to top" : {
+
+    },
+    "Pin to top" : {
+
+    },
+    "Popover" : {
+
+    },
+    "Posts a system notification the first time the governor breaches a cap after a quiet period. Useful when Air Assist is hidden and you want to know the OS is being throttled. macOS asks for permission the first time you turn this on." : {
+
+    },
+    "Preferences…" : {
+      "comment" : "Menu bar item: opens Preferences"
+    },
+    "Presenting" : {
+
+    },
+    "Preset:" : {
+
+    },
+    "Prevents both system and display sleep. Equivalent to caffeinate -id." : {
+
+    },
+    "Prevents idle sleep. Display follows its normal schedule. Equivalent to caffeinate -i." : {
+
+    },
+    "Process" : {
+
+    },
+    "Process runs this fraction of the time and is paused the rest. 30% means it gets ~30% of the CPU it would otherwise use." : {
+
+    },
+    "Quick throttles" : {
+
+    },
+    "Quiet" : {
+
+    },
+    "Quit Air Assist" : {
+      "comment" : "Menu bar item: quits the app"
+    },
+    "Range" : {
+
+    },
+    "Re-enable sensors in Preferences → Sensors to see them here." : {
+
+    },
+    "Reading sensors…" : {
+
+    },
+    "Recent throttle activity" : {
+
+    },
+    "Release" : {
+
+    },
+    "Release all throttling for this app" : {
+
+    },
+    "Release every throttled PID and hold off for 15 minutes. Governor and rules resume automatically when the timer expires." : {
+
+    },
+    "Release manual throttle for %@" : {
+
+    },
+    "Release Stay Awake" : {
+
+    },
+    "Release this manual throttle now." : {
+
+    },
+    "Reload" : {
+
+    },
+    "Remove %@ from favorites" : {
+
+    },
+    "Remove %@ from the never-throttle list" : {
+
+    },
+    "Remove from favorites" : {
+
+    },
+    "Remove rule (%lld%% cap)" : {
+
+    },
+    "Reset to defaults" : {
+
+    },
+    "Resume" : {
+
+    },
+    "Resume AirAssist" : {
+
+    },
+    "Resume now" : {
+
+    },
+    "Resume throttling" : {
+
+    },
+    "Resumes %@ from now" : {
+
+    },
+    "Samples are logged every 30 seconds. Leave Air Assist running to build up a history." : {
+
+    },
+    "Sampling processes…" : {
+
+    },
+    "Save" : {
+
+    },
+    "Scenario" : {
+
+    },
+    "Search or type a name…" : {
+
+    },
+    "Search…" : {
+
+    },
+    "Select a rule to edit its cap" : {
+
+    },
+    "Sensor list" : {
+
+    },
+    "Sensor read failed" : {
+      "comment" : "Error shown when no sensors return"
+    },
+    "Sensors" : {
+      "comment" : "Preferences tab: Sensors"
+    },
+    "Sensors unavailable" : {
+
+    },
+    "Set to 25% (heavy)" : {
+
+    },
+    "Set to 50%" : {
+
+    },
+    "Set to 85% (light)" : {
+
+    },
+    "Settings for the popover’s “Throttle [app]” button. The cap auto-releases after the chosen duration, or you can click the button again to release immediately." : {
+
+    },
+    "Show a system notification when the thermal governor first engages" : {
+
+    },
+    "Show all %@ sensors" : {
+
+    },
+    "Show dock icon" : {
+      "comment" : "Preferences toggle"
+    },
+    "Show icon" : {
+
+    },
+    "Show in Activity Monitor" : {
+
+    },
+    "Shown if a cap breached this instant. Live snapshot, updates every second." : {
+
+    },
+    "Skip" : {
+
+    },
+    "Slot 1" : {
+
+    },
+    "Slot 2" : {
+
+    },
+    "Sort" : {
+
+    },
+    "Sort by" : {
+      "comment" : "Dashboard: sort menu label"
+    },
+    "Sort sensors by" : {
+
+    },
+    "Startup" : {
+
+    },
+    "Status" : {
+
+    },
+    "Stay Awake" : {
+
+    },
+    "Stay awake mode" : {
+
+    },
+    "Stay Awake mode: %@" : {
+
+    },
+    "Suggestions based on what's running" : {
+
+    },
+    "Support" : {
+
+    },
+    "Swaps your sensor thresholds based on power source. Only the warm/hot color bands change — governor caps and per-app rules are untouched." : {
+
+    },
+    "Switch to a one-click setup (Presenting / Quiet / Performance / Auto). Bundles governor mode, caps, on-battery gating, and stay-awake." : {
+
+    },
+    "Targeting" : {
+
+    },
+    "Temp" : {
+
+    },
+    "Temperature" : {
+
+    },
+    "Temperature cap" : {
+
+    },
+    "Temperature thresholds" : {
+
+    },
+    "Temperature unit" : {
+
+    },
+    "Temporarily release every throttled process. Governor and per-app rules stop firing until resumed or the duration expires." : {
+
+    },
+    "Temporarily stop both the governor and per-app rules. Useful for gaming or rendering sessions." : {
+
+    },
+    "These aren't enabled automatically. Toggle any that you actually run." : {
+
+    },
+    "Threshold preset while on AC power" : {
+
+    },
+    "Threshold preset while on battery" : {
+
+    },
+    "Throttle Frontmost" : {
+
+    },
+    "Throttle Frontmost App" : {
+
+    },
+    "Throttle only when on battery" : {
+
+    },
+    "Throttling" : {
+      "comment" : "Preferences tab: Throttling"
+    },
+    "Throttling %@ to %lld%% for %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Throttling %1$@ to %2$lld%% for %3$@."
+          }
+        }
+      }
+    },
+    "Throttling paused" : {
+
+    },
+    "Throttling paused. Click to resume." : {
+
+    },
+    "Time" : {
+
+    },
+    "Today" : {
+
+    },
+    "Toggle pause/resume from any app. Carbon-based — no Accessibility permission required." : {
+
+    },
+    "Top CPU" : {
+
+    },
+    "Turn display off after" : {
+
+    },
+    "Unit" : {
+
+    },
+    "Until quit" : {
+
+    },
+    "Until you resume or quit the app" : {
+
+    },
+    "Up to date — last checked %@ ago" : {
+
+    },
+    "Update interval" : {
+      "comment" : "Preferences slider label"
+    },
+    "Updates" : {
+
+    },
+    "Use stricter thresholds while on battery" : {
+
+    },
+    "Version %@ available" : {
+
+    },
+    "Warm" : {
+
+    },
+    "Warm (°C)" : {
+
+    },
+    "Welcome to Air Assist" : {
+
+    },
+    "When the display sleeps" : {
+
+    },
+    "When this Focus turns on" : {
+
+    },
+    "Would get throttled now" : {
+
+    }
+  },
+  "version" : "1.0"
 }
