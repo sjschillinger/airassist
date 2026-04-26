@@ -350,6 +350,17 @@ final class MenuBarController {
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            // Capture frontmost BEFORE makeKey activates us — the popover
+            // view reads this for the "Throttle [frontmost]" button.
+            // A live NSWorkspace query from inside the view would return
+            // Air Assist itself.
+            if let app = NSWorkspace.shared.frontmostApplication,
+               app.processIdentifier != getpid() {
+                store.capturedFrontmost = .init(pid: app.processIdentifier,
+                                                name: app.localizedName ?? "Frontmost")
+            } else {
+                store.capturedFrontmost = nil
+            }
             ensurePopoverContent()
             popover.show(relativeTo: .zero, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
