@@ -1,5 +1,6 @@
 import Foundation
 import Darwin
+import os
 
 /// Identifies who is asking the throttler to cap a process. Multiple sources
 /// may want different duties on the same PID; the throttler applies the most
@@ -60,7 +61,7 @@ final class ProcessThrottler {
     /// its requested duty. The effective duty sent to the cycler each cycle
     /// is `min(sources.values)`. An empty `sources` means no one wants the
     /// PID throttled → release.
-    private struct Entry {
+    fileprivate struct Entry: Sendable {
         var sources: [ThrottleSource: Double]
         var name: String
         var task: Task<Void, Never>
@@ -72,7 +73,27 @@ final class ProcessThrottler {
         }
     }
 
-    private var active: [pid_t: Entry] = [:]
+    /// Lock-guarded shared state read by the off-main cycler.
+    ///
+    /// The cycler used to be `Task.detached { await self.runCycle(...) }` on
+    /// a `@MainActor` method, which silently hopped the entire duty-cycle
+    /// loop onto the main actor. If main hung, the cycler hung with it, and
+    /// the watchdog stopped seeing `noteStopped` heartbeats — exactly the
+    /// scenario the watchdog was designed to catch. (Audit Tier 0 item 1;
+    /// Codex flagged this as bigger than the original "drop three
+    /// MainActor.run hops" framing.)
+    ///
+    /// The fix: hold `active` and `foregroundPID` behind an
+    /// `OSAllocatedUnfairLock` so the cycler can read them without any
+    /// actor hop, and call `safety.noteStopped/noteContinued` (already
+    /// nonisolated) directly. Main-actor mutators continue to use the lock
+    /// to write — there is one source of truth.
+    fileprivate struct SharedState: Sendable {
+        var active: [pid_t: Entry] = [:]
+        var foregroundPID: pid_t? = nil
+    }
+    nonisolated fileprivate let state = OSAllocatedUnfairLock<SharedState>(initialState: SharedState())
+
     /// Per-PID kqueue-backed watchers that fire on process exit. Registered
     /// the moment we start throttling a PID, cancelled the moment we stop.
     /// Closes the PID-reuse window (#19): without this we'd rely on the 1Hz
@@ -81,12 +102,15 @@ final class ProcessThrottler {
     /// SIGSTOP to the wrong process is the kind of bug that erodes trust
     /// fast. See `docs/engineering-references.md` §2 for the kqueue details.
     private var exitWatchers: [pid_t: DispatchSourceProcess] = [:]
-    private let currentUID: uid_t = getuid()
+    nonisolated private let currentUID: uid_t = getuid()
 
-    /// Optional safety layer. Set by `ThermalStore` on startup. When present,
-    /// the throttler reports in-flight PIDs to the dead-man's-switch file
-    /// and the watchdog after every mutation.
-    var safety: SafetyCoordinator?
+    /// Optional safety layer. Set by `ThermalStore` on startup, never
+    /// reassigned, never cleared. Marked `nonisolated(unsafe)` so the
+    /// off-main cycler can call its (nonisolated) heartbeat methods
+    /// without an actor hop. The set-once invariant is the safety
+    /// argument: a single pointer-sized assignment from main during init,
+    /// followed by reads from the cycler — well-defined on arm64.
+    nonisolated(unsafe) var safety: SafetyCoordinator?
 
     /// Refuse throttling of our own PID or any ancestor in our parent chain.
     /// Layered on top of the excluded-name list because ancestors are often
@@ -98,13 +122,18 @@ final class ProcessThrottler {
     /// the effective duty for that PID — we never hammer the app the user
     /// is actively interacting with.
     var foregroundPID: pid_t? {
-        didSet { if oldValue != foregroundPID { publishInflight() } }
+        get { state.withLock { $0.foregroundPID } }
     }
 
     /// Update the tracked foreground PID. Called by `ThermalStore` whenever
     /// `FrontmostAppObserver` fires.
     func setForegroundPID(_ pid: pid_t?) {
-        foregroundPID = pid
+        let changed = state.withLock { s -> Bool in
+            let was = s.foregroundPID
+            s.foregroundPID = pid
+            return was != pid
+        }
+        if changed { publishInflight() }
     }
 
     // MARK: - Public API
@@ -143,12 +172,16 @@ final class ProcessThrottler {
             return
         }
 
-        if var existing = active[pid] {
-            existing.sources[source] = duty
-            existing.name = name  // keep the freshest display name
-            active[pid] = existing
-            return
+        let updated = state.withLock { s -> Bool in
+            if var existing = s.active[pid] {
+                existing.sources[source] = duty
+                existing.name = name  // keep the freshest display name
+                s.active[pid] = existing
+                return true
+            }
+            return false
         }
+        if updated { return }
 
         // SAFETY ORDERING — persist intent BEFORE spawning the cycler.
         //
@@ -165,23 +198,28 @@ final class ProcessThrottler {
         // the real cycler. Exit watcher is installed before the cycler runs
         // so pid reuse cannot race us.
         let placeholder = Task<Void, Never> { }
-        active[pid] = Entry(sources: [source: duty], name: name, task: placeholder)
+        state.withLock { $0.active[pid] = Entry(sources: [source: duty], name: name, task: placeholder) }
         installExitWatcher(pid: pid)
         publishInflight() // <-- inflight file is fsync'd before cycler can SIGSTOP
 
         let task = Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
-            await self.runCycle(pid: pid)
+            self.runCycle(pid: pid)
         }
-        // Replace the placeholder with the real cycler task. Cycler reads
-        // duty via `await MainActor.run { active[pid] }` so it won't start
-        // SIGSTOP'ing until this main-actor mutation has landed.
-        if var e = active[pid] {
-            e.task = task
-            active[pid] = e
-        } else {
-            // Released between publish and here (extremely rare main-actor
-            // reentrancy). Cancel the cycler we just spawned.
+        // Replace the placeholder with the real cycler task. The cycler
+        // reads duty via the lock, so it won't begin SIGSTOP'ing until this
+        // store completes.
+        let stillStaged = state.withLock { s -> Bool in
+            if var e = s.active[pid] {
+                e.task = task
+                s.active[pid] = e
+                return true
+            }
+            return false
+        }
+        if !stillStaged {
+            // Released between publish and here (extremely rare reentrancy).
+            // Cancel the cycler we just spawned.
             task.cancel()
         }
     }
@@ -239,19 +277,26 @@ final class ProcessThrottler {
     /// wants the PID throttled, it's released. Rule engine / governor use
     /// this (not `release`) so they only retract their own requests.
     func clearDuty(source: ThrottleSource, for pid: pid_t) {
-        guard var entry = active[pid] else { return }
-        entry.sources.removeValue(forKey: source)
-        if entry.sources.isEmpty {
-            release(pid: pid)
-        } else {
-            active[pid] = entry
+        let shouldRelease = state.withLock { s -> Bool in
+            guard var entry = s.active[pid] else { return false }
+            entry.sources.removeValue(forKey: source)
+            if entry.sources.isEmpty {
+                // Defer the release to outside the lock so we don't reenter.
+                return true
+            } else {
+                s.active[pid] = entry
+                return false
+            }
         }
+        if shouldRelease { release(pid: pid) }
     }
 
     /// Remove *all* requests from a single source. Used on engine
     /// teardown / pause so that source stops influencing any PID.
     func releaseSource(_ source: ThrottleSource) {
-        let toUpdate = active.keys.filter { active[$0]?.sources.keys.contains(source) == true }
+        let toUpdate = state.withLock { s in
+            s.active.keys.filter { s.active[$0]?.sources.keys.contains(source) == true }
+        }
         for pid in toUpdate {
             clearDuty(source: source, for: pid)
         }
@@ -261,7 +306,8 @@ final class ProcessThrottler {
     /// all source requests. Use sparingly; prefer `clearDuty` when you only
     /// want to retract one source's interest.
     func release(pid: pid_t) {
-        guard let entry = active.removeValue(forKey: pid) else { return }
+        let removed = state.withLock { $0.active.removeValue(forKey: pid) }
+        guard let entry = removed else { return }
         entry.task.cancel()
         resumeWithRetry(pid: pid, name: entry.name)
         cancelExitWatcher(pid: pid)
@@ -272,10 +318,13 @@ final class ProcessThrottler {
     /// Release everything. Call on teardown / when the rule engine disables.
     func releaseAll() {
         // Snapshot before mutating so retry tasks capture stable pid/name
-        // pairs even if `active` is mutated by main-actor reentrancy mid-loop.
-        let snapshot = active.map { (pid: $0.key, name: $0.value.name, task: $0.value.task) }
+        // pairs even if `active` is mutated mid-loop.
+        let snapshot: [(pid: pid_t, name: String, task: Task<Void, Never>)] = state.withLock { s in
+            let items = s.active.map { (pid: $0.key, name: $0.value.name, task: $0.value.task) }
+            s.active.removeAll()
+            return items
+        }
         for item in snapshot { item.task.cancel() }
-        active.removeAll()
         for item in snapshot {
             resumeWithRetry(pid: item.pid, name: item.name)
         }
@@ -316,34 +365,50 @@ final class ProcessThrottler {
     /// Push the current set of throttled PIDs to the safety layer so the
     /// dead-man's-switch file and signal-handler array stay in sync.
     private func publishInflight() {
-        safety?.noteInflightChange(pids: Array(active.keys))
+        let pids = state.withLock { Array($0.active.keys) }
+        safety?.noteInflightChange(pids: pids)
     }
 
     /// PIDs currently under active throttling, with their *effective* duty
     /// (min across sources) and the set of sources requesting the cap.
     var throttledPIDs: [(pid: pid_t, duty: Double, name: String)] {
-        active.map { (pid: $0.key, duty: $0.value.effectiveDuty, name: $0.value.name) }
+        state.withLock { s in
+            s.active.map { (pid: $0.key, duty: $0.value.effectiveDuty, name: $0.value.name) }
+        }
     }
 
     /// Full detail: which sources are requesting each pid, and at what duty.
     /// Used by UI to explain why a PID is throttled ("rule + governor").
     var throttleDetail: [(pid: pid_t, name: String, sources: [ThrottleSource: Double])] {
-        active.map { (pid: $0.key, name: $0.value.name, sources: $0.value.sources) }
+        state.withLock { s in
+            s.active.map { (pid: $0.key, name: $0.value.name, sources: $0.value.sources) }
+        }
     }
 
     /// Is this pid currently throttled by any source?
-    func isThrottled(pid: pid_t) -> Bool { active[pid] != nil }
+    func isThrottled(pid: pid_t) -> Bool {
+        state.withLock { $0.active[pid] != nil }
+    }
 
     /// Is this pid throttled by a specific source?
     func isThrottled(pid: pid_t, by source: ThrottleSource) -> Bool {
-        active[pid]?.sources[source] != nil
+        state.withLock { $0.active[pid]?.sources[source] != nil }
     }
 
     // MARK: - Cycler
 
     /// Main loop for a single pid. Reads the latest duty each iteration so
     /// updates take effect within one cycle.
-    private func runCycle(pid: pid_t) async {
+    ///
+    /// `nonisolated` so it runs entirely off the main actor — without this,
+    /// the duty-cycle loop would inherit `@MainActor` from the class and
+    /// every iteration would block on main responsiveness. The watchdog
+    /// design depends on `safety.noteStopped/noteContinued` heartbeats
+    /// continuing even when main is hung; that only works if the cycler is
+    /// genuinely off-main. Shared state (`active`, `foregroundPID`) is read
+    /// via the lock-guarded `state`; `safety` is a set-once reference safe
+    /// to read directly.
+    nonisolated private func runCycle(pid: pid_t) {
         let periodNs: UInt64 = UInt64(Self.cyclePeriodMs) * 1_000_000
 
         while !Task.isCancelled {
@@ -351,14 +416,14 @@ final class ProcessThrottler {
             // If this pid is the frontmost app, soften duty up to the
             // foreground floor so the user's active window isn't being
             // SIGSTOP'd mid-keystroke.
-            let duty: Double = await MainActor.run {
-                guard let entry = active[pid] else { return Self.maxDuty }
+            let duty: Double = state.withLock { s in
+                guard let entry = s.active[pid] else { return Self.maxDuty }
                 let base = entry.effectiveDuty
                 // Apply foreground floor unless the only requester is the
                 // ad-hoc manual escape hatch — the user explicitly asked for
                 // the frontmost app to be throttled.
                 let onlyManual = entry.sources.keys.allSatisfy { $0 == .manual }
-                if pid == foregroundPID && !onlyManual {
+                if pid == s.foregroundPID && !onlyManual {
                     return max(base, Self.foregroundDutyFloor)
                 }
                 return base
@@ -370,9 +435,9 @@ final class ProcessThrottler {
 
             // RUN phase: ensure SIGCONT, sleep run-slice.
             if !signal(SIGCONT, to: pid) { return }
-            await MainActor.run { self.safety?.noteContinued(pid: pid) }
+            safety?.noteContinued(pid: pid)
             if runNs > 0 {
-                try? await Task.sleep(nanoseconds: runNs)
+                blockingSleep(nanoseconds: runNs)
             }
             if Task.isCancelled { _ = kill(pid, SIGCONT); return }
 
@@ -380,32 +445,68 @@ final class ProcessThrottler {
             if stopNs > 0 {
                 // Re-check cancellation and that this pid is still in the
                 // active map right before we issue SIGSTOP. Closes a narrow
-                // race where `release(pid:)` ran on the main actor between
-                // the duty read above and here — without this check we'd
-                // SIGSTOP a pid the throttler thinks it's already released
-                // (and for which the exit watcher may have been cancelled).
+                // race where `release(pid:)` ran between the duty read above
+                // and here — without this check we'd SIGSTOP a pid the
+                // throttler thinks it's already released (and for which the
+                // exit watcher may have been cancelled).
                 if Task.isCancelled { _ = kill(pid, SIGCONT); return }
-                let stillActive = await MainActor.run { self.active[pid] != nil }
+                let stillActive = state.withLock { $0.active[pid] != nil }
                 if !stillActive { return }
                 if !signal(SIGSTOP, to: pid) { return }
-                await MainActor.run { self.safety?.noteStopped(pid: pid) }
-                try? await Task.sleep(nanoseconds: stopNs)
+                safety?.noteStopped(pid: pid)
+                blockingSleep(nanoseconds: stopNs)
             }
         }
         // On cancellation, always resume the process.
         _ = kill(pid, SIGCONT)
-        await MainActor.run { self.safety?.noteContinued(pid: pid) }
+        safety?.noteContinued(pid: pid)
+    }
+
+    /// Off-main blocking sleep. We can't use `Task.sleep` here because the
+    /// cycler is now synchronous (intentionally — keeps it off the actor
+    /// hop machinery). `nanosleep` is the cheapest portable equivalent and
+    /// honors signal interruption, which we ignore (the wake-up only costs
+    /// us a slightly shortened phase).
+    nonisolated private func blockingSleep(nanoseconds: UInt64) {
+        var ts = timespec(tv_sec: Int(nanoseconds / 1_000_000_000),
+                          tv_nsec: Int(nanoseconds % 1_000_000_000))
+        var rem = timespec()
+        while nanosleep(&ts, &rem) == -1 && errno == EINTR {
+            ts = rem
+        }
     }
 
     /// Sends `sig` to `pid`. Returns false if the process is gone (ESRCH) or
     /// another unrecoverable error — caller should stop the cycler.
-    private func signal(_ sig: Int32, to pid: pid_t) -> Bool {
+    ///
+    /// We log non-ESRCH failures (EPERM in particular) once per (pid, signal,
+    /// errno) tuple so a TCC regression or sandbox change doesn't silently
+    /// degrade the throttler — diagnosis materially improves when the same
+    /// failure class isn't collapsed with "process exited normally". (audit
+    /// Tier 0 item 5; Codex VERIFIED.)
+    ///
+    /// Nonisolated so the off-main cycler can call it without an actor hop.
+    nonisolated private func signal(_ sig: Int32, to pid: pid_t) -> Bool {
         let r = kill(pid, sig)
         if r == 0 { return true }
-        if errno == ESRCH { return false } // process died; unwind.
-        // EPERM etc. — can't control it; give up.
+        let err = errno
+        if err == ESRCH { return false } // process died; unwind silently.
+        let key = SignalFailureKey(pid: pid, signal: sig, errno: err)
+        let firstTime = Self.loggedSignalFailures.withLock { $0.insert(key).inserted }
+        if firstTime {
+            Self.logger.error(
+                "kill(\(pid, privacy: .public), \(sig, privacy: .public)) failed: errno=\(err, privacy: .public) (\(String(cString: strerror(err)), privacy: .public))"
+            )
+        }
         return false
     }
+
+    nonisolated private struct SignalFailureKey: Hashable, Sendable { let pid: pid_t; let signal: Int32; let errno: Int32 }
+    /// Lock-guarded so this stays correct now that the cycler runs off the
+    /// main actor and calls `signal()` directly.
+    nonisolated private static let loggedSignalFailures = OSAllocatedUnfairLock<Set<SignalFailureKey>>(initialState: [])
+    nonisolated private static let logger = Logger(subsystem: "com.sjschillinger.airassist",
+                                                    category: "ProcessThrottler")
 
     private func ownedByCurrentUser(pid: pid_t, uidOut: inout uid_t) -> Bool {
         var bsd = proc_bsdinfo()
