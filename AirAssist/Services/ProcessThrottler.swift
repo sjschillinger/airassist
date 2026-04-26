@@ -150,6 +150,15 @@ final class ProcessThrottler {
             Self.logger.error("setDuty rejected: pid=\(pid, privacy: .public) (non-positive)")
             return
         }
+        // Safety: user-managed "never throttle" list. Strong form — applies
+        // to every source including manual. The user has explicitly said
+        // "leave this app alone," so even an explicit click bounces rather
+        // than silently ignoring the list.
+        if NeverThrottleList.contains(name) {
+            Self.logger.notice("setDuty rejected: pid=\(pid) name=\(name, privacy: .public) (user never-throttle list)")
+            clearDuty(source: source, for: pid)
+            return
+        }
         // Safety: convenience allowlist that protects dev tools and a few
         // terminal apps from accidental auto-throttle by rules and the
         // governor. Explicit `.manual` clicks are user intent — bypass
