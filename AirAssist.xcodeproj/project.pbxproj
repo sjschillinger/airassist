@@ -72,7 +72,9 @@
 		A421ADB89070A8D476A827E9 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */; };
 		A5B74A36D44F389797534E71 /* MenuBarIconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E14DCBD5EA4C7C5865E92A /* MenuBarIconRenderer.swift */; };
 		A82D2A4454819031737A472C /* GlobalHotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31055655C5C5AA8D2754F348 /* GlobalHotkeyService.swift */; };
+		A978D1AAF79E69614141FE90 /* ThrottleSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3197A75BD80FAC5F30D260CC /* ThrottleSummaryTests.swift */; };
 		A9A30CE950749FF12DF4433D /* ScenarioPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327E368630BEE202473BFCFD /* ScenarioPreset.swift */; };
+		AB0AE3320264C9998D39F8DB /* WeeklySummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA9F74933FA4D936E19F58A8 /* WeeklySummaryView.swift */; };
 		AB48799889B27371203501F4 /* SensorCategorizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DC26A8B4587EC9DE928881 /* SensorCategorizer.swift */; };
 		ACB3D6C2A49200E19A003F2F /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053C1F519C6EF5056C3BFC58 /* main.swift */; };
 		ACFABCECFECDF629B1105134 /* GovernorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */; };
@@ -89,6 +91,7 @@
 		C43FB882937BC5D2E7FACF2B /* HistoryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */; };
 		C4735116908FE32FCE703B10 /* RuleTemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5133C0DF592E205CF9E9D017 /* RuleTemplates.swift */; };
 		C4793AB490B9ED1DF6CAE031 /* MetricKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 593A4CFD558F099804B37A98 /* MetricKit.framework */; };
+		C671A45C877A67BE152AE1AA /* ThrottleSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A815CDB84CB3EEAB443584 /* ThrottleSummary.swift */; };
 		C731C152534FB6D04AA9863E /* ProcessThrottler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC21475DBC53F8799B7B7332 /* ProcessThrottler.swift */; };
 		C99CE41C0148623FB418A91D /* HistoryLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */; };
 		CAB1687E2D8A71F55C3F50B5 /* ThermalEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */; };
@@ -97,6 +100,7 @@
 		D409F8F956BAF02BB00A41B5 /* URLSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB3CE8E0F5867CC85E9AF30C /* URLSchemeHandler.swift */; };
 		D92C644A0CFDA349A5C8E115 /* RescueAgentRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E38336154F353A6D7B84815 /* RescueAgentRegistrar.swift */; };
 		DA468550C7C0B1564688DBF2 /* SensorCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD667C42F60AF2E26D510B5F /* SensorCardView.swift */; };
+		DA5906764C2BEB76C0FB8479 /* ThrottleEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EFF04B9F40695804D56B3F /* ThrottleEventLog.swift */; };
 		DD41868683DA5D42CE4262A1 /* AppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586DB3B79D410ED45D4B6B80 /* AppIntents.swift */; };
 		DE977BF95BCAEC213B071E1B /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B8F67C6B8D8B0CD7E191D3E /* AppIntents.framework */; };
 		E0659C2FEE440E9197683AE8 /* ThrottleActivityLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B92AD6B874E16CC33B22F2 /* ThrottleActivityLogTests.swift */; };
@@ -154,6 +158,7 @@
 		0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryReader.swift; sourceTree = "<group>"; };
 		16E8286BDB0C5E6AF90B6498 /* AirAssistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1707FE5D6958FA0AB599F903 /* InflightFileFuzzTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InflightFileFuzzTests.swift; sourceTree = "<group>"; };
+		17EFF04B9F40695804D56B3F /* ThrottleEventLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleEventLog.swift; sourceTree = "<group>"; };
 		1A5AAA1B4722BB40A7EC6D67 /* AirAssist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AirAssist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E38AF8B6D89383B136037DA /* ProcessThrottlerArbitrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottlerArbitrationTests.swift; sourceTree = "<group>"; };
 		1F632647D859182626DE798B /* AirAssistIntegrationRunner */ = {isa = PBXFileReference; includeInIndex = 0; path = AirAssistIntegrationRunner; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -165,6 +170,7 @@
 		292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalEntry.swift; sourceTree = "<group>"; };
 		2E38336154F353A6D7B84815 /* RescueAgentRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RescueAgentRegistrar.swift; sourceTree = "<group>"; };
 		31055655C5C5AA8D2754F348 /* GlobalHotkeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyService.swift; sourceTree = "<group>"; };
+		3197A75BD80FAC5F30D260CC /* ThrottleSummaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleSummaryTests.swift; sourceTree = "<group>"; };
 		327E368630BEE202473BFCFD /* ScenarioPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenarioPreset.swift; sourceTree = "<group>"; };
 		33E14DCBD5EA4C7C5865E92A /* MenuBarIconRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarIconRenderer.swift; sourceTree = "<group>"; };
 		39892F869638A20F9B1C19A8 /* WhatsNewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewSheet.swift; sourceTree = "<group>"; };
@@ -176,6 +182,7 @@
 		4375982E8251576076415A73 /* SIGCONTFailureAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIGCONTFailureAlert.swift; sourceTree = "<group>"; };
 		4629A6D06B14E1E69D71A6E0 /* AppIcon-composed.svg */ = {isa = PBXFileReference; path = "AppIcon-composed.svg"; sourceTree = "<group>"; };
 		4734EA368915E7C48BCC2534 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		49A815CDB84CB3EEAB443584 /* ThrottleSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleSummary.swift; sourceTree = "<group>"; };
 		4B8F67C6B8D8B0CD7E191D3E /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 		4BE69B36A4A78E82AFCE02EA /* PreferencesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesWindowController.swift; sourceTree = "<group>"; };
 		4F10B096D5A7B63BCCE9517B /* AirAssistRescue */ = {isa = PBXFileReference; includeInIndex = 0; path = AirAssistRescue; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -244,6 +251,7 @@
 		E195513AB2DA802AD3B203E3 /* MenuBarQuickMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarQuickMenu.swift; sourceTree = "<group>"; };
 		E2DD49B9C83A47D20934170F /* TemperatureFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormatterTests.swift; sourceTree = "<group>"; };
 		E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchSeeder.swift; sourceTree = "<group>"; };
+		EA9F74933FA4D936E19F58A8 /* WeeklySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklySummaryView.swift; sourceTree = "<group>"; };
 		EB3CE8E0F5867CC85E9AF30C /* URLSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSchemeHandler.swift; sourceTree = "<group>"; };
 		EE3AE9374600EBF84EE6A7CB /* ThrottleActivityLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleActivityLog.swift; sourceTree = "<group>"; };
 		F10566982345E91583B70DED /* ProcessInspectorPerfTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInspectorPerfTests.swift; sourceTree = "<group>"; };
@@ -382,6 +390,7 @@
 				CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */,
 				02BA0BF3D6B9C098E7D51127 /* HistoryView.swift */,
 				AD667C42F60AF2E26D510B5F /* SensorCardView.swift */,
+				EA9F74933FA4D936E19F58A8 /* WeeklySummaryView.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
@@ -402,6 +411,7 @@
 				292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */,
 				5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */,
 				A644DAD204B5C11BF9D35A09 /* ThrottleRule.swift */,
+				49A815CDB84CB3EEAB443584 /* ThrottleSummary.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -466,6 +476,7 @@
 				F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */,
 				730102034F0141285957EA50 /* ThermalGovernor.swift */,
 				EE3AE9374600EBF84EE6A7CB /* ThrottleActivityLog.swift */,
+				17EFF04B9F40695804D56B3F /* ThrottleEventLog.swift */,
 				9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */,
 				A67180E42B4B4086CC440BD2 /* UpdateCheckService.swift */,
 				EB3CE8E0F5867CC85E9AF30C /* URLSchemeHandler.swift */,
@@ -512,6 +523,7 @@
 				F8C15D67B3F0B0BCE3515381 /* ThresholdPresetTests.swift */,
 				B3B92AD6B874E16CC33B22F2 /* ThrottleActivityLogTests.swift */,
 				5A7285C08FB8849F8371EBD4 /* ThrottleScheduleTests.swift */,
+				3197A75BD80FAC5F30D260CC /* ThrottleSummaryTests.swift */,
 				CE199B81B1884CF2BF1B4E1D /* UpdateCheckServiceTests.swift */,
 				6D27DC050DA4ABA3EB9D1484 /* URLSchemeHandlerTests.swift */,
 				2846BAB3600EC7C4F7697750 /* WatchdogForceSIGCONTTests.swift */,
@@ -802,6 +814,7 @@
 				182DE0DDA2536407E350B62F /* ThresholdPresetTests.swift in Sources */,
 				E0659C2FEE440E9197683AE8 /* ThrottleActivityLogTests.swift in Sources */,
 				47422C41049B5628AC31D285 /* ThrottleScheduleTests.swift in Sources */,
+				A978D1AAF79E69614141FE90 /* ThrottleSummaryTests.swift in Sources */,
 				4F8D50BFF09B19FE97FFFA66 /* URLSchemeHandlerTests.swift in Sources */,
 				16C914E01454D22E5D306839 /* UpdateCheckServiceTests.swift in Sources */,
 				746541589DF0935BB87134CA /* WatchdogForceSIGCONTTests.swift in Sources */,
@@ -873,12 +886,15 @@
 				72FE15AFF7FE2FD18EBD5B04 /* ThresholdPersistence.swift in Sources */,
 				BE5EDF0AE532002C1CBD310B /* ThresholdsPrefsView.swift in Sources */,
 				7DFDBE9AFB240F2EA89400D4 /* ThrottleActivityLog.swift in Sources */,
+				DA5906764C2BEB76C0FB8479 /* ThrottleEventLog.swift in Sources */,
 				5A858B7E2BF0CFC0B3E49847 /* ThrottleRule.swift in Sources */,
 				14BC7D908B94115EF40BC9D5 /* ThrottleRuleEngine.swift in Sources */,
+				C671A45C877A67BE152AE1AA /* ThrottleSummary.swift in Sources */,
 				8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */,
 				81EF92D16FD31086423E4B99 /* URLSchemeHandler+Debug.swift in Sources */,
 				D409F8F956BAF02BB00A41B5 /* URLSchemeHandler.swift in Sources */,
 				2F53BDD74ED0282DDB0307C9 /* UpdateCheckService.swift in Sources */,
+				AB0AE3320264C9998D39F8DB /* WeeklySummaryView.swift in Sources */,
 				9EF3A9C33C2DC63C1CB88DC7 /* WhatsNewSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1005,6 +1021,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.AirAssistCLI;
+				PRODUCT_MODULE_NAME = AirAssistCLI;
 				PRODUCT_NAME = airassist;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -1270,6 +1287,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sjschillinger.AirAssistCLI;
+				PRODUCT_MODULE_NAME = AirAssistCLI;
 				PRODUCT_NAME = airassist;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;

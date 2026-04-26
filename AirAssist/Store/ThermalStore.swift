@@ -84,6 +84,10 @@ final class ThermalStore {
     let processInspector = ProcessInspector()
     let processThrottler = ProcessThrottler()
     let throttleActivityLog = ThrottleActivityLog()
+    /// Persistent NDJSON log of throttle events — the data source for the
+    /// dashboard's "This week" panel. Distinct from `throttleActivityLog`,
+    /// which is the in-memory ring buffer for the live "Recent activity".
+    let throttleEventLog = ThrottleEventLog()
     let safety = SafetyCoordinator()
     private var frontmostObserver: FrontmostAppObserver!
     let snapshots: ProcessSnapshotPublisher
@@ -182,6 +186,10 @@ final class ThermalStore {
         self.throttleRules  = ThrottleRulesPersistence.load()
         self.processThrottler.safety = safety
         self.processThrottler.activityLog = throttleActivityLog
+        self.processThrottler.eventLog = throttleEventLog
+        // Trim ancient entries on launch — cheap (file is small) and keeps
+        // the on-disk log bounded across months of use.
+        throttleEventLog.pruneOldEntries()
         self.snapshots = ProcessSnapshotPublisher(inspector: processInspector)
         // Capture self weakly in the hottest-temp closure.
         self.governor = ThermalGovernor(

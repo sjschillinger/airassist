@@ -72,6 +72,8 @@ struct DashboardView: View {
                 Divider()
                 recentActivityPanel
             }
+            Divider()
+            WeeklySummaryView(store: store)
         }
         .frame(minWidth: 760, minHeight: 460)
     }

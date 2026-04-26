@@ -116,6 +116,12 @@ final class ProcessThrottler {
     /// "Recent activity" panel. Set once during store init.
     var activityLog: ThrottleActivityLog?
 
+    /// Optional persistent log written to ~/Library/Application Support/.../
+    /// throttle-events.ndjson. Feeds the weekly summary panel. Distinct from
+    /// `activityLog`: this one keeps the full uncoalesced event stream so
+    /// `ThrottleSummary.aggregate` can pair apply→release accurately.
+    var eventLog: ThrottleEventLog?
+
     /// Refuse throttling of our own PID or any ancestor in our parent chain.
     /// Layered on top of the excluded-name list because ancestors are often
     /// generic process names (zsh, Terminal) that could slip past a name check.
@@ -206,6 +212,7 @@ final class ProcessThrottler {
         }
         if updated {
             activityLog?.record(kind: .apply, source: source, pid: pid, name: name, duty: duty)
+            eventLog?.record(kind: .apply, source: source, pid: pid, name: name, duty: duty)
             return
         }
 
@@ -249,6 +256,7 @@ final class ProcessThrottler {
             task.cancel()
         } else {
             activityLog?.record(kind: .apply, source: source, pid: pid, name: name, duty: duty)
+            eventLog?.record(kind: .apply, source: source, pid: pid, name: name, duty: duty)
         }
     }
 
@@ -330,6 +338,7 @@ final class ProcessThrottler {
         }
         if let name = result.loggedName {
             activityLog?.record(kind: .release, source: source, pid: pid, name: name, duty: 1.0)
+            eventLog?.record(kind: .release, source: source, pid: pid, name: name, duty: 1.0)
         }
         if result.shouldRelease { release(pid: pid) }
     }
