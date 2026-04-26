@@ -112,6 +112,10 @@ final class ProcessThrottler {
     /// followed by reads from the cycler — well-defined on arm64.
     nonisolated(unsafe) var safety: SafetyCoordinator?
 
+    /// Optional ring-buffer log of apply/release events for the dashboard's
+    /// "Recent activity" panel. Set once during store init.
+    var activityLog: ThrottleActivityLog?
+
     /// Refuse throttling of our own PID or any ancestor in our parent chain.
     /// Layered on top of the excluded-name list because ancestors are often
     /// generic process names (zsh, Terminal) that could slip past a name check.
@@ -200,7 +204,10 @@ final class ProcessThrottler {
             }
             return false
         }
-        if updated { return }
+        if updated {
+            activityLog?.record(kind: .apply, source: source, pid: pid, name: name, duty: duty)
+            return
+        }
 
         // SAFETY ORDERING — persist intent BEFORE spawning the cycler.
         //
@@ -240,6 +247,8 @@ final class ProcessThrottler {
             // Released between publish and here (extremely rare reentrancy).
             // Cancel the cycler we just spawned.
             task.cancel()
+        } else {
+            activityLog?.record(kind: .apply, source: source, pid: pid, name: name, duty: duty)
         }
     }
 
@@ -296,6 +305,9 @@ final class ProcessThrottler {
     /// wants the PID throttled, it's released. Rule engine / governor use
     /// this (not `release`) so they only retract their own requests.
     func clearDuty(source: ThrottleSource, for pid: pid_t) {
+        // Snapshot the name before mutating so the activity log entry is
+        // accurate even after the entry is fully removed.
+        let snapshotName: String? = state.withLock { s in s.active[pid]?.name }
         let shouldRelease = state.withLock { s -> Bool in
             guard var entry = s.active[pid] else { return false }
             entry.sources.removeValue(forKey: source)
@@ -306,6 +318,9 @@ final class ProcessThrottler {
                 s.active[pid] = entry
                 return false
             }
+        }
+        if let name = snapshotName {
+            activityLog?.record(kind: .release, source: source, pid: pid, name: name, duty: 1.0)
         }
         if shouldRelease { release(pid: pid) }
     }

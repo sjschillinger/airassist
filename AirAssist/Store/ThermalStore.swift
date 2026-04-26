@@ -42,9 +42,43 @@ final class ThermalStore {
         StayAwakePersistence.save(mode)
     }
 
+    /// Apply a one-click scenario preset. Bundles a governor config, a
+    /// stay-awake mode, and the on-battery-only flag so the user can
+    /// switch context (Presenting / Quiet / Performance / Auto) without
+    /// reaching into Preferences. Per-app rules are intentionally
+    /// untouched — they represent persistent user intent.
+    func applyScenario(_ scenario: ScenarioPreset) {
+        var c = governorConfig
+        switch scenario {
+        case .presenting:
+            c.mode = .off
+            c.onBatteryOnly = false
+            governorConfig = c
+            setStayAwakeMode(.display)
+        case .quiet:
+            c = GovernorPreset.aggressive.applied(to: c)
+            c.mode = .both
+            c.onBatteryOnly = false
+            governorConfig = c
+        case .performance:
+            c.mode = .off
+            c.onBatteryOnly = false
+            governorConfig = c
+            setStayAwakeMode(.display)
+        case .auto:
+            c = GovernorPreset.balanced.applied(to: c)
+            c.mode = .both
+            c.onBatteryOnly = true
+            governorConfig = c
+            setStayAwakeMode(.off)
+        }
+        UserDefaults.standard.set(scenario.rawValue, forKey: "scenarioPreset.last")
+    }
+
     // MARK: - CPU / Governor subsystem
     let processInspector = ProcessInspector()
     let processThrottler = ProcessThrottler()
+    let throttleActivityLog = ThrottleActivityLog()
     let safety = SafetyCoordinator()
     private var frontmostObserver: FrontmostAppObserver!
     let snapshots: ProcessSnapshotPublisher
@@ -142,6 +176,7 @@ final class ThermalStore {
         self.governorConfig = GovernorConfigPersistence.load()
         self.throttleRules  = ThrottleRulesPersistence.load()
         self.processThrottler.safety = safety
+        self.processThrottler.activityLog = throttleActivityLog
         self.snapshots = ProcessSnapshotPublisher(inspector: processInspector)
         // Capture self weakly in the hottest-temp closure.
         self.governor = ThermalGovernor(

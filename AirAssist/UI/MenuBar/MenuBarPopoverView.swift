@@ -555,8 +555,35 @@ struct MenuBarPopoverView: View {
                        help: "Keep the Mac awake — system, display, or with a timeout.") {
                 stayAwakeMenu
             }
+
+            // Scenario preset — one-click profiles. Bundles governor
+            // mode, caps, on-battery flag, and stay-awake mode.
+            controlRow(icon: "wand.and.stars",
+                       label: "Scenario",
+                       help: "Apply a one-click preset (Presenting / Quiet / Performance / Auto).") {
+                scenarioMenu
+            }
         }
         .padding(.vertical, 4)
+    }
+
+    private var scenarioMenu: some View {
+        Menu {
+            ForEach(ScenarioPreset.allCases) { preset in
+                Button {
+                    store.applyScenario(preset)
+                } label: {
+                    Label(preset.label, systemImage: preset.sfSymbol)
+                }
+                .help(preset.tagline)
+            }
+        } label: {
+            Text("Apply…")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
     }
 
     /// Standard row for a control whose trailing widget is a Toggle/Menu.
