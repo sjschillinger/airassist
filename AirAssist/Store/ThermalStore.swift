@@ -49,6 +49,7 @@ final class ThermalStore {
     private var frontmostObserver: FrontmostAppObserver!
     let snapshots: ProcessSnapshotPublisher
     private(set) var governor: ThermalGovernor!
+    private(set) var governorNotifier: GovernorNotifier?
     private(set) var ruleEngine: ThrottleRuleEngine!
     /// Shared 1Hz driver — refreshes the snapshot publisher, then ticks both
     /// engines in deterministic order (rules first, governor second, so the
@@ -163,6 +164,7 @@ final class ThermalStore {
         self.governor.isRuleCoveredPID = { [weak self] pid in
             self?.ruleEngine.managedPIDs.contains(pid) ?? false
         }
+        self.governorNotifier = GovernorNotifier(governor: governor)
         // Foreground-app protection: the throttler uses this to clamp
         // effective duty up to `foregroundDutyFloor` for the active window.
         self.frontmostObserver = FrontmostAppObserver { [weak self] pid in
@@ -229,6 +231,7 @@ final class ThermalStore {
                 self.snapshots.refresh()
                 self.ruleEngine.tick()
                 self.governor.tick()
+                self.governorNotifier?.evaluate()
                 self.appendSparklineSample()
             }
         }

@@ -100,6 +100,7 @@
 		EBE6C2163E1F9171F1E8F87E /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */; };
 		EC80724CCFDD8458B4D929BF /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B547671D14DD15F0C9817F44 /* Assertions.swift */; };
 		FAB74801EE74233DE341FF9C /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02BA0BF3D6B9C098E7D51127 /* HistoryView.swift */; };
+		FFFDE534BF1F2E71377BC949 /* GovernorNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE9C2F08AC070CE2A01E6E25 /* GovernorNotifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -233,6 +234,7 @@
 		FAE7B1E9B83D8BC64EA57633 /* IOKitBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOKitBridge.h; sourceTree = "<group>"; };
 		FB12A736A62BA39A609E7C19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FD32BF366F8E6D8B74D4EAB5 /* MetricKitReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricKitReporter.swift; sourceTree = "<group>"; };
+		FE9C2F08AC070CE2A01E6E25 /* GovernorNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GovernorNotifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -418,6 +420,7 @@
 				F39D53AA5D34F3BF9DC08F9F /* FirstRunDisclosure.swift */,
 				BF7E79F9D9CEB95EE90B4F21 /* FrontmostAppObserver.swift */,
 				31055655C5C5AA8D2754F348 /* GlobalHotkeyService.swift */,
+				FE9C2F08AC070CE2A01E6E25 /* GovernorNotifier.swift */,
 				F196C0F3CE861B44C60AC956 /* HistoryLogger.swift */,
 				0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */,
 				5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */,
@@ -749,6 +752,7 @@
 				1FBEFE6AFC18FA9F73206F50 /* GeneralPrefsView.swift in Sources */,
 				A82D2A4454819031737A472C /* GlobalHotkeyService.swift in Sources */,
 				ACFABCECFECDF629B1105134 /* GovernorConfig.swift in Sources */,
+				FFFDE534BF1F2E71377BC949 /* GovernorNotifier.swift in Sources */,
 				C99CE41C0148623FB418A91D /* HistoryLogger.swift in Sources */,
 				C43FB882937BC5D2E7FACF2B /* HistoryReader.swift in Sources */,
 				FAB74801EE74233DE341FF9C /* HistoryView.swift in Sources */,

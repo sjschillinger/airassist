@@ -329,6 +329,20 @@ struct MenuBarPopoverView: View {
                         .help("Release this manual throttle now.")
                     }
                     .font(.caption2)
+                    .contextMenu {
+                        Button("Show in Activity Monitor") {
+                            Self.openActivityMonitor()
+                        }
+                        Button("Add \"\(row.name)\" to Never-Throttle list") {
+                            NeverThrottleList.add(row.name)
+                            store.releaseManualThrottle(pid: row.pid)
+                        }
+                        Divider()
+                        Button("Copy process name") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(row.name, forType: .string)
+                        }
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -745,6 +759,16 @@ struct MenuBarPopoverView: View {
                           role: .destructive) { onQuit() }
         }
         .padding(.vertical, 4)
+    }
+
+    // MARK: - System integration
+
+    /// Bring Activity Monitor forward. macOS doesn't expose a public URL
+    /// scheme that selects a specific PID, so we just open the app and
+    /// let the user search — still beats hunting through Spotlight.
+    fileprivate static func openActivityMonitor() {
+        let url = URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app")
+        NSWorkspace.shared.open(url)
     }
 }
 
