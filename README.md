@@ -1,5 +1,7 @@
 # AirAssist
 
+[![Latest Release](https://img.shields.io/github/v/release/sjschillinger/airassist?label=Download&style=for-the-badge&color=2ea44f)](https://github.com/sjschillinger/airassist/releases/latest)
+
 A menu-bar thermal monitor and workload governor for the fanless MacBook
 Air. Watches the SoC's internal thermal sensors, surfaces them in a tidy
 dashboard, and — when things get warm — duty-cycles the greediest
