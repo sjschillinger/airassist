@@ -1,0 +1,55 @@
+// Signing configuration template.
+//
+// Copy this file to `Signing.xcconfig` (gitignored) and fill in your own
+// Team ID + signing identity. The real file is never committed; this
+// template documents the contract.
+//
+// **You only need this file when building targets that include the
+// privileged Battery Assist helper (or any future helper that needs
+// SMAppService.daemon registration).** The main AirAssist app builds
+// fine with the project's default ad-hoc signing (`CODE_SIGN_IDENTITY=-`)
+// for local use, no Apple Developer membership required.
+//
+// ## When you need to fill this in
+//
+// - You're adding the privileged helper target locally for development.
+//   A free Apple ID gives you an "Apple Development" cert that's enough
+//   to test the entire helper architecture on your own Mac. Set:
+//     DEVELOPMENT_TEAM   = <your free personal Team ID, 10 chars>
+//     CODE_SIGN_IDENTITY = Apple Development
+//     CODE_SIGN_STYLE    = Automatic
+//
+// - You're cutting a release for distribution to other users. This
+//   requires a paid Apple Developer Program membership ($99/year):
+//     DEVELOPMENT_TEAM   = <your paid Team ID>
+//     CODE_SIGN_IDENTITY = Developer ID Application
+//     CODE_SIGN_STYLE    = Manual
+//
+// ## How to find your Team ID
+//
+// - Open Xcode → Settings → Accounts → select your Apple ID → click
+//   "Manage Certificates" or look at the Team Name table — the 10-char
+//   code in the right column is your Team ID.
+// - Or run: `security find-identity -v -p codesigning` and parse the
+//   long-form identity string.
+//
+// ## How this gets read
+//
+// When the helper target is added to project.yml, its configuration
+// will reference this file via `configFiles:` so xcodegen wires it
+// into the generated Xcode project. The file is read at build time;
+// no runtime dependency.
+
+// Team ID — 10-character alphanumeric. Required for any helper target
+// that uses SMAppService.daemon, because the daemon and the parent app
+// must share a Team ID for the system's same-team check to pass.
+DEVELOPMENT_TEAM =
+
+// Signing identity — "Apple Development" for free / personal-team
+// builds, "Developer ID Application" for distributable builds with a
+// paid membership.
+CODE_SIGN_IDENTITY = Apple Development
+
+// Manual is fine for personal builds; Automatic lets Xcode manage
+// provisioning profiles for you, which matters more when distributing.
+CODE_SIGN_STYLE = Automatic

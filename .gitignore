@@ -35,3 +35,10 @@ References/
 .env.*
 !.env.example
 AuthKey_*.p8
+*.mobileprovision
+*.provisionprofile
+
+# Local signing config — Team ID + cert identity for the developer's own
+# build. Tracked as Signing.xcconfig.template; never as the real file.
+Signing.xcconfig
+!Signing.xcconfig.template
