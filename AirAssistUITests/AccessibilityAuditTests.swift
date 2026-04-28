@@ -119,21 +119,12 @@ final class AccessibilityAuditTests: XCTestCase {
             }
         }
 
-        // Contrast audits on SensorCardView's `.cool` state. The system
-        // `.green` used for the 22pt temperature reading against
-        // `.regularMaterial` falls below WCAG AA large-text (3:1) in light
-        // mode. Visual design is explicitly locked for v1.0 per
-        // LAUNCH_CHECKLIST #9/#10 ("accepted as shipping"). Post-launch
-        // follow-up: replace `.green`/`.orange`/`.red` in SensorCardView
-        // with a palette that meets AA on both materials. Tracked as
-        // TODO_POST_LAUNCH in SensorCardView.swift.
-        if issue.auditType.rawValue == 1, // .contrast
-           element.label.contains(", cool")
-            || element.label.contains(", warm")
-            || element.label.contains(", hot") {
-            print("[#14] suppressed contrast audit on locked-design element: \(element.label)")
-            return true
-        }
+        // (Historical note: a contrast suppression for SensorCardView's
+        // .cool / .warm / .hot states lived here through 0.12.0. The
+        // underlying contrast issue was fixed by replacing the bare
+        // SwiftUI .green/.orange with darker RGB variants that meet
+        // WCAG AA on both materials. Suppression removed in 0.12.1 so
+        // a future regression on those colors will fail the audit.)
 
         return false
     }

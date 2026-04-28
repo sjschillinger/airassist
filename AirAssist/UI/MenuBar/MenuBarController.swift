@@ -184,21 +184,67 @@ final class MenuBarController {
         case .cool, .unknown: tint = nil
         }
 
-        let v1 = store.temperature(category: slot1Cat, value: slot1Val)
-        let v2 = layout == .single ? nil : store.temperature(category: slot2Cat, value: slot2Val)
+        let slot1 = store.resolveSlot(category: slot1Cat, value: slot1Val)
+        let slot2 = layout == .single
+            ? MenuBarSlotState.empty
+            : store.resolveSlot(category: slot2Cat, value: slot2Val)
+        let v1 = slot1.value
+        let v2 = layout == .single ? nil : slot2.value
 
-        let targetLength: CGFloat
-        switch layout {
-        case .single:
-            targetLength = showIcon ? MenuBarIconRenderer.widthSingle
-                                    : MenuBarIconRenderer.widthSingleNoIcon
-        case .sideBySide:
-            targetLength = showIcon ? MenuBarIconRenderer.widthSideBySide
-                                    : MenuBarIconRenderer.widthSideBySideNoIcon
-        case .stacked:
-            // Stacked layout is text-only by design — showIcon doesn't apply.
-            targetLength = MenuBarIconRenderer.widthStacked
+        // Source badge appears only on "highest" slots — that's the
+        // mode where the displayed value can flip categories silently
+        // ("which sensor is hottest right now?") and the badge resolves
+        // the ambiguity. Average and individual already imply their
+        // source. Stacked layout has no horizontal room.
+        let showBadge = (defaults.object(forKey: "showMenuBarSourceBadge") as? Bool) ?? true
+        let badge1: String? = (showBadge
+            && layout != .stacked
+            && slot1Cat == SlotCategory.highest.rawValue)
+            ? slot1.sourceCategory.map(MenuBarSourceBadge.character(for:))
+            : nil
+        let badge2: String? = (showBadge
+            && layout == .sideBySide
+            && slot2Cat == SlotCategory.highest.rawValue)
+            ? slot2.sourceCategory.map(MenuBarSourceBadge.character(for:))
+            : nil
+
+        // Trend glyph: only meaningful when we have history (highest or
+        // individual modes — average doesn't carry one). We suppress
+        // .flat in the bar so the glyph isn't a permanent fixture; the
+        // eye latches onto motion, and a flat bullet sitting next to a
+        // steady reading just adds noise. Suppression also lets users
+        // who don't enable the badge see arrows when something is
+        // actually moving.
+        let showTrend = (defaults.object(forKey: "showMenuBarTrendGlyph") as? Bool) ?? true
+        func trend(for state: MenuBarSlotState) -> String? {
+            guard showTrend, !state.history.isEmpty,
+                  let t = MenuBarTrendCompute.compute(state.history),
+                  t != .flat
+            else { return nil }
+            return MenuBarTrendCompute.glyph(for: t)
         }
+        let trend1: String? = (layout != .stacked) ? trend(for: slot1) : nil
+        let trend2: String? = (layout == .sideBySide) ? trend(for: slot2) : nil
+
+        // Width reservation for the trend glyph is decoupled from
+        // whether we're actually drawing one right now. If we sized
+        // the slot to the live glyph, the menu bar item would shift
+        // left/right every time the temperature settled into a flat
+        // band — the eye reads that as glitchy. Instead, we reserve
+        // the trend's width whenever the feature is on and the slot's
+        // mode can produce trends, so the slot only changes width on
+        // a pref toggle, not on temperature noise.
+        let reserveTrend1 = showTrend && layout != .stacked
+        let reserveTrend2 = showTrend && layout == .sideBySide
+
+        let targetLength = MenuBarIconRenderer.slotWidth(
+            layout: layout,
+            showIcon: showIcon,
+            badge1: badge1 != nil,
+            badge2: badge2 != nil,
+            trend1: reserveTrend1,
+            trend2: reserveTrend2
+        )
 
         // Throttle indicator dot: red if cap is breached, orange if only
         // rules, blue ("armed") if the governor is enabled but not yet
@@ -230,9 +276,32 @@ final class MenuBarController {
         let rendered = MenuBarIconRenderer.render(
             layout: layout,
             v1: v1, v2: v2, unit: unit,
+            sourceBadge1: badge1,
+            sourceBadge2: badge2,
+            trend1: trend1,
+            trend2: trend2,
+            reserveTrend1: reserveTrend1,
+            reserveTrend2: reserveTrend2,
             iconName: iconName, tint: tint,
             showIcon: showIcon,
             throttleDot: throttleDot,
+            // `liveThrottledPIDs` is the set of PIDs the throttler is
+            // actively cycling right now. Governor episodes (CPU/temp
+            // throttle) are conceptually "all foreground processes" but
+            // don't enumerate per-PID — for those we leave the count
+            // at 1 and let the dot stand in. The pill only kicks in
+            // when there are genuinely multiple distinct rule/manual
+            // targets being held down at once.
+            throttleCount: store.liveThrottledPIDs.count,
+            // Worst-case headroom drives the strip — if either visible
+            // slot is creeping toward hot, that's what the user wants
+            // to see. nil-safe via compactMap.
+            headroom: {
+                let showStrip = (defaults.object(forKey: "showMenuBarHeadroomStrip") as? Bool) ?? true
+                guard showStrip else { return nil }
+                let candidates = [slot1.headroom, slot2.headroom].compactMap { $0 }
+                return candidates.max()
+            }(),
             pulsePhase: phase,
             width: targetLength
         )
@@ -255,7 +324,9 @@ final class MenuBarController {
         let a11y = accessibilityDescription(
             v1: v1, v2: v2, unit: unit, state: state,
             isPaused: store.isPauseActive,
-            throttleDotRed: throttleDot == .systemRed
+            throttleDotRed: throttleDot == .systemRed,
+            slot1Source: badge1 != nil ? slot1.sourceCategory : nil,
+            slot2Source: badge2 != nil ? slot2.sourceCategory : nil
         )
         rendered.accessibilityDescription = a11y
         button.setAccessibilityLabel(a11y)
@@ -272,15 +343,30 @@ final class MenuBarController {
         unit: TempUnit,
         state: ThresholdState,
         isPaused: Bool,
-        throttleDotRed: Bool
+        throttleDotRed: Bool,
+        slot1Source: SensorCategory? = nil,
+        slot2Source: SensorCategory? = nil
     ) -> String {
         var parts: [String] = [AppStrings.appName]
+        // For highest-mode slots we read the long-form category name
+        // ("hottest is CPU, 84 degrees") so VoiceOver doesn't strand
+        // the user trying to decode "C" as a letter. Direct slots fall
+        // back to plain numbers because the user already knows what
+        // they configured.
+        func phrase(value: Double, source: SensorCategory?) -> String {
+            let v = unit.format(value)
+            if let source {
+                return "hottest is \(MenuBarSourceBadge.accessibilityName(for: source)), \(v)"
+            }
+            return v
+        }
         if let v1 {
-            let v1Str = unit.format(v1)
+            let p1 = phrase(value: v1, source: slot1Source)
             if let v2 {
-                parts.append("\(v1Str), \(unit.format(v2))")
+                let p2 = phrase(value: v2, source: slot2Source)
+                parts.append("\(p1), \(p2)")
             } else {
-                parts.append(v1Str)
+                parts.append(p1)
             }
         } else {
             parts.append("sensors unavailable")
@@ -294,9 +380,22 @@ final class MenuBarController {
         if isPaused {
             parts.append("paused")
         } else if throttleDotRed {
-            parts.append("throttling active")
+            // Mention scope when meaningful — "throttling 3 processes"
+            // is materially more useful than the bare "throttling active"
+            // for someone who can't see the number badge.
+            let n = store.liveThrottledPIDs.count
+            if n >= 2 {
+                parts.append("throttling \(n) processes")
+            } else {
+                parts.append("throttling active")
+            }
         } else if !store.liveThrottledPIDs.isEmpty {
-            parts.append("rules active")
+            let n = store.liveThrottledPIDs.count
+            if n >= 2 {
+                parts.append("rules active on \(n) processes")
+            } else {
+                parts.append("rules active")
+            }
         }
         return parts.joined(separator: ". ")
     }

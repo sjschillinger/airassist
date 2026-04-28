@@ -22,9 +22,16 @@ enum MenuBarIconRenderer {
         static let sideBySideWidth: CGFloat       = 86
         static let sideBySideWidthNoIcon: CGFloat = 70
         static let stackedWidth: CGFloat          = 44
+        // Each source badge is one ~9pt character + a hair of leading;
+        // budgeting 11pt per badge keeps the slot from clipping while
+        // staying tight enough that "C 84°" reads as one unit.
+        static let badgeWidth: CGFloat            = 11
         // Font sizes at reference bar height
         static let singleFontPt: CGFloat    = 12
         static let stackedFontPt: CGFloat   = 10
+        // Source-badge font: noticeably smaller than the value so the
+        // eye reads the number first and the badge as a label.
+        static let badgeFontPt: CGFloat     = 9
         static let iconPt: CGFloat          = 13
     }
 
@@ -56,33 +63,79 @@ enum MenuBarIconRenderer {
     static func render(
         layout: MenuBarLayout,
         v1: Double?, v2: Double?, unit: TempUnit,
+        sourceBadge1: String? = nil,
+        sourceBadge2: String? = nil,
+        trend1: String? = nil,
+        trend2: String? = nil,
+        /// When true, the trend slot reserves its layout width even
+        /// when `trend1`/`trend2` is nil — by drawing an invisible
+        /// placeholder glyph. Lets callers stop the menu bar item
+        /// from shifting whenever the trend toggles between visible
+        /// and hidden (which happens whenever the temperature settles
+        /// into the flat band).
+        reserveTrend1: Bool = false,
+        reserveTrend2: Bool = false,
         iconName: String, tint: NSColor?,
         showIcon: Bool = true,
         throttleDot: NSColor?,
+        throttleCount: Int = 0,
+        headroom: Double? = nil,
         pulsePhase: CGFloat = 1.0,
         width: CGFloat
     ) -> NSImage {
         let size = NSSize(width: width, height: barHeight)
+        let compositeIsTemplate = (tint == nil && throttleDot == nil && headroom == nil)
         let img = NSImage(size: size, flipped: false) { _ in
             switch layout {
             case .single:
-                drawIconPlusText(
-                    text: v1.map(unit.format) ?? "",
+                let textColor: NSColor = tint ?? .labelColor
+                drawIconPlusAttributedText(
+                    text: composeSlot(
+                        value: v1.map(unit.format) ?? "",
+                        badge: sourceBadge1,
+                        trend: trend1,
+                        reserveTrend: reserveTrend1,
+                        textColor: textColor
+                    ),
                     iconName: iconName, tint: tint,
                     showIcon: showIcon,
                     throttleDot: throttleDot,
+                    throttleCount: throttleCount,
+                    compositeIsTemplate: compositeIsTemplate,
                     pulsePhase: pulsePhase,
                     size: size
                 )
             case .sideBySide:
-                var parts: [String] = []
-                if let v1 { parts.append(unit.format(v1)) }
-                if let v2 { parts.append(unit.format(v2)) }
-                drawIconPlusText(
-                    text: parts.joined(separator: "  "),
+                let textColor: NSColor = tint ?? .labelColor
+                let combined = NSMutableAttributedString()
+                if let v1 {
+                    combined.append(composeSlot(
+                        value: unit.format(v1), badge: sourceBadge1,
+                        trend: trend1, reserveTrend: reserveTrend1,
+                        textColor: textColor
+                    ))
+                }
+                if let v2 {
+                    if combined.length > 0 {
+                        combined.append(NSAttributedString(
+                            string: "  ",
+                            attributes: [.font: slotFont(),
+                                         .foregroundColor: textColor]
+                        ))
+                    }
+                    combined.append(composeSlot(
+                        value: unit.format(v2), badge: sourceBadge2,
+                        trend: trend2, reserveTrend: reserveTrend2,
+                        textColor: textColor
+                    ))
+                }
+                drawIconPlusAttributedText(
+                    text: combined,
                     iconName: iconName, tint: tint,
                     showIcon: showIcon,
                     throttleDot: throttleDot,
+                    throttleCount: throttleCount,
+                    compositeIsTemplate: compositeIsTemplate,
                     pulsePhase: pulsePhase,
                     size: size
                 )
@@ -93,18 +146,199 @@ enum MenuBarIconRenderer {
                     size: size
                 )
             }
+            // Headroom strip — drawn last so it sits on top of the
+            // icon's bottom edge but under nothing else. See
+            // `drawHeadroomStrip` for the full design rationale.
+            if let h = headroom {
+                drawHeadroomStrip(headroom: h, size: size)
+            }
             return true
         }
-        img.isTemplate = (tint == nil && throttleDot == nil)
+        // The strip uses systemBlue/systemOrange/systemRed which all
+        // carry color, so once it's drawn the composite cannot be a
+        // template. Keep the auto-template path only when there is no
+        // tint AND no dot AND no headroom.
+        img.isTemplate = compositeIsTemplate
         return img
+    }
+
+    /// Draws a thin progress strip across the bottom of the bar. Width
+    /// is proportional to `headroom` (0…1). Color interpolates
+    /// blue → orange → red so the eye picks up "creeping toward hot"
+    /// well before the main tint flips.
+    ///
+    /// Why one strip across the whole item instead of per-slot:
+    ///   - The composer treats sideBySide as a single attributed-text
+    ///     block, so per-slot rects aren't easily recoverable here.
+    ///   - The user cares about the worst sensor anyway — that's the
+    ///     one that's going to throttle first.
+    /// Caller is responsible for picking which slot's headroom to pass
+    /// (typically `max(slot1.headroom, slot2.headroom)`).
+    private static func drawHeadroomStrip(headroom: Double, size: NSSize) {
+        let h = max(0, min(1, headroom))
+        // Hide the strip entirely below ~10% so a cool Mac doesn't
+        // carry a permanent low-grade tinted line at the bottom of
+        // the menu bar — the strip should *appear* as the room runs
+        // out, not be a fixture.
+        guard h > 0.1 else { return }
+
+        let stripHeight: CGFloat = max(1.5, 1.5 * barScale)
+        // Inset 2pt on each side so the strip doesn't kiss the slot's
+        // own boundary in the menu bar — leaves visual breathing room
+        // next to neighbouring status items.
+        let horizontalInset: CGFloat = 2
+        let usableWidth = max(0, size.width - horizontalInset * 2)
+        let fillWidth = usableWidth * CGFloat(h)
+        let stripRect = NSRect(
+            x: horizontalInset,
+            y: 0.5,                         // 0.5pt off the bottom edge
+            width: fillWidth,
+            height: stripHeight
+        )
+
+        // Three-stop color ramp. Below 0.5 we fade blue → orange;
+        // above 0.5 we fade orange → red. Alpha climbs with headroom
+        // because a near-empty strip at full alpha would look like an
+        // alarm; a near-full strip should read clearly.
+        let stripColor: NSColor = {
+            if h < 0.5 {
+                let t = h / 0.5
+                return blend(.systemBlue, .systemOrange, t)
+                    .withAlphaComponent(0.45 + 0.25 * CGFloat(t))
+            } else {
+                let t = (h - 0.5) / 0.5
+                return blend(.systemOrange, .systemRed, t)
+                    .withAlphaComponent(0.70 + 0.20 * CGFloat(t))
+            }
+        }()
+        stripColor.set()
+        // Rounded so it doesn't read as a hard edge against the menu
+        // bar's translucent background.
+        NSBezierPath(roundedRect: stripRect,
+                     xRadius: stripHeight / 2,
+                     yRadius: stripHeight / 2).fill()
+    }
+
+    /// Linear-interpolate two NSColors in their RGB representations.
+    /// `t` is clamped to 0…1.
+    private static func blend(_ a: NSColor, _ b: NSColor, _ t: Double) -> NSColor {
+        let clamped = max(0, min(1, t))
+        // Convert to a representable RGB space; system dynamic colors
+        // need this dance or .redComponent traps.
+        guard let aRGB = a.usingColorSpace(.deviceRGB),
+              let bRGB = b.usingColorSpace(.deviceRGB) else {
+            return clamped < 0.5 ? a : b
+        }
+        let f = CGFloat(clamped)
+        return NSColor(
+            deviceRed:   aRGB.redComponent   * (1 - f) + bRGB.redComponent   * f,
+            green:       aRGB.greenComponent * (1 - f) + bRGB.greenComponent * f,
+            blue:        aRGB.blueComponent  * (1 - f) + bRGB.blueComponent  * f,
+            alpha: 1
+        )
+    }
+
+    /// Width for a slot-with-badges configuration. Badges add a small
+    /// fixed amount per side so the slot doesn't clip when the user
+    /// has them on. Stacked layout never carries badges (no horizontal
+    /// room) so it's exempt.
+    static func slotWidth(
+        layout: MenuBarLayout,
+        showIcon: Bool,
+        badge1: Bool,
+        badge2: Bool,
+        trend1: Bool = false,
+        trend2: Bool = false
+    ) -> CGFloat {
+        let scale = barScale
+        let badgePad = BaseSize.badgeWidth * scale
+        // Trend glyph is one ~9pt arrow; same budget as the badge slot
+        // is honest enough and keeps the math symmetric.
+        let trendPad = BaseSize.badgeWidth * scale
+        switch layout {
+        case .single:
+            let base = showIcon ? BaseSize.singleWidth : BaseSize.singleWidthNoIcon
+            return base * scale
+                + (badge1 ? badgePad : 0)
+                + (trend1 ? trendPad : 0)
+        case .sideBySide:
+            let base = showIcon ? BaseSize.sideBySideWidth : BaseSize.sideBySideWidthNoIcon
+            return base * scale
+                + (badge1 ? badgePad : 0)
+                + (badge2 ? badgePad : 0)
+                + (trend1 ? trendPad : 0)
+                + (trend2 ? trendPad : 0)
+        case .stacked:
+            return BaseSize.stackedWidth * scale
+        }
+    }
+
+    private static func slotFont() -> NSFont {
+        .monospacedDigitSystemFont(ofSize: BaseSize.singleFontPt * barScale, weight: .regular)
+    }
+
+    /// Compose "[badge ]value" as an attributed string. The badge is
+    /// drawn in a smaller font and dimmer color so it reads as a label
+    /// rather than competing with the value itself.
+    private static func composeSlot(
+        value: String, badge: String?,
+        trend: String? = nil, reserveTrend: Bool = false,
+        textColor: NSColor
+    ) -> NSAttributedString {
+        let out = NSMutableAttributedString()
+        let valueFont = slotFont()
+        let supportFont: NSFont = .systemFont(
+            ofSize: BaseSize.badgeFontPt * barScale, weight: .semibold
+        )
+        // 0.65 alpha gives the eye a clear hierarchy: value dominant,
+        // supporting glyphs softer. Inherits the slot's tint so warm/hot
+        // states don't lose their color signal.
+        let supportColor = textColor.withAlphaComponent(0.65)
+
+        if let badge, !badge.isEmpty {
+            // Hair-space separator (\u{2009}) keeps "C84°" from collapsing
+            // visually — wide enough to read as separate, tighter than a
+            // full space which would push the value out of frame.
+            out.append(NSAttributedString(
+                string: badge + "\u{2009}",
+                attributes: [.font: supportFont, .foregroundColor: supportColor]
+            ))
+        }
+        out.append(NSAttributedString(
+            string: value,
+            attributes: [.font: valueFont, .foregroundColor: textColor]
+        ))
+        if let trend, !trend.isEmpty {
+            // Trend glyph trails the value with another hair-space —
+            // the eye reads "84°↑" as one chunk. Subtle on purpose:
+            // direction is supporting info, not a primary signal.
+            out.append(NSAttributedString(
+                string: "\u{2009}" + trend,
+                attributes: [.font: supportFont, .foregroundColor: supportColor]
+            ))
+        } else if reserveTrend {
+            // No live arrow but the caller wants the slot's width
+            // pinned. Draw an arrow with alpha 0 so the layout is
+            // identical to the visible-arrow case — eliminates the
+            // left/right wobble that happens whenever the temperature
+            // settles into the flat band and the arrow vanishes.
+            out.append(NSAttributedString(
+                string: "\u{2009}↑",
+                attributes: [.font: supportFont,
+                             .foregroundColor: NSColor.clear]
+            ))
+        }
+        return out
     }
 
     // MARK: - Private drawing primitives
 
-    private static func drawIconPlusText(
-        text: String, iconName: String, tint: NSColor?,
+    private static func drawIconPlusAttributedText(
+        text: NSAttributedString, iconName: String, tint: NSColor?,
         showIcon: Bool = true,
         throttleDot: NSColor?,
+        throttleCount: Int = 0,
+        compositeIsTemplate: Bool = true,
         pulsePhase: CGFloat = 1.0,
         size: NSSize
     ) {
@@ -141,14 +375,12 @@ enum MenuBarIconRenderer {
         // baseIcon is intentionally nil and we proceed text-only.
         if showIcon && baseIcon == nil { return }
         let iconSize: NSSize = baseIcon?.size ?? .zero
-        let font: NSFont = .monospacedDigitSystemFont(ofSize: BaseSize.singleFontPt * scale, weight: .regular)
-        let textColor: NSColor = tint ?? .labelColor
-        let textAttrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
-        let textSize = (text as NSString).size(withAttributes: textAttrs)
+        let textSize = text.size()
+        let textIsEmpty = (text.length == 0)
 
         let gap: CGFloat = 3
         let iconBlockWidth: CGFloat = showIcon ? iconSize.width : 0
-        let joinGap: CGFloat = (showIcon && !text.isEmpty) ? gap : 0
+        let joinGap: CGFloat = (showIcon && !textIsEmpty) ? gap : 0
         let totalWidth = iconBlockWidth + joinGap + textSize.width
         let startX = (size.width - totalWidth) / 2
 
@@ -167,8 +399,12 @@ enum MenuBarIconRenderer {
             // current labelColor. When no coloured element is present we leave
             // the glyph as pure black and let the template flip in the status
             // bar handle it.
-            let compositeWillBeTemplate = (tint == nil && throttleDot == nil)
-            let effectiveColor: NSColor? = tint ?? (compositeWillBeTemplate ? nil : NSColor.labelColor)
+            // The caller knows the full set of color-bearing elements
+            // (tint, throttle dot, headroom strip) and tells us whether
+            // the composite will retain template behaviour. When it
+            // won't, we have to manually paint the glyph in labelColor
+            // because macOS won't auto-flip black→white for us.
+            let effectiveColor: NSColor? = tint ?? (compositeIsTemplate ? nil : NSColor.labelColor)
             if let color = effectiveColor {
                 color.set()
                 let tinted = baseIcon.copy() as! NSImage
@@ -186,14 +422,14 @@ enum MenuBarIconRenderer {
 
         // Text
         var textRect: NSRect = .zero
-        if !text.isEmpty {
+        if !textIsEmpty {
             textRect = NSRect(
                 x: startX + iconBlockWidth + joinGap,
                 y: (size.height - textSize.height) / 2,
                 width: textSize.width,
                 height: textSize.height
             )
-            (text as NSString).draw(in: textRect, withAttributes: textAttrs)
+            text.draw(in: textRect)
         }
 
         // Throttle dot — pulsePhase 0→1 maps to alpha pulseMinAlpha→1.0
@@ -207,7 +443,7 @@ enum MenuBarIconRenderer {
             if showIcon {
                 anchorMaxX = iconRect.maxX
                 anchorMinY = iconRect.minY
-            } else if !text.isEmpty {
+            } else if !textIsEmpty {
                 anchorMaxX = textRect.maxX + dotDiameter * 0.4
                 anchorMinY = textRect.minY
             } else {
@@ -221,10 +457,54 @@ enum MenuBarIconRenderer {
                 height: dotDiameter
             )
             let alpha = pulseMinAlpha + (1.0 - pulseMinAlpha) * max(0, min(1, pulsePhase))
-            NSColor.windowBackgroundColor.withAlphaComponent(0.6 * alpha).set()
-            NSBezierPath(ovalIn: dotRect.insetBy(dx: -0.8, dy: -0.8)).fill()
-            dotColor.withAlphaComponent(alpha).set()
-            NSBezierPath(ovalIn: dotRect).fill()
+
+            // When more than one process is currently throttled, the
+            // bare dot under-reports. We bump the dot to a small
+            // numeric badge ("2", "3", … capped at "9+") so the user
+            // can see scope at a glance — five throttled processes
+            // looks materially different from one. Single-process and
+            // zero-but-armed states keep the existing dot, because
+            // labelling a "1" badge would be more visual noise than
+            // signal.
+            if throttleCount >= 2 {
+                let label = throttleCount > 9 ? "9+" : "\(throttleCount)"
+                let badgeFont: NSFont = .monospacedDigitSystemFont(
+                    ofSize: BaseSize.badgeFontPt * scale, weight: .bold
+                )
+                let labelAttrs: [NSAttributedString.Key: Any] = [
+                    .font: badgeFont,
+                    .foregroundColor: NSColor.white.withAlphaComponent(alpha),
+                ]
+                let labelSize = (label as NSString).size(withAttributes: labelAttrs)
+                // The badge is a pill sized to fit the label with 1.5pt
+                // horizontal padding. Height matches the dot's intended
+                // diameter so vertical alignment in the bar stays stable.
+                let pillHeight = max(dotDiameter + 2, labelSize.height + 1)
+                let pillWidth  = max(pillHeight, labelSize.width + 4)
+                let pillRect = NSRect(
+                    x: dotRect.midX - pillWidth / 2,
+                    y: dotRect.midY - pillHeight / 2,
+                    width: pillWidth,
+                    height: pillHeight
+                )
+                let radius = pillHeight / 2
+                NSColor.windowBackgroundColor.withAlphaComponent(0.6 * alpha).set()
+                NSBezierPath(roundedRect: pillRect.insetBy(dx: -0.8, dy: -0.8),
+                             xRadius: radius + 0.8,
+                             yRadius: radius + 0.8).fill()
+                dotColor.withAlphaComponent(alpha).set()
+                NSBezierPath(roundedRect: pillRect, xRadius: radius, yRadius: radius).fill()
+                let labelOrigin = NSPoint(
+                    x: pillRect.midX - labelSize.width / 2,
+                    y: pillRect.midY - labelSize.height / 2 + 0.5
+                )
+                (label as NSString).draw(at: labelOrigin, withAttributes: labelAttrs)
+            } else {
+                NSColor.windowBackgroundColor.withAlphaComponent(0.6 * alpha).set()
+                NSBezierPath(ovalIn: dotRect.insetBy(dx: -0.8, dy: -0.8)).fill()
+                dotColor.withAlphaComponent(alpha).set()
+                NSBezierPath(ovalIn: dotRect).fill()
+            }
         }
     }
 

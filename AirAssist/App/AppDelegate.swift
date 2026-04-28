@@ -87,6 +87,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         watchdog.start()
         memoryWatchdog = watchdog
 
+        // First-run default: opt the user in to launch-at-login. Keyed on a
+        // dedicated UserDefaults flag (NOT the SMAppService status) so that a
+        // user who turns it OFF in Preferences won't have it silently turned
+        // back ON by a subsequent launch. Running from DerivedData / a build
+        // dir will fail with `notFound` and surface an alert; we suppress
+        // that path by only attempting from /Applications-style locations.
+        LaunchAtLoginService.shared.applyFirstRunDefaultIfNeeded()
+
         // One-time legal/safety disclosure. Runs after the menu bar is up so
         // the alert isn't the first thing the user sees on a cold launch; the
         // icon appears, then the modal.

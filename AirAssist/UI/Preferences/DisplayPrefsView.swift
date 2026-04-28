@@ -31,11 +31,17 @@ struct DisplayPrefsView: View {
             }
 
             Section("Menu Bar") {
-                LabeledContent("Show icon") {
+                PrefRow(
+                    "Show icon",
+                    info: "Hide the snowflake glyph and show only temperature text. Saves a few pixels in a crowded menu bar; the colored tint when sensors run hot still applies to the text."
+                ) {
                     Toggle("", isOn: $showIcon).labelsHidden()
                 }
 
-                LabeledContent("Layout") {
+                PrefRow(
+                    "Layout",
+                    info: "Single = one slot. Side-by-side = two slots on one line (compact, fixed width). Stacked = two slots one above the other (taller, easier to read at a glance)."
+                ) {
                     Picker("", selection: Binding(
                         get: { layout },
                         set: { layoutRaw = $0.rawValue }
@@ -46,11 +52,17 @@ struct DisplayPrefsView: View {
                     .frame(width: 140)
                 }
 
-                LabeledContent("Slot 1") {
+                PrefRow(
+                    "Slot 1",
+                    info: "What this slot shows. Highest = the hottest reading in the chosen scope. Average = mean of the chosen scope. Individual = a single named sensor."
+                ) {
                     SlotPicker(category: $slot1Cat, value: $slot1Val, sensors: store.sensors)
                 }
 
-                LabeledContent("Slot 2") {
+                PrefRow(
+                    "Slot 2",
+                    info: "Second slot, available in Side-by-side and Stacked layouts. Pair them so the two slots tell complementary stories — e.g. Slot 1 = Highest Overall, Slot 2 = Battery (which always runs cooler and won't be hidden by a hot CPU)."
+                ) {
                     SlotPicker(category: $slot2Cat, value: $slot2Val, sensors: store.sensors)
                         .disabled(layout == .single)
                         .opacity(layout == .single ? 0.4 : 1)

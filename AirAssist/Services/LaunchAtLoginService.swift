@@ -90,6 +90,52 @@ final class LaunchAtLoginService {
         notifyObservers(status)
     }
 
+    /// On a brand-new install, opt the user in to launch-at-login. Only
+    /// runs once: the dedicated `launchAtLogin.firstRunDefaultApplied`
+    /// flag is set on first attempt regardless of outcome, so a user
+    /// who later disables the toggle in Preferences won't see it flip
+    /// back on at next launch.
+    ///
+    /// Skipped silently when the bundle is not in `/Applications` (or
+    /// `~/Applications`) — DerivedData builds always fail with
+    /// `notFound` and we don't want to nag during development.
+    func applyFirstRunDefaultIfNeeded() {
+        let key = "launchAtLogin.firstRunDefaultApplied"
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: key) else { return }
+
+        defer { defaults.set(true, forKey: key) }
+
+        let bundlePath = Bundle.main.bundlePath
+        let inApplications = bundlePath.hasPrefix("/Applications/")
+            || bundlePath.hasPrefix(NSHomeDirectory() + "/Applications/")
+        guard inApplications else {
+            logger.info("first-run launch-at-login default: skipped (bundle not in /Applications)")
+            return
+        }
+
+        // Only flip from .notRegistered. If the user has already approved
+        // this app on a previous install, the status will be .enabled
+        // already and we shouldn't churn the registration.
+        let current = SMAppService.mainApp.status
+        guard current == .notRegistered else {
+            logger.info("first-run launch-at-login default: status already \(String(describing: current), privacy: .public), no change")
+            return
+        }
+
+        do {
+            try SMAppService.mainApp.register()
+            logger.info("first-run launch-at-login default: enabled")
+        } catch {
+            // Silent on first-run — we don't want a modal alert to be the
+            // first thing a brand-new user sees. The toggle in Preferences
+            // will reflect the actual status when they look.
+            logger.error("first-run launch-at-login default: register failed \(String(describing: error), privacy: .public)")
+        }
+
+        notifyObservers(SMAppService.mainApp.status)
+    }
+
     // MARK: - Private
 
     private func notifyObservers(_ status: SMAppService.Status) {

@@ -36,11 +36,17 @@ struct GeneralPrefsView: View {
     var body: some View {
         Form {
             Section("Startup") {
-                LabeledContent(AppStrings.Preferences.launchAtLogin) {
+                PrefRow(
+                    AppStrings.Preferences.launchAtLogin,
+                    info: "Registers Air Assist as a macOS login item via SMAppService. The app must be in /Applications (or ~/Applications) for this to work — DerivedData builds will fail. If macOS asks for approval, we'll open the Login Items pane in System Settings."
+                ) {
                     Toggle("", isOn: launchAtLoginBinding)
                         .labelsHidden()
                 }
-                LabeledContent(AppStrings.Preferences.showDockIcon) {
+                PrefRow(
+                    AppStrings.Preferences.showDockIcon,
+                    info: "Air Assist normally lives only in the menu bar (LSUIElement). Turn this on to also show a Dock icon — useful if you prefer ⌘-Tab access or want the standard window-management affordances."
+                ) {
                     Toggle("", isOn: $showDockIcon)
                         .labelsHidden()
                         .onChange(of: showDockIcon) { _, show in
@@ -77,7 +83,10 @@ struct GeneralPrefsView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
 
-                LabeledContent("Global hotkey ⌘⌥P") {
+                PrefRow(
+                    "Global hotkey ⌘⌥P",
+                    info: "Toggle pause/resume from any app, even when Air Assist isn't focused. Built on Carbon's RegisterEventHotKey — no Accessibility permission required, and the shortcut is reserved system-wide so it works inside full-screen apps and games."
+                ) {
                     Toggle("", isOn: Binding(
                         get: { hotkeyEnabled },
                         set: { on in
@@ -93,7 +102,10 @@ struct GeneralPrefsView: View {
             }
 
             Section("Battery-aware thresholds") {
-                LabeledContent("Enabled") {
+                PrefRow(
+                    "Enabled",
+                    info: "Swap your sensor warm/hot color thresholds based on power source. AC stays cooler-feeling (you'd unplug if it got hot); battery stays useful longer (don't trip warnings on every modest workload). Governor caps and per-app rules are not affected."
+                ) {
                     Toggle("", isOn: Binding(
                         get: { batteryAwareEnabled },
                         set: { on in
@@ -204,7 +216,10 @@ struct GeneralPrefsView: View {
             }
 
             Section("Monitoring") {
-                LabeledContent(AppStrings.Preferences.updateInterval) {
+                PrefRow(
+                    AppStrings.Preferences.updateInterval,
+                    info: "How often Air Assist polls IOKit sensors. 1s gives the most responsive menu bar, 5-10s is gentler on battery. The thermal governor's control loop ticks at this rate too, so longer intervals make throttling decisions slower."
+                ) {
                     Picker("", selection: Binding(
                         get: { updateInterval },
                         set: {
@@ -222,7 +237,10 @@ struct GeneralPrefsView: View {
             }
 
             Section("Notifications") {
-                LabeledContent("Notify when governor engages") {
+                PrefRow(
+                    "Notify when governor engages",
+                    info: "Posts a system notification the first time the governor breaches a temperature or CPU cap after a quiet period. Rate-limited so a single sustained workload posts once, not dozens of times. macOS will ask for notification permission the first time you turn this on."
+                ) {
                     Toggle("", isOn: Binding(
                         get: { UserDefaults.standard.bool(forKey: "notifications.governor") },
                         set: { newValue in
@@ -241,7 +259,10 @@ struct GeneralPrefsView: View {
             }
 
             Section("Updates") {
-                LabeledContent("Check automatically") {
+                PrefRow(
+                    "Check automatically",
+                    info: "Once a day, Air Assist asks api.github.com for the latest release tag. No telemetry, no user data — just the version number. Off by default for users who prefer to control when network calls happen."
+                ) {
                     Toggle("", isOn: Binding(
                         get: { UpdateCheckService.shared.automaticChecksEnabled },
                         set: { UpdateCheckService.shared.automaticChecksEnabled = $0 }

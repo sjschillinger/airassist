@@ -23,8 +23,8 @@ import Foundation
 // Live runtime state (active throttles, paused-until timestamp, the
 // instantaneous governor decision) is *not* persisted, so the CLI
 // can't show it without IPC. We deliberately don't add IPC for that:
-// the dashboard window is the right surface, and `airassist
-// open-dashboard` (TODO) is a saner UX than a CLI table.
+// the dashboard window is the right surface, exposed as `airassist
+// open-dashboard`. A CLI table would just rot whenever the UI changes.
 //
 // Single file, no external deps. Intentionally low-magic.
 
@@ -32,7 +32,7 @@ import Foundation
 
 let bundleID = "com.sjschillinger.airassist"
 let scheme   = "airassist"
-let version  = "0.12.1"
+let version  = "0.13.0"
 
 // Completion script literals are declared up-front because top-level
 // `let` in main.swift initializes in source order; if they lived
@@ -56,6 +56,8 @@ _airassist() {
     'scenario:Apply a scenario preset'
     'status:Print persisted preferences'
     'completions:Emit shell completion script'
+    'open-dashboard:Open the Dashboard window'
+    'open-preferences:Open the Preferences window'
     'version:Print version'
     'help:Print help'
   )
@@ -65,7 +67,7 @@ _airassist() {
   fi
   case ${words[2]} in
     pause)       _values 'duration' 30s 1m 5m 15m 1h 4h forever ;;
-    scenario)    _values 'preset' presenting quiet performance auto ;;
+    scenario)    _values 'preset' presenting lap-cool quiet performance auto ;;
     completions) _values 'shell' zsh bash fish ;;
     throttle)
       if (( CURRENT == 3 )); then
@@ -89,14 +91,14 @@ _airassist_complete() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    verbs="pause resume throttle release scenario status completions version help"
+    verbs="pause resume throttle release scenario status completions open-dashboard open-preferences version help"
     if [ "$COMP_CWORD" -eq 1 ]; then
         COMPREPLY=( $(compgen -W "$verbs" -- "$cur") )
         return
     fi
     case "${COMP_WORDS[1]}" in
       pause)       COMPREPLY=( $(compgen -W "30s 1m 5m 15m 1h 4h forever" -- "$cur") ) ;;
-      scenario)    COMPREPLY=( $(compgen -W "presenting quiet performance auto" -- "$cur") ) ;;
+      scenario)    COMPREPLY=( $(compgen -W "presenting lap-cool quiet performance auto" -- "$cur") ) ;;
       completions) COMPREPLY=( $(compgen -W "zsh bash fish" -- "$cur") ) ;;
       throttle)    COMPREPLY=( $(compgen -W "--duty --duration" -- "$cur") ) ;;
       status)      COMPREPLY=( $(compgen -W "--json" -- "$cur") ) ;;
@@ -116,11 +118,13 @@ complete -c airassist -n '__fish_use_subcommand' -a 'release'     -d 'Release CL
 complete -c airassist -n '__fish_use_subcommand' -a 'scenario'    -d 'Apply scenario preset'
 complete -c airassist -n '__fish_use_subcommand' -a 'status'      -d 'Print persisted preferences'
 complete -c airassist -n '__fish_use_subcommand' -a 'completions' -d 'Emit shell completion script'
+complete -c airassist -n '__fish_use_subcommand' -a 'open-dashboard'   -d 'Open the Dashboard window'
+complete -c airassist -n '__fish_use_subcommand' -a 'open-preferences' -d 'Open the Preferences window'
 complete -c airassist -n '__fish_use_subcommand' -a 'version'     -d 'Print version'
 complete -c airassist -n '__fish_use_subcommand' -a 'help'        -d 'Print help'
 
 complete -c airassist -n '__fish_seen_subcommand_from pause'       -a 'forever 30s 1m 5m 15m 1h 4h'
-complete -c airassist -n '__fish_seen_subcommand_from scenario'    -a 'presenting quiet performance auto'
+complete -c airassist -n '__fish_seen_subcommand_from scenario'    -a 'presenting lap-cool quiet performance auto'
 complete -c airassist -n '__fish_seen_subcommand_from completions' -a 'zsh bash fish'
 complete -c airassist -n '__fish_seen_subcommand_from throttle' -l duty     -d 'Cap percentage (e.g. 30%)'
 complete -c airassist -n '__fish_seen_subcommand_from throttle' -l duration -d 'Throttle duration (e.g. 1h)'
@@ -146,6 +150,8 @@ case "release":            cmdRelease(rest)
 case "scenario":           cmdScenario(rest)
 case "status":             cmdStatus(rest)
 case "completions":        cmdCompletions(rest)
+case "open-dashboard":     cmdOpen(rest, kind: "open-dashboard")
+case "open-preferences":   cmdOpen(rest, kind: "open-preferences")
 case "help", "-h", "--help":
     printUsage()
 case "version", "-v", "--version":
@@ -222,9 +228,19 @@ func cmdRelease(_ args: [String]) {
 }
 
 func cmdScenario(_ args: [String]) {
-    guard let name = args.first?.lowercased() else {
-        fputs("airassist scenario: missing <name> (presenting|quiet|performance|auto)\n", stderr)
+    guard let raw = args.first?.lowercased() else {
+        fputs("airassist scenario: missing <name> (presenting|lap-cool|performance|auto)\n", stderr)
         exit(64)
+    }
+    // `lap-cool` is the user-facing name as of the rename; the URL-scheme
+    // handler still keys on the underlying `quiet` raw value for back-compat
+    // with older shortcuts and persisted state. Normalize at the edge.
+    let name: String
+    switch raw {
+    case "lap-cool", "lap", "cool", "lap/cool":
+        name = "quiet"
+    default:
+        name = raw
     }
     open("\(scheme)://scenario?name=\(percentEscape(name))")
 }
@@ -298,6 +314,16 @@ func cmdStatus(_ args: [String]) {
     print("")
     print("Note: live throttle state and sensor readings are not")
     print("persisted; open the dashboard to view them.")
+}
+
+func cmdOpen(_ args: [String], kind: String) {
+    // `airassist open-dashboard` / `airassist open-preferences`.
+    // Both verbs are zero-arg — anything else is a typo.
+    if !args.isEmpty {
+        fputs("airassist \(kind): unexpected arguments: \(args.joined(separator: " "))\n", stderr)
+        exit(64)
+    }
+    open("\(scheme)://\(kind)")
 }
 
 func cmdCompletions(_ args: [String]) {
@@ -407,14 +433,18 @@ func printUsage() {
                                             Duty: 0.5 or 50% (5%–100%).
                                             Default duration: 1h.
       release <bundle>                      Release CLI-issued throttle on a bundle.
-      scenario <name>                       Apply preset: presenting | quiet
+      scenario <name>                       Apply preset: presenting | lap-cool
                                             | performance | auto.
+                                            (`quiet` still accepted as an alias
+                                            for lap-cool.)
       status [--json]                       Print persisted preferences.
                                             With --json: machine-readable,
                                             includes appRunning + appVersion.
       completions <shell>                   Emit shell completion script
                                             (zsh | bash | fish).
                                             Pipe into your fpath / source.
+      open-dashboard                        Open the Dashboard window.
+      open-preferences                      Open the Preferences window.
       version                               Print version.
       help                                  Print this message.
 

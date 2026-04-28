@@ -9,6 +9,98 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-04-27
+
+A meaningful menu-bar overhaul plus a Preferences pass. The status item
+now carries enough at-a-glance signal (source badge, trend arrow,
+headroom strip, throttle count pill) that opening the popover becomes
+optional rather than required. The "Quiet" scenario is renamed to
+"Lap / Cool" with a retuned governor that doesn't pause parallel
+builds at moderate temperatures. Every Preferences row that wasn't
+self-explanatory now has an info popover. Launch at login is ON by
+default for new installs.
+
+### Added
+
+- **Weekly throttle summary on the dashboard.** A new "This week" panel
+  rolls up the last 7 days of throttle apply/release events from the
+  persistent NDJSON log: episode count, total time throttled,
+  per-source breakdown (governor / rule / manual), and the top apps by
+  time. Aggregator clamps episodes that span the window edge and
+  closes still-open episodes at `now`, so the totals match what the
+  user actually experienced even if the app is currently throttling.
+- **Source badge in the menu bar.** When a slot is showing "Highest"
+  (overall or category-pinned), the value is now prefixed with a
+  single-letter category badge (`C` CPU, `G` GPU, `S` SoC, `B`
+  battery, `D` disk, `·` other). Resolves the long-standing ambiguity
+  of "91° — but 91° from *which* sensor?" without forcing the user to
+  open the popover. Toggle in Preferences › Menu Bar › Source badge.
+- **Trend arrow next to each slot.** A small `↑` or `↓` appears when a
+  slot's recent history shows a clear rise or fall; suppressed when
+  steady, so the bar doesn't flicker on sensor jitter (0.4°C flat
+  band by default). Toggle in Preferences › Menu Bar › Trend arrow.
+- **Headroom strip in the menu bar.** A thin progress bar across the
+  bottom of the status item fills as the hottest visible sensor
+  approaches its hot threshold, ramping blue → orange → red. Hidden
+  below ~10% headroom so a cool Mac doesn't carry a permanent line.
+  Gives pre-warm visibility well before the icon tint flips. Toggle
+  in Preferences › Menu Bar › Headroom strip.
+- **Throttle count pill.** When two or more processes are actively
+  being held down by rules at once, the throttle dot in the menu bar
+  expands into a numeric pill ("2", "3", … "9+") so scope is visible
+  at a glance. Single-process and "armed but idle" states keep the
+  existing dot. VoiceOver now reads "throttling 3 processes" in the
+  same conditions.
+
+### Changed
+
+- **"Quiet" scenario renamed to "Lap / Cool".** The old name only made
+  sense to fan-equipped Mac users — for the fanless Air audience
+  "quiet" is a non-sequitur. The new label speaks to both groups
+  ("Lap" = chassis comfort on the skin, "Cool" = less fan noise as
+  the side effect of the same temperature cap). The governor was also
+  retuned: it now uses temperature-only mode with a 78°C ceiling and
+  4°C hysteresis, so a parallel build at moderate temperature is no
+  longer paused on the way up. The CLI accepts `lap-cool` going
+  forward; `quiet` remains a valid alias so existing Shortcuts and
+  scripts keep working. The persisted raw value is unchanged.
+
+### Improved
+
+- **Launch at login defaults ON for new installs.** A first-run hook
+  registers `SMAppService.mainApp` once, keyed on a dedicated
+  `launchAtLogin.firstRunDefaultApplied` flag so a user who later
+  toggles it off in Preferences won't see it flip back on at next
+  launch. Only fires from `/Applications` (or `~/Applications`) — a
+  DerivedData build won't churn the registration. Failures are
+  silent so a brand-new user doesn't get a modal alert as their
+  first impression.
+- **Info popovers across all preferences panes.** The `info.circle`
+  affordance from the Menu Bar pane is now on the rows that need it
+  in General (Launch at Login, Show Dock Icon, Global hotkey,
+  Battery-aware thresholds, Update interval, Notifications, Auto
+  update check), Display (Show icon, Layout, Slot 1 & 2), Sensors
+  (Temperature thresholds, sensor list), Thresholds (Category
+  header), and Throttling (Automatic governor, Frontmost quick
+  throttle, Per-app rules, Never throttle list). Each one opens a
+  ~280pt popover with a paragraph that explains *what the setting
+  actually does and when you'd want it*, separate from the
+  one-liner section captions.
+
+- **VoiceOver source disclosure.** The menu bar's accessibility label
+  now reads "hottest is CPU, 84 degrees" for highest-mode slots
+  instead of bare digits, so users on assistive tech aren't left
+  guessing which sensor the value came from.
+
+### Fixed
+
+- **`xcodebuild test` no longer fails from cold DerivedData.** A
+  case-insensitive APFS collision between the CLI target's
+  `airassist.swiftmodule` and the test target's lookup of
+  `AirAssist.swiftmodule` was rejecting the host module on first
+  build. The CLI target now sets `PRODUCT_MODULE_NAME = AirAssistCLI`
+  to keep the artifact paths distinct.
+
 ---
 
 ## [0.12.1] — 2026-04-26

@@ -192,7 +192,7 @@ enum AirAssistScenarioChoice: String, AppEnum {
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Scenario"
     static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
         .presenting:  "Presenting",
-        .quiet:       "Quiet",
+        .quiet:       "Lap / Cool",
         .performance: "Performance",
         .auto:        "Auto",
     ]

@@ -165,6 +165,13 @@ targets:
     settings:
       base:
         PRODUCT_NAME: airassist
+        # Override the Swift module name so the CLI's `airassist.swiftmodule`
+        # doesn't collide with the app's `AirAssist.swiftmodule` on the
+        # case-insensitive filesystem. Without this, `@testable import
+        # AirAssist` from AirAssistTests fails with
+        #   "cannot load module 'airassist' as 'AirAssist'"
+        # because the linker finds the CLI's module first.
+        PRODUCT_MODULE_NAME: AirAssistCLI
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: minimal
         ENABLE_HARDENED_RUNTIME: NO
@@ -274,7 +281,7 @@ targets:
         CFBundleDisplayName: Air Assist
         CFBundleIdentifier: com.sjschillinger.airassist
         CFBundleVersion: "1"
-        CFBundleShortVersionString: "0.12.1"
+        CFBundleShortVersionString: "0.13.0"
         CFBundlePackageType: APPL
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleDevelopmentRegion: en
