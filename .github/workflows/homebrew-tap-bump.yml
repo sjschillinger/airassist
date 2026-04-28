@@ -1,0 +1,118 @@
+name: Bump Homebrew Tap
+
+# Keeps the sjschillinger/homebrew-airassist cask in sync with whatever
+# release was just published in this repo. Without this, the tap drifts
+# behind the actual releases — and `brew install --cask` users keep
+# getting an old build until someone manually bumps the formula.
+#
+# Trigger: a Release on this repo is *published* (not just drafted).
+# That matches the user-visible install URL flipping to the new version.
+#
+# Setup (one-time, done by repo owner):
+#
+#   1. Create a fine-grained PAT scoped to ONLY the
+#      `sjschillinger/homebrew-airassist` repository, with
+#      `Contents: Read and write` permission.
+#      https://github.com/settings/personal-access-tokens/new
+#
+#   2. Add it as a repo secret named `HOMEBREW_TAP_TOKEN` in the
+#      `sjschillinger/airassist` repo:
+#      Settings → Secrets and variables → Actions → New repository secret.
+#
+# Until step 2 is done the workflow soft-fails with a warning rather
+# than blocking the release.
+#
+# What it does:
+#   1. Read the just-published tag (e.g. v0.13.0) and strip the leading "v".
+#   2. Pull SHA256SUMS.txt from the release's assets (uploaded by
+#      release.yml).
+#   3. Check out the tap repo.
+#   4. sed-update the `version` and `sha256` lines in the cask file.
+#   5. Commit + push if anything changed.
+#
+# Idempotent: if the tap is already at the target version, the diff
+# is empty and the workflow no-ops.
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  bump-tap:
+    name: Bump airassist cask
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Soft-fail if HOMEBREW_TAP_TOKEN is missing
+        env:
+          TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "${TOKEN}" ]; then
+            echo "::warning::HOMEBREW_TAP_TOKEN secret not set — Homebrew tap was NOT updated."
+            echo "::warning::Create a fine-grained PAT for sjschillinger/homebrew-airassist with Contents: Read and write,"
+            echo "::warning::and add it as a repo secret named HOMEBREW_TAP_TOKEN. See homebrew-tap-bump.yml header."
+            # Exit-code 0 so the release isn't marked failed; the warning
+            # is loud enough that the maintainer notices.
+            exit 0
+          fi
+
+      - name: Resolve version + SHA from release
+        id: meta
+        env:
+          TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        if: env.TOKEN != ''
+        run: |
+          set -o pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          # SHA256SUMS.txt is uploaded by release.yml as one of the release
+          # assets. Pulling from the public download URL means we don't
+          # need a token just to read it.
+          SHA=$(curl -fsSL "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/SHA256SUMS.txt" | awk '{print $1}')
+          if [ -z "${SHA}" ]; then
+            echo "::error::SHA256SUMS.txt missing or empty on release ${GITHUB_REF_NAME}."
+            echo "::error::Check that release.yml's zip step ran and attached the file."
+            exit 1
+          fi
+          # Sanity-check the shape — should be 64 lowercase hex chars.
+          if ! echo "${SHA}" | grep -qE '^[0-9a-f]{64}$'; then
+            echo "::error::Parsed SHA looks malformed: ${SHA}"
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${SHA}"      >> "$GITHUB_OUTPUT"
+          echo "Bumping tap to ${VERSION} (sha256 ${SHA})"
+
+      - name: Checkout tap
+        if: steps.meta.outputs.version != ''
+        uses: actions/checkout@v4
+        with:
+          repository: sjschillinger/homebrew-airassist
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Bump cask
+        if: steps.meta.outputs.version != ''
+        working-directory: tap
+        run: |
+          set -o pipefail
+          # macOS's BSD sed and GNU sed differ on -i, but ubuntu-latest
+          # is GNU-only — keep it simple.
+          sed -i -E "s/^(  version )\".*\"/\\1\"${{ steps.meta.outputs.version }}\"/" Casks/airassist.rb
+          sed -i -E "s/^(  sha256 )\".*\"/\\1\"${{ steps.meta.outputs.sha256 }}\"/" Casks/airassist.rb
+
+          if git diff --quiet; then
+            echo "Tap already at ${{ steps.meta.outputs.version }} — nothing to push."
+            exit 0
+          fi
+
+          git config user.name  "AirAssist Release Bot"
+          git config user.email "noreply@github.com"
+          git add Casks/airassist.rb
+          git commit -m "airassist ${{ steps.meta.outputs.version }}
+
+          Automated bump on release publish.
+          SHA256: ${{ steps.meta.outputs.sha256 }}
+
+          From: ${{ github.repository }}@${GITHUB_SHA::7}"
+          git push
