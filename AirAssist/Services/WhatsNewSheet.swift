@@ -21,6 +21,17 @@ enum WhatsNewSheet {
     /// an intermediate release.
     private static let entries: [(version: String, title: String, bullets: [String])] = [
         (
+            "0.13.0",
+            "What's new in 0.13",
+            [
+                "Source badge, trend arrow, and headroom strip in the menu bar",
+                "Throttle count pill when ≥2 processes are held down at once",
+                "\"Quiet\" scenario renamed to \"Lap / Cool\" with retuned governor",
+                "Info popovers across every Preferences pane",
+                "Launch at login defaults ON for new installs"
+            ]
+        ),
+        (
             "0.12.1",
             "What's new in 0.12.1",
             [

@@ -9,6 +9,17 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-04-27
+
+A meaningful menu-bar overhaul plus a Preferences pass. The status item
+now carries enough at-a-glance signal (source badge, trend arrow,
+headroom strip, throttle count pill) that opening the popover becomes
+optional rather than required. The "Quiet" scenario is renamed to
+"Lap / Cool" with a retuned governor that doesn't pause parallel
+builds at moderate temperatures. Every Preferences row that wasn't
+self-explanatory now has an info popover. Launch at login is ON by
+default for new installs.
+
 ### Added
 
 - **Weekly throttle summary on the dashboard.** A new "This week" panel
