@@ -5,9 +5,10 @@ name: Release
 # What this does:
 #   1. Build a Release-configuration archive
 #   2. Export the .app, ad-hoc sign it (no Apple Developer cert required)
-#   3. Zip via ditto (preserves extended attributes)
+#   3. Stage with a /Applications symlink + roll into a UDZO DMG via
+#      hdiutil (the format every commercial Mac app uses)
 #   4. Compute SHA256 (the Homebrew cask formula needs it)
-#   5. Attach AirAssist-<version>.zip + SHA256SUMS.txt to the GitHub Release
+#   5. Attach AirAssist-<version>.dmg + SHA256SUMS.txt to the GitHub Release
 #
 # Users install via `brew install --cask` from the homebrew-airassist tap —
 # Homebrew downloads with curl (no quarantine attribute set), macOS trusts
@@ -92,28 +93,54 @@ jobs:
           codesign --force --deep --sign - "build/export/AirAssist.app"
           codesign --verify --verbose=2 "build/export/AirAssist.app"
 
-      - name: Zip (ditto preserves xattrs + symlinks)
+      - name: Package as DMG
         id: zip
         run: |
           set -o pipefail
           VERSION="${GITHUB_REF_NAME#v}"
-          ZIP_NAME="AirAssist-${VERSION}.zip"
-          cd build/export
-          # ditto produces the kind of zip Homebrew + Archive Utility
-          # expect. plain `zip` mangles extended attributes and can
-          # corrupt the signature.
-          ditto -c -k --keepParent "AirAssist.app" "../../${ZIP_NAME}"
-          cd ../..
-          SHA=$(shasum -a 256 "${ZIP_NAME}" | cut -d ' ' -f 1)
-          SIZE=$(stat -f%z "${ZIP_NAME}")
-          echo "zip_name=${ZIP_NAME}"       >> "$GITHUB_OUTPUT"
-          echo "zip_path=${ZIP_NAME}"       >> "$GITHUB_OUTPUT"
+          DMG_NAME="AirAssist-${VERSION}.dmg"
+
+          # Stage in a folder with a /Applications symlink alongside the
+          # app, so the mounted volume gives users the familiar
+          # "drag the icon to the Applications shortcut" install
+          # experience that every commercial Mac app has trained them
+          # on. hdiutil rolls the staging folder into a single .dmg.
+          STAGING="build/dmg-staging"
+          mkdir -p "${STAGING}"
+          cp -R "build/export/AirAssist.app" "${STAGING}/"
+          ln -s /Applications "${STAGING}/Applications"
+
+          # UDZO = zlib-compressed read-only image. Standard format
+          # macOS apps ship with — small, mounts instantly, immutable
+          # so the app can't be tampered with after we sign it.
+          # Volume name is what shows up in Finder when the user
+          # mounts it ("Air Assist"), distinct from the file name.
+          hdiutil create \
+            -volname "Air Assist" \
+            -srcfolder "${STAGING}" \
+            -ov \
+            -format UDZO \
+            "${DMG_NAME}"
+
+          SHA=$(shasum -a 256 "${DMG_NAME}" | cut -d ' ' -f 1)
+          SIZE=$(stat -f%z "${DMG_NAME}")
+          # Output names kept as `zip_*` for backwards compatibility
+          # with the rest of the workflow steps that reference them
+          # (release body, files block, artifact upload). Renaming
+          # them adds churn for no gain — they're internal. New step
+          # also exposes `dmg_name`/`dmg_path` aliases for clarity if
+          # we ever revisit this section.
+          echo "zip_name=${DMG_NAME}"       >> "$GITHUB_OUTPUT"
+          echo "zip_path=${DMG_NAME}"       >> "$GITHUB_OUTPUT"
+          echo "dmg_name=${DMG_NAME}"       >> "$GITHUB_OUTPUT"
+          echo "dmg_path=${DMG_NAME}"       >> "$GITHUB_OUTPUT"
           echo "sha256=${SHA}"              >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}"         >> "$GITHUB_OUTPUT"
           echo "size_bytes=${SIZE}"         >> "$GITHUB_OUTPUT"
-          # Also write a SHA256SUMS.txt that the Homebrew cask formula
-          # can consume without parsing the release page.
-          echo "${SHA}  ${ZIP_NAME}" > SHA256SUMS.txt
+          # SHA256SUMS.txt drives the Homebrew tap auto-bump workflow
+          # (homebrew-tap-bump.yml). Format is `<sha>  <filename>` so
+          # the cask formula can verify the download.
+          echo "${SHA}  ${DMG_NAME}" > SHA256SUMS.txt
 
       - name: Smoke-test the signed bundle
         run: |
@@ -153,8 +180,9 @@ jobs:
 
             ### Manual install
 
-            1. Download `${{ steps.zip.outputs.zip_name }}` below.
-            2. Unzip, move `AirAssist.app` into `/Applications`.
+            1. Download `${{ steps.zip.outputs.dmg_name }}` below.
+            2. Double-click to mount, drag `AirAssist.app` to the
+               Applications shortcut, then eject the volume.
             3. First-launch only — run once in Terminal to clear the
                quarantine attribute macOS adds to browser downloads:
                ```
@@ -166,7 +194,7 @@ jobs:
             ### Verify
 
             ```
-            shasum -a 256 ${{ steps.zip.outputs.zip_name }}
+            shasum -a 256 ${{ steps.zip.outputs.dmg_name }}
             # should match:
             ${{ steps.zip.outputs.sha256 }}
             ```

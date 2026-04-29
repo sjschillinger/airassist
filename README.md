@@ -106,9 +106,10 @@ ad-hoc signed `.app` from the GitHub Releases page and drops it into
 
 ### Manual download
 
-Grab the latest `AirAssist-<version>.zip` from the
+Grab the latest `AirAssist-<version>.dmg` from the
 [Releases](https://github.com/sjschillinger/airassist/releases) page,
-unzip, and drag `AirAssist.app` into `/Applications`.
+double-click to mount, drag `AirAssist.app` onto the Applications
+shortcut, and eject the volume.
 
 One extra step the first time: because the build is ad-hoc signed
 rather than Developer-ID-signed, browsers add a quarantine flag that
@@ -122,12 +123,16 @@ xattr -dr com.apple.quarantine /Applications/AirAssist.app
 quarantine attribute.)
 
 **Verify the download (optional but recommended.)** Each release
-includes a `SHA256SUMS.txt` alongside the zip. Check the archive
-against it before unzipping:
+includes a `SHA256SUMS.txt` alongside the disk image. Check it
+against the download:
 
 ```bash
 shasum -a 256 -c SHA256SUMS.txt
 ```
+
+> Note: releases up to and including **v0.13.0** shipped as `.zip`.
+> From v0.14.0 onward they ship as `.dmg`, matching what most Mac
+> apps use.
 
 ### Updates
 

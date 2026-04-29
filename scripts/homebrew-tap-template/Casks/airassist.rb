@@ -8,7 +8,7 @@ cask "airassist" do
   version "0.9.0"
   sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
-  url "https://github.com/sjschillinger/airassist/releases/download/v#{version}/AirAssist-#{version}.zip"
+  url "https://github.com/sjschillinger/airassist/releases/download/v#{version}/AirAssist-#{version}.dmg"
   name "Air Assist"
   desc "Menu-bar thermal monitor and workload governor for fanless Macs, such as MacBook Airs and Neos"
   homepage "https://github.com/sjschillinger/airassist"

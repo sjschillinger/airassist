@@ -9,6 +9,17 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+### Changed
+
+- **Distribution format switched from `.zip` to `.dmg`.** Manual
+  downloads now arrive as a standard mounted disk image with a
+  drag-to-Applications shortcut, matching the install flow of every
+  commercial Mac app users have already seen. The Homebrew install
+  path is unchanged from the user's perspective —
+  `brew install --cask sjschillinger/airassist/airassist` still
+  Just Works™. Internally, the release workflow now produces a
+  UDZO disk image via `hdiutil` instead of a `ditto` zip.
+
 ## [0.13.0] — 2026-04-27
 
 A meaningful menu-bar overhaul plus a Preferences pass. The status item
