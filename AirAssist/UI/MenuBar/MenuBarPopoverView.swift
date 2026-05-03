@@ -43,6 +43,7 @@ struct MenuBarPopoverView: View {
             sensorList
             sparklineRow
             Divider()
+            cpuActivitySection
             manualThrottlesSection
             throttleSection
             Divider()
@@ -266,6 +267,129 @@ struct MenuBarPopoverView: View {
         guard let first = samples.first, let last = samples.last,
               let peak = samples.max() else { return "" }
         return "Hottest sensor trend: now \(unit.format(last)), was \(unit.format(first)) one minute ago, peaked at \(unit.format(peak))."
+    }
+
+    // MARK: - CPU Activity (v0.14 — visibility sprint phase 1)
+
+    /// Live "what's running hot right now" panel. Reads from the
+    /// governor's already-1Hz process snapshot, so this is free —
+    /// no new polling, no new state. Shows the top 5 processes by
+    /// CPU% after filtering out anything already covered by another
+    /// section (rules, manual throttles) so we don't double-count.
+    ///
+    /// Right-click on any row gets the user the same actions they'd
+    /// otherwise have to dig through the dashboard for: throttle
+    /// now, add a rule, protect via never-throttle, jump to
+    /// Activity Monitor.
+    @ViewBuilder
+    private var cpuActivitySection: some View {
+        let rows = cpuActivityRows
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "cpu").foregroundStyle(.blue)
+                Text("CPU Activity").font(.caption).bold()
+                Spacer()
+                if !rows.isEmpty {
+                    Text("\(rows.count)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
+            }
+            if rows.isEmpty {
+                // Friendly empty state — happens when nothing's above
+                // the visibility floor (>1% CPU, not user-managed).
+                Text("Nothing notable. Your Mac is idle.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(rows) { p in
+                    cpuActivityRow(p)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.blue.opacity(0.04))
+        Divider()
+    }
+
+    /// Top processes the CPU activity panel shows. The selection
+    /// rules — visibility floor, exclude rule-managed, exclude
+    /// manually throttled, exclude self, sort, take prefix — live
+    /// in `CPUActivityFilter` so they're unit-testable without a
+    /// store. See that file for the rationale per filter.
+    private var cpuActivityRows: [RunningProcess] {
+        let manuallyThrottled: Set<pid_t> = Set(
+            store.processThrottler.throttleDetail
+                .filter { $0.sources[.manual] != nil }
+                .map(\.pid)
+        )
+        return CPUActivityFilter.topRows(
+            from: store.governor.lastTopProcesses,
+            ruleManagedPIDs: Set(store.ruleEngine.managedPIDs),
+            manuallyThrottledPIDs: manuallyThrottled,
+            selfPID: getpid()
+        )
+    }
+
+    @ViewBuilder
+    private func cpuActivityRow(_ p: RunningProcess) -> some View {
+        HStack(spacing: 6) {
+            Text(p.displayName)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer()
+            Text("\(Int(p.cpuPercent.rounded()))%")
+                .monospacedDigit()
+                .foregroundStyle(cpuTint(p.cpuPercent))
+        }
+        .font(.caption2)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(p.displayName), \(Int(p.cpuPercent.rounded())) percent CPU")
+        .accessibilityHint("Right click for throttle and rule options")
+        .contextMenu {
+            // Default duty matches the existing frontmost-throttle
+            // user preference so this menu and the popover's
+            // "Throttle [frontmost]" button behave the same way for
+            // the same user. Hardcoded duration of 1h matches the
+            // Throttle Frontmost intent default.
+            Button("Throttle now (\(Int(frontmostDuty * 100))% for 1 hour)") {
+                store.throttleFrontmost(
+                    pid: p.id,
+                    name: p.name,
+                    duty: frontmostDuty,
+                    duration: 60 * 60
+                )
+            }
+            Button("Add throttle rule (\(Int(frontmostDuty * 100))% cap)") {
+                store.upsertRule(for: p, duty: frontmostDuty)
+            }
+            Button("Add \"\(p.name)\" to Never-Throttle list") {
+                NeverThrottleList.add(p.name)
+            }
+            Divider()
+            Button("Show in Activity Monitor") {
+                Self.openActivityMonitor()
+            }
+            Button("Copy process name") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(p.name, forType: .string)
+            }
+        }
+    }
+
+    /// Color tier for CPU% — matches the existing dashboard's
+    /// `topCPURow` palette so the same number tints the same way
+    /// regardless of which surface the user is looking at.
+    private func cpuTint(_ percent: Double) -> Color {
+        switch percent {
+        case ..<25:    return .secondary
+        case ..<75:    return .primary
+        case ..<150:   return .orange
+        default:       return .red
+        }
     }
 
     // MARK: - Manual throttles strip (v0.10)

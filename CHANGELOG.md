@@ -9,6 +9,20 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+### Added
+
+- **CPU Activity panel in the popover.** A new section between the
+  sensor list and the throttle status shows the top 5 processes by
+  CPU% right now, refreshed at 1 Hz off the existing governor tick.
+  Right-click any row for a context menu: throttle now (uses your
+  configured frontmost-throttle duty for one hour), add a per-app
+  throttle rule, add to the Never-Throttle list, or jump to
+  Activity Monitor / copy the process name. Filters out processes
+  already covered by a per-app rule, anything currently under a
+  manual cap, anything under 1% CPU, and Air Assist itself — so the
+  panel only shows you actionable processes you haven't already
+  decided about. Empty state when nothing's notable.
+
 ### Changed
 
 - **Distribution format switched from `.zip` to `.dmg`.** Manual
