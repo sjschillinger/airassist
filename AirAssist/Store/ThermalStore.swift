@@ -17,38 +17,25 @@ final class ThermalStore {
     // MARK: - Battery-aware auto-mode (#59)
     let batteryAware = BatteryAwareMode()
 
-    // MARK: - Popover sparkline (#45)
-    /// Ring buffer of the hottest enabled-sensor reading, one sample per
-    /// control-loop tick (~1 Hz). Capped at `sparklineCapacity` (60 ≈ 1 min).
-    /// Kept in-memory only — the on-disk `HistoryLogger` is the source of
-    /// truth for the Dashboard's longer charts; this is just a cheap live
-    /// strip for the menu bar popover.
-    private(set) var sparklineSamples: [Double] = []
-    static let sparklineCapacity: Int = 60
+    // MARK: - Menu bar history buffers
+    //
+    // Consolidates the two rolling sample arrays the menu bar reads
+    // from: the popover sparkline (hottest enabled sensor) and the
+    // CPU% slot's trend arrow. See `MenuBarHistoryBuffers` for the
+    // append + trim policy and the buffer capacity (60 = ~1 min at
+    // 1 Hz). Kept in-memory only — the on-disk `HistoryLogger` is
+    // the source of truth for the Dashboard's longer charts; these
+    // are cheap live strips for the menu bar surfaces.
+    let history = MenuBarHistoryBuffers()
 
-    private func appendSparklineSample() {
-        if let t = enabledSensors.compactMap(\.currentValue).max() {
-            sparklineSamples.append(t)
-            if sparklineSamples.count > Self.sparklineCapacity {
-                sparklineSamples.removeFirst(sparklineSamples.count - Self.sparklineCapacity)
-            }
-        }
-    }
+    /// Pass-through for the popover, which historically read
+    /// `store.sparklineSamples` directly. Internal callers can use
+    /// `history.sparkline`.
+    var sparklineSamples: [Double] { history.sparkline }
 
-    // MARK: - CPU total history (#metric-arch v0.14)
-    /// Rolling buffer of total system CPU% — the value the menu bar's
-    /// `cpuTotal` metric shows. Captured at the same 1Hz cadence as
-    /// the sparkline so the trend arrow has enough samples to compute
-    /// a slope without extra polling. Capped at the same capacity.
-    private(set) var cpuTotalHistory: [Double] = []
-
-    private func appendCPUTotalSample() {
-        let v = governor.lastTotalCPUPercent
-        cpuTotalHistory.append(v)
-        if cpuTotalHistory.count > Self.sparklineCapacity {
-            cpuTotalHistory.removeFirst(cpuTotalHistory.count - Self.sparklineCapacity)
-        }
-    }
+    /// Pass-through for the slot resolver, which reads CPU%
+    /// history when building the `cpuTotal` slot.
+    var cpuTotalHistory: [Double] { history.cpuTotal }
 
     /// User-facing API: change the stay-awake mode. Persists the choice
     /// so the selection survives a quit.
@@ -358,8 +345,11 @@ final class ThermalStore {
                 self.ruleEngine.tick()
                 self.governor.tick()
                 self.governorNotifier?.evaluate()
-                self.appendSparklineSample()
-                self.appendCPUTotalSample()
+                // Sparkline samples the hottest enabled sensor;
+                // CPU buffer samples whatever the governor just
+                // observed. Both feed menu bar surfaces.
+                self.history.appendSparkline(self.enabledSensors.compactMap(\.currentValue).max())
+                self.history.appendCPUTotal(self.governor.lastTotalCPUPercent)
             }
         }
         // CPU activity sampler. Reads the governor's already-1Hz

@@ -65,6 +65,7 @@
 		7DFDBE9AFB240F2EA89400D4 /* ThrottleActivityLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3AE9374600EBF84EE6A7CB /* ThrottleActivityLog.swift */; };
 		81EF92D16FD31086423E4B99 /* URLSchemeHandler+Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81295A77AF3537BE14EEA582 /* URLSchemeHandler+Debug.swift */; };
 		84A2245698D5145A2CF258F1 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4734EA368915E7C48BCC2534 /* main.swift */; };
+		89D43259166CA7DA7A694DAC /* MenuBarHistoryBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14547607823739C5BCEC29FE /* MenuBarHistoryBuffers.swift */; };
 		8B1F31EC477E96E3DD53D9EB /* FirstLaunchSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C65713A5357FA38932CBCE /* FirstLaunchSeeder.swift */; };
 		8CA421B3782B870D24263659 /* ThrottlingPrefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573E0D36375389574C26D88F /* ThrottlingPrefsView.swift */; };
 		8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */; };
@@ -173,6 +174,7 @@
 		053C1F519C6EF5056C3BFC58 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		05664AF6DD35210D50D4D873 /* SensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorService.swift; sourceTree = "<group>"; };
 		0DD78EF5909056BC1B5C1321 /* HistoryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryReader.swift; sourceTree = "<group>"; };
+		14547607823739C5BCEC29FE /* MenuBarHistoryBuffers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarHistoryBuffers.swift; sourceTree = "<group>"; };
 		16E8286BDB0C5E6AF90B6498 /* AirAssistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirAssistTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1707FE5D6958FA0AB599F903 /* InflightFileFuzzTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InflightFileFuzzTests.swift; sourceTree = "<group>"; };
 		17EFF04B9F40695804D56B3F /* ThrottleEventLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleEventLog.swift; sourceTree = "<group>"; };
@@ -510,6 +512,7 @@
 				3EAD7FCA44F3E19EC9BC2BAD /* LaunchAtLoginService.swift */,
 				5E632AAB0E1C20EF69992454 /* ManualThrottleCoordinator.swift */,
 				94E3121354051F583FCBB426 /* MemoryWatchdog.swift */,
+				14547607823739C5BCEC29FE /* MenuBarHistoryBuffers.swift */,
 				FD32BF366F8E6D8B74D4EAB5 /* MetricKitReporter.swift */,
 				6E9A77B36585950274F5A0C6 /* OnboardingWindow.swift */,
 				BEE7645B03DAEDE64CB56215 /* ProcessInspector.swift */,
@@ -919,6 +922,7 @@
 				F94A0DB8E504FAF33380F292 /* ManualThrottleCoordinator.swift in Sources */,
 				BCCAB1901E878170437146FF /* MemoryWatchdog.swift in Sources */,
 				C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */,
+				89D43259166CA7DA7A694DAC /* MenuBarHistoryBuffers.swift in Sources */,
 				A5B74A36D44F389797534E71 /* MenuBarIconRenderer.swift in Sources */,
 				44195528CA48B8B684CE7C82 /* MenuBarLayout.swift in Sources */,
 				8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */,
