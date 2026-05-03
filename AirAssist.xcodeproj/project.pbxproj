@@ -128,7 +128,9 @@
 		EB79F540BA6F71D092CAA211 /* DashboardContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */; };
 		EBE6C2163E1F9171F1E8F87E /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 738AAA405DB2CDD240D1B550 /* ServiceManagement.framework */; };
 		EC80724CCFDD8458B4D929BF /* Assertions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B547671D14DD15F0C9817F44 /* Assertions.swift */; };
+		F72071162F3456152C82EA0C /* FrontmostSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26333C8B394F39AA715056E6 /* FrontmostSnapshot.swift */; };
 		F8AFBE6562DEA8282EEC4273 /* NeverThrottleListTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3A9B671BE8B027E8D775E6 /* NeverThrottleListTests.swift */; };
+		F94A0DB8E504FAF33380F292 /* ManualThrottleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E632AAB0E1C20EF69992454 /* ManualThrottleCoordinator.swift */; };
 		FAB74801EE74233DE341FF9C /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02BA0BF3D6B9C098E7D51127 /* HistoryView.swift */; };
 		FFFDE534BF1F2E71377BC949 /* GovernorNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE9C2F08AC070CE2A01E6E25 /* GovernorNotifier.swift */; };
 /* End PBXBuildFile section */
@@ -181,6 +183,7 @@
 		2124996E8C1E9C11060E99BA /* SensorCategorizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorCategorizerTests.swift; sourceTree = "<group>"; };
 		22B8A97982FB78D94D328FDB /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		2340286CEE2E559824D689B1 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		26333C8B394F39AA715056E6 /* FrontmostSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontmostSnapshot.swift; sourceTree = "<group>"; };
 		2846BAB3600EC7C4F7697750 /* WatchdogForceSIGCONTTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchdogForceSIGCONTTests.swift; sourceTree = "<group>"; };
 		292189D5E536AB9DB2DE7736 /* ThermalEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalEntry.swift; sourceTree = "<group>"; };
 		2E38336154F353A6D7B84815 /* RescueAgentRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RescueAgentRegistrar.swift; sourceTree = "<group>"; };
@@ -216,6 +219,7 @@
 		5B734121E6713309C52DC0C7 /* GeneralPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPrefsView.swift; sourceTree = "<group>"; };
 		5BCA27BE42EB8084809A3CBC /* ScenarioPresetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenarioPresetTests.swift; sourceTree = "<group>"; };
 		5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitSensorReader.swift; sourceTree = "<group>"; };
+		5E632AAB0E1C20EF69992454 /* ManualThrottleCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualThrottleCoordinator.swift; sourceTree = "<group>"; };
 		5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirAssistApp.swift; sourceTree = "<group>"; };
 		5F2342EB5FCCF01609009A7F /* ThresholdPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThresholdPersistence.swift; sourceTree = "<group>"; };
 		63E335A7861F5C571CE779E9 /* PopoverSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverSectionTests.swift; sourceTree = "<group>"; };
@@ -432,6 +436,7 @@
 				DD2ACECEB5D102216552A1F6 /* CPUActivitySample.swift */,
 				F64C63A73BF4172580CC2432 /* CPUActivitySummary.swift */,
 				2046E967D79512E7253E3830 /* CPUTint.swift */,
+				26333C8B394F39AA715056E6 /* FrontmostSnapshot.swift */,
 				9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */,
 				46E2E83F20C8453A62109CD1 /* MenuBarLayout.swift */,
 				EFE5FB26F5FE3B40C038C065 /* MenuBarTrend.swift */,
@@ -500,6 +505,7 @@
 				04ED29039D60153CEBDADDE6 /* InfoSheetWindow.swift */,
 				5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */,
 				3EAD7FCA44F3E19EC9BC2BAD /* LaunchAtLoginService.swift */,
+				5E632AAB0E1C20EF69992454 /* ManualThrottleCoordinator.swift */,
 				94E3121354051F583FCBB426 /* MemoryWatchdog.swift */,
 				FD32BF366F8E6D8B74D4EAB5 /* MetricKitReporter.swift */,
 				6E9A77B36585950274F5A0C6 /* OnboardingWindow.swift */,
@@ -896,6 +902,7 @@
 				8B1F31EC477E96E3DD53D9EB /* FirstLaunchSeeder.swift in Sources */,
 				C3AA7A3ED6914DB08A2F9D26 /* FirstRunDisclosure.swift in Sources */,
 				0F4EDC318F405B7E520BF6C5 /* FrontmostAppObserver.swift in Sources */,
+				F72071162F3456152C82EA0C /* FrontmostSnapshot.swift in Sources */,
 				1FBEFE6AFC18FA9F73206F50 /* GeneralPrefsView.swift in Sources */,
 				A82D2A4454819031737A472C /* GlobalHotkeyService.swift in Sources */,
 				ACFABCECFECDF629B1105134 /* GovernorConfig.swift in Sources */,
@@ -906,6 +913,7 @@
 				2E8787E468BA9D77080343A2 /* IOKitSensorReader.swift in Sources */,
 				74D6CEF6E0A209D8AE335167 /* InfoSheetWindow.swift in Sources */,
 				99CCB4C7F83F69F150A2594D /* LaunchAtLoginService.swift in Sources */,
+				F94A0DB8E504FAF33380F292 /* ManualThrottleCoordinator.swift in Sources */,
 				BCCAB1901E878170437146FF /* MemoryWatchdog.swift in Sources */,
 				C2E0E06F927D297FDC8B647B /* MenuBarController.swift in Sources */,
 				A5B74A36D44F389797534E71 /* MenuBarIconRenderer.swift in Sources */,

@@ -258,6 +258,17 @@ final class ThermalStore {
         // ever add a longer view we can dial this back.
         cpuActivityLog.pruneOldEntries(keepDays: 7)
         self.snapshots = ProcessSnapshotPublisher(inspector: processInspector)
+        // Wire the manual-throttle coordinator. It needs the
+        // throttler (to apply / clear caps) and a way to read the
+        // current snapshot (for the bundle-keyed APIs that target
+        // every matching PID). Closed over the snapshot publisher
+        // rather than holding a reference so the coordinator stays
+        // ignorant of snapshot lifecycle.
+        let publisher = self.snapshots
+        self.manualThrottle = ManualThrottleCoordinator(
+            throttler: processThrottler,
+            snapshotProvider: { publisher.latest }
+        )
         // Capture self weakly in the hottest-temp closure.
         self.governor = ThermalGovernor(
             snapshots: snapshots,
@@ -407,9 +418,7 @@ final class ThermalStore {
         processThrottler.releaseAll()
         safety.stopWatchdog()
         stayAwake.shutdown()
-        for (_, task) in manualExpiryTasks { task.cancel() }
-        manualExpiryTasks.removeAll()
-        manualExpiryDeadlines.removeAll()
+        manualThrottle.shutdownAll()
     }
 
     /// Resolves a temperature from the two-part slot encoding stored in UserDefaults.
@@ -622,137 +631,71 @@ final class ThermalStore {
     }
 
     // MARK: - Manual throttle (menu-bar escape hatch)
+    //
+    // The actual coordination lives in `ManualThrottleCoordinator`
+    // (Services/). The methods on `ThermalStore` are thin pass-throughs
+    // so existing call sites in the UI / URL scheme / Shortcuts layer
+    // didn't need to change when this was extracted in the post-v0.14
+    // refactor. New callers should read `manualThrottle` directly.
 
-    /// Pending auto-release timers for `throttleFrontmost` / `throttleBundle`.
-    /// Keyed by PID (frontmost) or lowercased bundle ID (bundle). On
-    /// re-invocation we cancel the prior task before scheduling a new one
-    /// — without this, two quick clicks create two sleepers and the first
-    /// fires early, clearing the cap the user just renewed. (audit Tier 0
-    /// item 2; Codex VERIFIED).
     /// Snapshot of the frontmost app captured by `MenuBarController`
-    /// just before it opens the popover. Calling `NSWorkspace.shared
-    /// .frontmostApplication` from inside the popover returns Air
-    /// Assist itself (the popover's `makeKey()` activates us), so the
-    /// "Throttle [frontmost]" button can't trust a live query — it
-    /// has to read from this captured value.
-    struct FrontmostSnapshot: Sendable, Equatable {
-        let pid: pid_t
-        let name: String
-    }
+    /// just before it opens the popover. Stored on the store rather
+    /// than on the coordinator because it's a stash, not a piece of
+    /// throttle coordination state — written by the controller, read
+    /// by the popover's "Throttle [frontmost]" button.
     var capturedFrontmost: FrontmostSnapshot?
 
-    private var manualExpiryTasks: [String: Task<Void, Never>] = [:]
-    /// Wall-clock deadlines paired with `manualExpiryTasks`. Surfaced
-    /// to the UI so the popover can show "47m left" next to each
-    /// active manual throttle. `nil`-valued entries (sentinel: very
-    /// large duration treated as "until cleared") render with no
-    /// countdown.
-    private(set) var manualExpiryDeadlines: [String: Date] = [:]
-    private static func manualExpiryKey(pid: pid_t) -> String { "pid:\(pid)" }
-    private static func manualExpiryKey(bundleID: String) -> String { "bundle:\(bundleID.lowercased())" }
+    /// The actual coordinator. Owned by the store so it can wire it
+    /// up with the throttler and snapshot publisher in `init`.
+    private(set) var manualThrottle: ManualThrottleCoordinator!
+
+    /// Wall-clock deadlines for active manual throttles. Forwarded
+    /// from the coordinator for back-compat with UI that read this
+    /// directly off the store. New code should use
+    /// `manualThrottle.manualExpiryDeadlines`.
+    var manualExpiryDeadlines: [String: Date] {
+        manualThrottle.manualExpiryDeadlines
+    }
 
     /// Returns the wall-clock deadline (if any) for a manual throttle
     /// on this PID. UI uses this for the countdown badge.
     func manualThrottleDeadline(pid: pid_t) -> Date? {
-        manualExpiryDeadlines[Self.manualExpiryKey(pid: pid)]
+        manualThrottle.manualThrottleDeadline(pid: pid)
     }
 
     /// Release a manual throttle on this PID and cancel its pending
-    /// auto-release task. Use this from UI instead of calling
-    /// `processThrottler.clearDuty` directly so the deadline tracker
-    /// stays in sync.
+    /// auto-release task.
     func releaseManualThrottle(pid: pid_t) {
-        processThrottler.clearDuty(source: .manual, for: pid)
-        let key = Self.manualExpiryKey(pid: pid)
-        manualExpiryTasks[key]?.cancel()
-        manualExpiryTasks[key] = nil
-        manualExpiryDeadlines[key] = nil
+        manualThrottle.releaseManualThrottle(pid: pid)
     }
 
-    /// Fire-and-forget cap on a specific PID via the `.manual` source. Used
-    /// by the "Throttle frontmost at X%" quick-menu action. Bypasses the
-    /// foreground-duty floor because the whole point is to rein in the app
-    /// the user is currently interacting with. Auto-releases after
-    /// `duration` (default 1h) so the user can't accidentally leave
-    /// something pegged forever. Re-invoking replaces the cap.
+    /// Fire-and-forget cap on a specific PID via the `.manual`
+    /// source. See `ManualThrottleCoordinator.throttleFrontmost(...)`
+    /// for the full contract.
     func throttleFrontmost(pid: pid_t,
                            name: String,
                            duty: Double,
                            duration: TimeInterval = 60 * 60) {
-        guard pid > 0, pid != getpid() else { return }
-        processThrottler.setDuty(duty, for: pid, name: name, source: .manual)
-
-        let key = Self.manualExpiryKey(pid: pid)
-        manualExpiryTasks[key]?.cancel()
-        // Treat very long durations (≥ 30 days) as "until I clear it"
-        // — no deadline shown in the UI countdown.
-        manualExpiryDeadlines[key] = duration < 60 * 60 * 24 * 30
-            ? Date().addingTimeInterval(duration)
-            : nil
-        manualExpiryTasks[key] = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
-            guard !Task.isCancelled, let self else { return }
-            self.processThrottler.clearDuty(source: .manual, for: pid)
-            self.manualExpiryTasks[key] = nil
-            self.manualExpiryDeadlines[key] = nil
-        }
+        manualThrottle.throttleFrontmost(pid: pid, name: name,
+                                         duty: duty, duration: duration)
     }
 
-    /// URL-scheme / Shortcuts entry point: throttle every PID currently
-    /// matching `bundleID` (case-insensitive) via `.manual` duty. Like
-    /// `throttleFrontmost` but identifies the target by bundle instead of
-    /// PID, so it survives the app being killed and re-launched within the
-    /// duration (the next matching snapshot picks it up again).
-    /// Returns the number of PIDs affected.
+    /// URL-scheme / Shortcuts entry point: throttle every PID
+    /// currently matching `bundleID`. Returns the number of PIDs
+    /// affected.
     @discardableResult
     func throttleBundle(bundleID: String,
                         duty: Double,
                         duration: TimeInterval = 60 * 60) -> Int {
-        let target = bundleID.lowercased()
-        let pids = snapshots.latest.filter {
-            ($0.bundleID?.lowercased() == target) && $0.id > 0 && $0.id != getpid()
-        }
-        for p in pids {
-            processThrottler.setDuty(duty, for: p.id, name: p.name, source: .manual)
-        }
-        // Auto-release after the duration. Clear by bundle so we catch PIDs
-        // that were spawned after the initial call too. Cancel any prior
-        // expiry for this bundle so back-to-back invocations don't have an
-        // old sleeper clear the new cap.
-        let key = Self.manualExpiryKey(bundleID: bundleID)
-        manualExpiryTasks[key]?.cancel()
-        manualExpiryDeadlines[key] = duration < 60 * 60 * 24 * 30
-            ? Date().addingTimeInterval(duration)
-            : nil
-        manualExpiryTasks[key] = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
-            guard !Task.isCancelled, let self else { return }
-            self.releaseBundle(bundleID: bundleID)
-            self.manualExpiryTasks[key] = nil
-            self.manualExpiryDeadlines[key] = nil
-        }
-        return pids.count
+        manualThrottle.throttleBundle(bundleID: bundleID,
+                                      duty: duty, duration: duration)
     }
 
     /// Release any manual throttles on processes matching `bundleID`.
-    /// Called explicitly by URL scheme / Shortcuts, and automatically by
-    /// the `throttleBundle` expiry timer. Also cancels any pending expiry
-    /// task so an explicit release isn't followed by a stale auto-release
-    /// firing later for the same bundle.
+    /// Returns the number of PIDs released.
     @discardableResult
     func releaseBundle(bundleID: String) -> Int {
-        let target = bundleID.lowercased()
-        let pids = snapshots.latest
-            .filter { $0.bundleID?.lowercased() == target }
-            .map { $0.id }
-        for pid in pids {
-            processThrottler.clearDuty(source: .manual, for: pid)
-        }
-        let key = Self.manualExpiryKey(bundleID: bundleID)
-        manualExpiryTasks[key]?.cancel()
-        manualExpiryTasks[key] = nil
-        manualExpiryDeadlines[key] = nil
-        return pids.count
+        manualThrottle.releaseBundle(bundleID: bundleID)
     }
 
     // MARK: - Rule management helpers (used by UI)

@@ -830,7 +830,7 @@ struct MenuBarPopoverView: View {
     /// popover's `makeKey()` activates us), so the button has to use
     /// this captured value. `nil` when the popover was opened with
     /// nothing else frontmost (e.g. cold launch).
-    private var frontmost: ThermalStore.FrontmostSnapshot? {
+    private var frontmost: FrontmostSnapshot? {
         store.capturedFrontmost
     }
     private var canThrottleFrontmost: Bool { frontmost != nil }
