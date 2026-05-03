@@ -37,6 +37,7 @@
 		2E8787E468BA9D77080343A2 /* IOKitSensorReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE5078FB22B14DB0E38F98C /* IOKitSensorReader.swift */; };
 		2F53BDD74ED0282DDB0307C9 /* UpdateCheckService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A67180E42B4B4086CC440BD2 /* UpdateCheckService.swift */; };
 		30D3D067217FDCD224706495 /* ProcessInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE7645B03DAEDE64CB56215 /* ProcessInspector.swift */; };
+		3B3D47873010FB1069BEE938 /* SlotMetricTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A009BF5136539F9C93D083BA /* SlotMetricTests.swift */; };
 		3C53C4BE5E248A344EB5EFBF /* DashboardWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */; };
 		3EE7E39D8EAC8F21B3B8DBD7 /* SafetyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */; };
 		4111D77C0E4FD338E48D7F0C /* AirAssistApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBF17476E3029EC451ADEFF /* AirAssistApp.swift */; };
@@ -239,6 +240,7 @@
 		9A17995172EC04EAA4762ACE /* SleepWakeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepWakeObserver.swift; sourceTree = "<group>"; };
 		9AAAF704569BD67EB8A1F6D1 /* ThrottleRuleEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottleRuleEngine.swift; sourceTree = "<group>"; };
 		9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GovernorConfig.swift; sourceTree = "<group>"; };
+		A009BF5136539F9C93D083BA /* SlotMetricTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotMetricTests.swift; sourceTree = "<group>"; };
 		A0C523C9176A233CA7DDF721 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A0C53CD24479A02B74641C02 /* MenuBarPrefsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPrefsView.swift; sourceTree = "<group>"; };
 		A3DC26A8B4587EC9DE928881 /* SensorCategorizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorCategorizer.swift; sourceTree = "<group>"; };
@@ -558,6 +560,7 @@
 				F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */,
 				5BCA27BE42EB8084809A3CBC /* ScenarioPresetTests.swift */,
 				2124996E8C1E9C11060E99BA /* SensorCategorizerTests.swift */,
+				A009BF5136539F9C93D083BA /* SlotMetricTests.swift */,
 				E2DD49B9C83A47D20934170F /* TemperatureFormatterTests.swift */,
 				F8C15D67B3F0B0BCE3515381 /* ThresholdPresetTests.swift */,
 				B3B92AD6B874E16CC33B22F2 /* ThrottleActivityLogTests.swift */,
@@ -855,6 +858,7 @@
 				B77AD3CA5AE2AF1411D68173 /* SafetyCoordinatorTests.swift in Sources */,
 				21CBFD43A08B712F1D797B1B /* ScenarioPresetTests.swift in Sources */,
 				2C229BB86BAF26BEE5D68F48 /* SensorCategorizerTests.swift in Sources */,
+				3B3D47873010FB1069BEE938 /* SlotMetricTests.swift in Sources */,
 				5CB20C8B4947EE620FA02E20 /* TemperatureFormatterTests.swift in Sources */,
 				182DE0DDA2536407E350B62F /* ThresholdPresetTests.swift in Sources */,
 				E0659C2FEE440E9197683AE8 /* ThrottleActivityLogTests.swift in Sources */,

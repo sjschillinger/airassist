@@ -11,6 +11,16 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ### Added
 
+- **CPU usage in the menu bar.** Slots can now show total system CPU
+  usage as a percentage in addition to the existing temperature
+  options. New two-tier slot picker in Preferences › Display: pick
+  the metric (Temperature / CPU usage / None), then for Temperature
+  pick the existing Highest / Average / Individual sub-config.
+  Defaults to Temperature so users upgrading from v0.13 see no
+  change. Hard-coded warm/hot thresholds for CPU% (60% / 85%) feed
+  the headroom strip and color tint, matching how the temperature
+  metric already works. Unit suffix in the bar flips between `°` and
+  `%` based on the slot.
 - **"Top CPU consumers — last 7 days" panel on the dashboard.** A
   new section beneath the weekly throttle summary rolls up which
   apps were habitually heavy on CPU over the rolling 7-day window:

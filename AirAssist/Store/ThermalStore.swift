@@ -35,6 +35,21 @@ final class ThermalStore {
         }
     }
 
+    // MARK: - CPU total history (#metric-arch v0.14)
+    /// Rolling buffer of total system CPU% — the value the menu bar's
+    /// `cpuTotal` metric shows. Captured at the same 1Hz cadence as
+    /// the sparkline so the trend arrow has enough samples to compute
+    /// a slope without extra polling. Capped at the same capacity.
+    private(set) var cpuTotalHistory: [Double] = []
+
+    private func appendCPUTotalSample() {
+        let v = governor.lastTotalCPUPercent
+        cpuTotalHistory.append(v)
+        if cpuTotalHistory.count > Self.sparklineCapacity {
+            cpuTotalHistory.removeFirst(cpuTotalHistory.count - Self.sparklineCapacity)
+        }
+    }
+
     /// User-facing API: change the stay-awake mode. Persists the choice
     /// so the selection survives a quit.
     func setStayAwakeMode(_ mode: StayAwakeService.Mode) {
@@ -333,6 +348,7 @@ final class ThermalStore {
                 self.governor.tick()
                 self.governorNotifier?.evaluate()
                 self.appendSparklineSample()
+                self.appendCPUTotalSample()
             }
         }
         // CPU activity sampler. Reads the governor's already-1Hz
@@ -408,6 +424,55 @@ final class ThermalStore {
     /// otherwise see a blank menu bar. The fallback keeps the slot useful
     /// without silently lying: the highest-overall reading is still a
     /// meaningful number, just not category-filtered.
+    /// Top-level slot resolver — branches on `metric` and routes to
+    /// the appropriate underlying source (existing temperature path,
+    /// new CPU total path, etc.). Use this instead of `resolveSlot`
+    /// from new call sites; `resolveSlot` is kept as the temperature-
+    /// only path so existing tests / call sites don't need to know
+    /// about the metric concept.
+    func resolveSlotMetric(_ metric: SlotMetric,
+                           category: String,
+                           value: String) -> MenuBarSlotState {
+        switch metric {
+        case .none:
+            return .empty
+        case .temperature:
+            return resolveSlot(category: category, value: value)
+        case .cpuTotal:
+            return resolveCPUTotalSlot()
+        }
+    }
+
+    /// CPU total slot — single global value, no sub-config. Headroom
+    /// and color thresholds use a hard-coded warm/hot pair (60% / 85%)
+    /// since `ThresholdSettings` is sensor-category-shaped today; if
+    /// users want configurable CPU thresholds we'll add a parallel
+    /// settings struct.
+    private func resolveCPUTotalSlot() -> MenuBarSlotState {
+        let v = governor.lastTotalCPUPercent
+        return MenuBarSlotState(
+            value: v,
+            unit: .percent,
+            sourceCategory: nil,
+            headroom: cpuTotalHeadroom(v),
+            history: cpuTotalHistory
+        )
+    }
+
+    /// Hard-coded CPU% thresholds. Picked from common monitoring-app
+    /// conventions — 60% sustained = "noticeable", 85% sustained =
+    /// "actively under load." Pinned in tests; change here means
+    /// changing the test expectation too.
+    static let cpuTotalWarmPercent: Double = 60
+    static let cpuTotalHotPercent: Double = 85
+
+    private func cpuTotalHeadroom(_ value: Double) -> Double {
+        let span = Self.cpuTotalHotPercent - Self.cpuTotalWarmPercent
+        guard span > 0 else { return 0 }
+        let raw = (value - Self.cpuTotalWarmPercent) / span
+        return min(max(raw, 0), 1)
+    }
+
     /// Rich version of `temperature(category:value:)` — returns enough
     /// context for the menu bar renderer to paint the source badge,
     /// trend glyph, and headroom strip without round-tripping back here.

@@ -6,8 +6,10 @@ struct DisplayPrefsView: View {
     @AppStorage("tempUnit")             private var tempUnitRaw: Int    = TempUnit.celsius.rawValue
     @AppStorage("showMenuBarIcon")      private var showIcon: Bool      = true
     @AppStorage("menuBarLayout")        private var layoutRaw: String   = MenuBarLayout.single.rawValue
+    @AppStorage("menuBarSlot1Metric")   private var slot1MetricRaw: String = SlotMetric.temperature.rawValue
     @AppStorage("menuBarSlot1Category") private var slot1Cat: String    = SlotCategory.highest.rawValue
     @AppStorage("menuBarSlot1Value")    private var slot1Val: String    = SensorCategory.cpu.rawValue
+    @AppStorage("menuBarSlot2Metric")   private var slot2MetricRaw: String = SlotMetric.none.rawValue
     @AppStorage("menuBarSlot2Category") private var slot2Cat: String    = SlotCategory.none.rawValue
     @AppStorage("menuBarSlot2Value")    private var slot2Val: String    = ""
 
@@ -54,16 +56,22 @@ struct DisplayPrefsView: View {
 
                 PrefRow(
                     "Slot 1",
-                    info: "What this slot shows. Highest = the hottest reading in the chosen scope. Average = mean of the chosen scope. Individual = a single named sensor."
+                    info: "What this slot shows. Pick a metric — Temperature, CPU usage — and then (for Temperature) the specific scope: Highest, Average, or Individual sensor."
                 ) {
-                    SlotPicker(category: $slot1Cat, value: $slot1Val, sensors: store.sensors)
+                    SlotPicker(metric: $slot1MetricRaw,
+                               category: $slot1Cat,
+                               value: $slot1Val,
+                               sensors: store.sensors)
                 }
 
                 PrefRow(
                     "Slot 2",
-                    info: "Second slot, available in Side-by-side and Stacked layouts. Pair them so the two slots tell complementary stories — e.g. Slot 1 = Highest Overall, Slot 2 = Battery (which always runs cooler and won't be hidden by a hot CPU)."
+                    info: "Second slot, available in Side-by-side and Stacked layouts. Pair complementary metrics — e.g. Slot 1 = Highest Temperature, Slot 2 = CPU usage — so the two slots tell different parts of the story."
                 ) {
-                    SlotPicker(category: $slot2Cat, value: $slot2Val, sensors: store.sensors)
+                    SlotPicker(metric: $slot2MetricRaw,
+                               category: $slot2Cat,
+                               value: $slot2Val,
+                               sensors: store.sensors)
                         .disabled(layout == .single)
                         .opacity(layout == .single ? 0.4 : 1)
                 }
@@ -73,14 +81,28 @@ struct DisplayPrefsView: View {
     }
 }
 
-// MARK: - Two-level slot picker
+// MARK: - Slot picker (Metric → Sub-config)
+//
+// Two tiers as of v0.14:
+//   1. Metric — Temperature / CPU usage / None (the new top-level picker)
+//   2. Sub-config — only relevant for Temperature; categorizes the
+//      sensor scope (Highest / Average / Individual) and the value
+//      within that scope.
+//
+// Non-temperature metrics don't render the sub-config picker because
+// they're fully specified by the metric type alone.
 
 private struct SlotPicker: View {
+    @Binding var metric: String
     @Binding var category: String
     @Binding var value: String
     let sensors: [Sensor]
 
-    // Sub-options vary by category
+    private var metricEnum: SlotMetric {
+        SlotMetric(rawValue: metric) ?? .none
+    }
+
+    // Sub-options vary by category. Only consulted when metric == .temperature.
     private var subOptions: [(label: String, value: String)] {
         switch category {
         case SlotCategory.highest.rawValue:
@@ -101,34 +123,46 @@ private struct SlotPicker: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            // Category picker
-            Picker("", selection: $category) {
-                ForEach(SlotCategory.allCases, id: \.rawValue) { cat in
-                    Text(cat.label).tag(cat.rawValue)
+            // Top-level metric picker — Temperature / CPU usage / None
+            Picker("", selection: $metric) {
+                ForEach(SlotMetric.allCases, id: \.rawValue) { m in
+                    Text(m.label).tag(m.rawValue)
                 }
             }
             .labelsHidden()
             .frame(width: 110)
-            .onChange(of: category) { _, newCat in
-                // Reset to a valid default for the incoming category
-                let cat = SlotCategory(rawValue: newCat) ?? .none
-                if cat == .individual {
-                    value = sensors.filter(\.isEnabled).first?.id ?? ""
-                } else {
-                    value = cat.defaultValue
-                }
-            }
 
-            // Sub-option picker (hidden when None)
-            if category != SlotCategory.none.rawValue, !subOptions.isEmpty {
-                Picker("", selection: $value) {
-                    ForEach(subOptions, id: \.value) { opt in
-                        Text(opt.label).tag(opt.value)
+            if metricEnum == .temperature {
+                // Temperature gets its existing two-level sub-config:
+                // Highest / Average / Individual + scope.
+                Picker("", selection: $category) {
+                    ForEach(SlotCategory.allCases, id: \.rawValue) { cat in
+                        Text(cat.label).tag(cat.rawValue)
                     }
                 }
                 .labelsHidden()
-                .frame(width: 170)
+                .frame(width: 110)
+                .onChange(of: category) { _, newCat in
+                    // Reset value to a valid default for the incoming category
+                    let cat = SlotCategory(rawValue: newCat) ?? .none
+                    if cat == .individual {
+                        value = sensors.filter(\.isEnabled).first?.id ?? ""
+                    } else {
+                        value = cat.defaultValue
+                    }
+                }
+
+                if category != SlotCategory.none.rawValue, !subOptions.isEmpty {
+                    Picker("", selection: $value) {
+                        ForEach(subOptions, id: \.value) { opt in
+                            Text(opt.label).tag(opt.value)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 160)
+                }
             }
+            // Other metrics (.cpuTotal, .none) need no further config.
         }
     }
 }
