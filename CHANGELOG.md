@@ -11,6 +11,17 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ### Added
 
+- **Top CPU consumers in Throttling preferences.** New "Top CPU
+  consumers" section in Preferences › Throttling that shows the
+  top 8 processes by live CPU% with a one-click "Cap at N%" button
+  per row. Lets you go from "what's heavy right now" to "rule in
+  place" in a single click. Apps already covered by a per-app rule
+  show their
+  current cap with a "Remove" button so dropping a rule is also one
+  click. Apps in the Never-Throttle list show a "Protected" badge
+  and stay non-actionable. Default duty matches the user's
+  configured Frontmost-app quick throttle setting, so the same
+  preference drives every quick-tame path in the app.
 - **Customize what the popover shows.** New "Show in popover"
   section in Preferences › Menu Bar lets you toggle each part of
   the popover on or off — Sensors, CPU Activity, Manual throttles,

@@ -13,6 +13,8 @@ struct ThrottlingPrefsView: View {
                 Divider()
                 FrontmostThrottleSection()
                 Divider()
+                TopCPUConsumersSection(store: store)
+                Divider()
                 NeverThrottleSection(store: store)
                 Divider()
                 RulesSection(store: store)
@@ -453,6 +455,203 @@ private struct FrontmostThrottleSection: View {
                     .frame(width: 180)
                 }
             }
+        }
+    }
+}
+
+// MARK: - Top CPU consumers (v0.14)
+
+/// Live "what's eating my CPU right now" panel with one-click rule
+/// creation. The Throttling-prefs answer to the classic
+/// see-processes-then-tame flow common in CPU-management tools:
+/// see what's heavy, click to cap, done.
+///
+/// Reads from `governor.lastTopProcesses` (already 1 Hz, free) so
+/// the list ticks while the prefs window is open. Each row shows
+/// status:
+///   - **Capped** (per-app rule already exists) → shows the duty
+///     and a "Remove" button so the user can drop the rule fast.
+///   - **Protected** (in Never-Throttle list) → no action; just
+///     a badge so the user knows why they can't rule it.
+///   - otherwise → "Cap at N%" button that one-click upserts a
+///     rule using the user's configured frontmost-throttle duty.
+private struct TopCPUConsumersSection: View {
+    @Bindable var store: ThermalStore
+
+    /// Default cap when the user clicks "Cap at N%". Mirrors the
+    /// popover's CPU Activity context menu and the Throttle-frontmost
+    /// button so the same user setting drives every quick-tame path
+    /// in the app.
+    @AppStorage("throttleFrontmost.duty") private var defaultDuty: Double = 0.30
+
+    /// How many rows to show. 8 is enough to cover what's actually
+    /// running heavy without scrolling; below that and the user has
+    /// to dig into the Add Rule sheet to find anything else.
+    private let displayLimit: Int = 8
+
+    /// CPU-percent floor for visibility. Below this the process
+    /// isn't doing anything actionable and shouldn't take a slot.
+    private let minCPUPercent: Double = 1.0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "cpu").foregroundStyle(.blue)
+                Text("Top CPU consumers").font(.headline)
+                InfoButton(text: "Live list of the top processes by CPU usage right now. Click any one to instantly cap it at your default throttle duty (configured in Frontmost-app quick throttle above). Apps already covered by a rule show their current cap; protected apps show as such.")
+                Spacer()
+                if !rows.isEmpty {
+                    Text("Updates every second")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text("Set up a per-app rule in one click. The rule re-applies whenever the app launches and matches by bundle ID, so it sticks across quits and relaunches.")
+                .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if rows.isEmpty {
+                Text("Nothing notable. Your Mac is idle.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .padding(.vertical, 8)
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(rows) { row in
+                        consumerRow(row)
+                        if row.id != rows.last?.id {
+                            Divider().padding(.leading, 12)
+                        }
+                    }
+                }
+                .background(Color.secondary.opacity(0.04),
+                            in: RoundedRectangle(cornerRadius: 8))
+            }
+        }
+    }
+
+    /// Top processes after filtering. Same selection rules as the
+    /// popover's CPU Activity panel (`CPUActivityFilter.topRows`)
+    /// but with a different exclusion set — here we keep
+    /// rule-managed apps visible (so they show as "Capped at N%")
+    /// because the action you can take on them differs.
+    private var rows: [RunningProcess] {
+        let neverThrottled: Set<String> = Set(NeverThrottleList.names())
+        let myPID = getpid()
+        return store.governor.lastTopProcesses
+            .filter { $0.cpuPercent >= minCPUPercent }
+            .filter { $0.id != myPID }
+            .sorted { $0.cpuPercent > $1.cpuPercent }
+            .prefix(displayLimit)
+            .map { $0 }
+            // Surface protected apps near the bottom — user can see
+            // them but they're not actionable, so they shouldn't
+            // crowd out the actionable rows. (Stable sort: prefix
+            // already enforces ordering, this is just a pass-through.)
+            .sorted { lhs, rhs in
+                let lhsProtected = neverThrottled.contains(lhs.name)
+                let rhsProtected = neverThrottled.contains(rhs.name)
+                if lhsProtected != rhsProtected {
+                    return !lhsProtected   // unprotected first
+                }
+                return lhs.cpuPercent > rhs.cpuPercent
+            }
+    }
+
+    @ViewBuilder
+    private func consumerRow(_ p: RunningProcess) -> some View {
+        let existingRule = store.throttleRules.rule(for: p)
+        let isProtected  = NeverThrottleList.names().contains(p.name)
+
+        HStack(spacing: 8) {
+            // Identity column — display name big, raw process name
+            // small. The raw name is the only way to disambiguate
+            // helper variants (e.g. "Google Chrome Helper (Renderer)").
+            VStack(alignment: .leading, spacing: 1) {
+                Text(p.displayName)
+                    .font(.subheadline).lineLimit(1)
+                Text(p.name)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            // CPU% — color-tinted by load. Same palette as the
+            // popover's CPU Activity rows so users see the same
+            // number / color combo across surfaces.
+            Text("\(Int(p.cpuPercent.rounded()))%")
+                .monospacedDigit()
+                .foregroundStyle(cpuTint(p.cpuPercent))
+                .frame(width: 50, alignment: .trailing)
+
+            // Action column — three states.
+            actionView(for: p, existingRule: existingRule, isProtected: isProtected)
+                .frame(width: 140, alignment: .trailing)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel(for: p,
+                                              existingRule: existingRule,
+                                              isProtected: isProtected))
+    }
+
+    @ViewBuilder
+    private func actionView(for p: RunningProcess,
+                            existingRule: ThrottleRule?,
+                            isProtected: Bool) -> some View {
+        if isProtected {
+            HStack(spacing: 4) {
+                Image(systemName: "shield.fill").foregroundStyle(.tint)
+                Text("Protected").font(.caption)
+            }
+            .help("This app is in your Never-Throttle list. Remove it from there to enable rules.")
+        } else if let rule = existingRule {
+            HStack(spacing: 6) {
+                Text("Capped \(Int((rule.duty * 100).rounded()))%")
+                    .font(.caption).monospacedDigit()
+                    .foregroundStyle(.secondary)
+                Button("Remove") {
+                    store.removeRule(id: rule.id)
+                }
+                .controlSize(.small)
+                .help("Drop the per-app rule. The app runs unthrottled until you add a new rule.")
+            }
+        } else {
+            Button("Cap at \(Int((defaultDuty * 100).rounded()))%") {
+                store.upsertRule(for: p, duty: defaultDuty)
+            }
+            .controlSize(.small)
+            .help("Add a per-app throttle rule for \(p.displayName) at the default duty. Adjust per-rule below or change the default in Frontmost-app quick throttle.")
+        }
+    }
+
+    /// VoiceOver-friendly summary of one row. Combines the row's
+    /// child elements so screen-reader users get the whole picture
+    /// in one swipe — name, CPU%, status — rather than three
+    /// separate stops.
+    private func accessibilityLabel(for p: RunningProcess,
+                                    existingRule: ThrottleRule?,
+                                    isProtected: Bool) -> String {
+        let cpu = "\(Int(p.cpuPercent.rounded())) percent CPU"
+        if isProtected {
+            return "\(p.displayName), \(cpu), protected by Never-Throttle list"
+        }
+        if let rule = existingRule {
+            return "\(p.displayName), \(cpu), currently capped at \(Int((rule.duty * 100).rounded())) percent"
+        }
+        return "\(p.displayName), \(cpu). Click Cap to add a throttle rule."
+    }
+
+    /// Color tier for CPU% — matches the popover's CPU Activity
+    /// palette. See `MenuBarPopoverView.cpuTint` for the source.
+    private func cpuTint(_ percent: Double) -> Color {
+        switch percent {
+        case ..<25:    return .secondary
+        case ..<75:    return .primary
+        case ..<150:   return .orange
+        default:       return .red
         }
     }
 }
