@@ -9,6 +9,88 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+## [0.14.0] — 2026-05-02
+
+The visibility release. The popover and the dashboard learn to
+answer "what is my Mac actually doing right now" — top CPU
+processes are surfaced live with one-click throttle / rule / never-
+throttle actions, and a dashboard rollup shows which apps have
+been habitual heavy hitters over the last seven days. Menu bar
+slots can now show CPU usage in addition to temperatures, and the
+popover itself becomes user-customizable: hide whichever sections
+you don't need. Distribution format moves from `.zip` to `.dmg`
+matching what every commercial Mac app ships with.
+
+### Added
+
+- **Top CPU consumers in Throttling preferences.** New "Top CPU
+  consumers" section in Preferences › Throttling that shows the
+  top 8 processes by live CPU% with a one-click "Cap at N%" button
+  per row. Lets you go from "what's heavy right now" to "rule in
+  place" in a single click. Apps already covered by a per-app rule
+  show their
+  current cap with a "Remove" button so dropping a rule is also one
+  click. Apps in the Never-Throttle list show a "Protected" badge
+  and stay non-actionable. Default duty matches the user's
+  configured Frontmost-app quick throttle setting, so the same
+  preference drives every quick-tame path in the app.
+- **Customize what the popover shows.** New "Show in popover"
+  section in Preferences › Menu Bar lets you toggle each part of
+  the popover on or off — Sensors, CPU Activity, Manual throttles,
+  Governor status, Controls. Defaults to all visible (matching
+  pre-v0.14 behavior). The header (app name + pause menu) and
+  action buttons (Dashboard / Preferences / Quit) are always
+  visible — they're how you reach the prefs in the first place.
+  Drag-to-reorder is intentionally not in this release; the data
+  model already supports it, so a follow-up can layer in handles
+  without migration.
+- **CPU usage in the menu bar.** Slots can now show total system CPU
+  usage as a percentage in addition to the existing temperature
+  options. New two-tier slot picker in Preferences › Display: pick
+  the metric (Temperature / CPU usage / None), then for Temperature
+  pick the existing Highest / Average / Individual sub-config.
+  Defaults to Temperature so users upgrading from v0.13 see no
+  change. Hard-coded warm/hot thresholds for CPU% (60% / 85%) feed
+  the headroom strip and color tint, matching how the temperature
+  metric already works. Unit suffix in the bar flips between `°` and
+  `%` based on the slot.
+- **"Top CPU consumers — last 7 days" panel on the dashboard.** A
+  new section beneath the weekly throttle summary rolls up which
+  apps were habitually heavy on CPU over the rolling 7-day window:
+  total active time above a 10% activity floor, average CPU during
+  active periods, peak observed. Different signal from the throttle
+  log — captures CPU hogs even when the governor or rules never
+  needed to step in. Each row gets a width-proportional bar tinted
+  by peak CPU% (blue for sustained-mid, orange for high, red for
+  spike) so a 30%-for-hours app reads visually different from a
+  briefly-pegged-200% app.
+- **CPU activity sampling.** A new background task writes to a
+  persistent NDJSON log (`cpu-activity.ndjson` in Application
+  Support) every 60 seconds, capturing the top 10 processes above
+  5% CPU per tick. 7-day pruning on launch keeps the file bounded.
+  Drives the new dashboard panel; future memory / GPU / disk panels
+  can reuse the same shape.
+- **Popover section visibility model.** Internal data layer for
+  which sections appear in the menu-bar popover. Defaults match
+  current behavior — every section visible — so this changes
+  nothing for existing users. Sets up the persistence (two
+  UserDefaults keys: ordered list of all sections, set of hidden
+  sections) for the user-facing customization UI in a later phase
+  of this sprint. Forward-compatible: a future release adding new
+  sections will surface them automatically without users having to
+  re-enable anything.
+- **CPU Activity panel in the popover.** A new section between the
+  sensor list and the throttle status shows the top 5 processes by
+  CPU% right now, refreshed at 1 Hz off the existing governor tick.
+  Right-click any row for a context menu: throttle now (uses your
+  configured frontmost-throttle duty for one hour), add a per-app
+  throttle rule, add to the Never-Throttle list, or jump to
+  Activity Monitor / copy the process name. Filters out processes
+  already covered by a per-app rule, anything currently under a
+  manual cap, anything under 1% CPU, and Air Assist itself — so the
+  panel only shows you actionable processes you haven't already
+  decided about. Empty state when nothing's notable.
+
 ### Changed
 
 - **Distribution format switched from `.zip` to `.dmg`.** Manual

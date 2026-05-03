@@ -52,6 +52,21 @@ enum MenuBarIconRenderer {
     /// (so the user doesn't think throttling just stopped).
     static let pulseMinAlpha: CGFloat = 0.35
 
+    /// Format a slot value according to its unit. Temperature goes
+    /// through the user's chosen °C/°F formatter; percent ignores the
+    /// temperature unit entirely. Centralized here so every layout
+    /// branch in `render` formats consistently.
+    static func formatValue(_ value: Double,
+                            slotUnit: MenuBarSlotState.Unit,
+                            tempUnit: TempUnit) -> String {
+        switch slotUnit {
+        case .temperature:
+            return tempUnit.format(value)
+        case .percent:
+            return "\(Int(value.rounded()))%"
+        }
+    }
+
     /// Produce the complete status-item image for the given layout & state.
     /// Auto-template mode is on unless a tint or throttle dot would be lost
     /// under system tinting.
@@ -63,6 +78,13 @@ enum MenuBarIconRenderer {
     static func render(
         layout: MenuBarLayout,
         v1: Double?, v2: Double?, unit: TempUnit,
+        /// Per-slot unit. Drives whether the value is formatted with
+        /// `°C/°F` (temperature) or `%` (percent — CPU%, future
+        /// memory / battery). Defaults to `.temperature` so older
+        /// snapshot tests that don't pass this still compile and
+        /// render the same way.
+        slot1Unit: MenuBarSlotState.Unit = .temperature,
+        slot2Unit: MenuBarSlotState.Unit = .temperature,
         sourceBadge1: String? = nil,
         sourceBadge2: String? = nil,
         trend1: String? = nil,
@@ -91,7 +113,7 @@ enum MenuBarIconRenderer {
                 let textColor: NSColor = tint ?? .labelColor
                 drawIconPlusAttributedText(
                     text: composeSlot(
-                        value: v1.map(unit.format) ?? "",
+                        value: v1.map { formatValue($0, slotUnit: slot1Unit, tempUnit: unit) } ?? "",
                         badge: sourceBadge1,
                         trend: trend1,
                         reserveTrend: reserveTrend1,
@@ -110,7 +132,8 @@ enum MenuBarIconRenderer {
                 let combined = NSMutableAttributedString()
                 if let v1 {
                     combined.append(composeSlot(
-                        value: unit.format(v1), badge: sourceBadge1,
+                        value: formatValue(v1, slotUnit: slot1Unit, tempUnit: unit),
+                        badge: sourceBadge1,
                         trend: trend1, reserveTrend: reserveTrend1,
                         textColor: textColor
                     ))
@@ -124,7 +147,8 @@ enum MenuBarIconRenderer {
                         ))
                     }
                     combined.append(composeSlot(
-                        value: unit.format(v2), badge: sourceBadge2,
+                        value: formatValue(v2, slotUnit: slot2Unit, tempUnit: unit),
+                        badge: sourceBadge2,
                         trend: trend2, reserveTrend: reserveTrend2,
                         textColor: textColor
                     ))
@@ -141,8 +165,8 @@ enum MenuBarIconRenderer {
                 )
             case .stacked:
                 drawStackedText(
-                    top:    v1.map(unit.format) ?? "–",
-                    bottom: v2.map(unit.format) ?? "–",
+                    top:    v1.map { formatValue($0, slotUnit: slot1Unit, tempUnit: unit) } ?? "–",
+                    bottom: v2.map { formatValue($0, slotUnit: slot2Unit, tempUnit: unit) } ?? "–",
                     size: size
                 )
             }

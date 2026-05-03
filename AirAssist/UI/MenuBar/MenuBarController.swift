@@ -160,6 +160,13 @@ final class MenuBarController {
         let defaults = UserDefaults.standard
 
         let unit     = TempUnit(rawValue: defaults.integer(forKey: "tempUnit")) ?? .celsius
+        // Slot metric (v0.14) — defaults to .temperature so users
+        // upgrading from v0.13 see no change. The category/value
+        // keys below are only consulted when metric == .temperature.
+        let slot1Metric = SlotMetric(rawValue: defaults.string(forKey: "menuBarSlot1Metric") ?? "")
+            ?? .temperature
+        let slot2Metric = SlotMetric(rawValue: defaults.string(forKey: "menuBarSlot2Metric") ?? "")
+            ?? .none
         let slot1Cat = defaults.string(forKey: "menuBarSlot1Category") ?? SlotCategory.highest.rawValue
         let slot1Val = defaults.string(forKey: "menuBarSlot1Value")    ?? SensorCategory.cpu.rawValue
         let slot2Cat = defaults.string(forKey: "menuBarSlot2Category") ?? SlotCategory.none.rawValue
@@ -184,10 +191,14 @@ final class MenuBarController {
         case .cool, .unknown: tint = nil
         }
 
-        let slot1 = store.resolveSlot(category: slot1Cat, value: slot1Val)
+        let slot1 = store.resolveSlotMetric(slot1Metric,
+                                            category: slot1Cat,
+                                            value: slot1Val)
         let slot2 = layout == .single
             ? MenuBarSlotState.empty
-            : store.resolveSlot(category: slot2Cat, value: slot2Val)
+            : store.resolveSlotMetric(slot2Metric,
+                                      category: slot2Cat,
+                                      value: slot2Val)
         let v1 = slot1.value
         let v2 = layout == .single ? nil : slot2.value
 
@@ -196,14 +207,20 @@ final class MenuBarController {
         // ("which sensor is hottest right now?") and the badge resolves
         // the ambiguity. Average and individual already imply their
         // source. Stacked layout has no horizontal room.
+        // Source badge only fires for temperature `.highest` slots —
+        // that's the mode where the displayed value flips silently
+        // between sensors. CPU/% slots and category-pinned temps
+        // already imply their source.
         let showBadge = (defaults.object(forKey: "showMenuBarSourceBadge") as? Bool) ?? true
         let badge1: String? = (showBadge
             && layout != .stacked
+            && slot1Metric == .temperature
             && slot1Cat == SlotCategory.highest.rawValue)
             ? slot1.sourceCategory.map(MenuBarSourceBadge.character(for:))
             : nil
         let badge2: String? = (showBadge
             && layout == .sideBySide
+            && slot2Metric == .temperature
             && slot2Cat == SlotCategory.highest.rawValue)
             ? slot2.sourceCategory.map(MenuBarSourceBadge.character(for:))
             : nil
@@ -276,6 +293,7 @@ final class MenuBarController {
         let rendered = MenuBarIconRenderer.render(
             layout: layout,
             v1: v1, v2: v2, unit: unit,
+            slot1Unit: slot1.unit, slot2Unit: slot2.unit,
             sourceBadge1: badge1,
             sourceBadge2: badge2,
             trend1: trend1,

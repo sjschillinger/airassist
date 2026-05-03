@@ -21,6 +21,18 @@ enum WhatsNewSheet {
     /// an intermediate release.
     private static let entries: [(version: String, title: String, bullets: [String])] = [
         (
+            "0.14.0",
+            "What's new in 0.14",
+            [
+                "Live top CPU processes in the popover — right-click for one-click throttle / rule / Never-Throttle / Activity Monitor",
+                "\"Top CPU consumers\" in Throttling preferences — see what's heavy, click to add a rule",
+                "Menu bar slots can now show CPU usage as a percentage, not just temperatures",
+                "\"Top CPU consumers — last 7 days\" panel on the dashboard rolls up habitual heavy hitters",
+                "Customize which sections appear in the popover (Preferences → Menu Bar → Show in popover)",
+                "Manual downloads now arrive as a `.dmg` disk image instead of a `.zip`"
+            ]
+        ),
+        (
             "0.13.0",
             "What's new in 0.13",
             [

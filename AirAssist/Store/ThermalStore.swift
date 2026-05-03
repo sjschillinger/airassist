@@ -35,6 +35,21 @@ final class ThermalStore {
         }
     }
 
+    // MARK: - CPU total history (#metric-arch v0.14)
+    /// Rolling buffer of total system CPU% — the value the menu bar's
+    /// `cpuTotal` metric shows. Captured at the same 1Hz cadence as
+    /// the sparkline so the trend arrow has enough samples to compute
+    /// a slope without extra polling. Capped at the same capacity.
+    private(set) var cpuTotalHistory: [Double] = []
+
+    private func appendCPUTotalSample() {
+        let v = governor.lastTotalCPUPercent
+        cpuTotalHistory.append(v)
+        if cpuTotalHistory.count > Self.sparklineCapacity {
+            cpuTotalHistory.removeFirst(cpuTotalHistory.count - Self.sparklineCapacity)
+        }
+    }
+
     /// User-facing API: change the stay-awake mode. Persists the choice
     /// so the selection survives a quit.
     func setStayAwakeMode(_ mode: StayAwakeService.Mode) {
@@ -114,6 +129,28 @@ final class ThermalStore {
     /// dashboard's "This week" panel. Distinct from `throttleActivityLog`,
     /// which is the in-memory ring buffer for the live "Recent activity".
     let throttleEventLog = ThrottleEventLog()
+    /// Persistent NDJSON log of per-process CPU samples. Drives the
+    /// dashboard's "habitual CPU consumers" panel. Sampled at the
+    /// cadence below by `cpuActivityTask`; pruned on launch to a
+    /// 7-day rolling window. Distinct from `throttleEventLog` —
+    /// throttle log captures decisions; this captures observation.
+    let cpuActivityLog = CPUActivityLog()
+    /// Sampling cadence for `cpuActivityLog`. 60s is sparse enough
+    /// to keep the on-disk file modest (≈50K lines / week worst
+    /// case) while still giving the aggregator enough resolution
+    /// for "actively running for hours" type queries.
+    static let cpuActivitySampleIntervalSeconds: Double = 60
+    /// Lower bound for sampling — processes below this don't get
+    /// written. Lower than the aggregator's default activity
+    /// threshold (10%) on purpose: the log keeps borderline cases
+    /// so the dashboard can choose a stricter cutoff later without
+    /// us having to rewrite history.
+    static let cpuActivitySampleMinPercent: Double = 5
+    /// How many top CPU processes per tick to write. Captures
+    /// enough data for multi-helper apps (Chrome, Slack, Electron
+    /// in general) to roll up correctly without bloating the log.
+    static let cpuActivitySampleTopN: Int = 10
+    private var cpuActivityTask: Task<Void, Never>?
     let safety = SafetyCoordinator()
     private var frontmostObserver: FrontmostAppObserver!
     let snapshots: ProcessSnapshotPublisher
@@ -216,6 +253,10 @@ final class ThermalStore {
         // Trim ancient entries on launch — cheap (file is small) and keeps
         // the on-disk log bounded across months of use.
         throttleEventLog.pruneOldEntries()
+        // CPU activity log gets a tighter retention since it's
+        // dashboard-only: 7 days matches the panel's window. If we
+        // ever add a longer view we can dial this back.
+        cpuActivityLog.pruneOldEntries(keepDays: 7)
         self.snapshots = ProcessSnapshotPublisher(inspector: processInspector)
         // Capture self weakly in the hottest-temp closure.
         self.governor = ThermalGovernor(
@@ -307,8 +348,46 @@ final class ThermalStore {
                 self.governor.tick()
                 self.governorNotifier?.evaluate()
                 self.appendSparklineSample()
+                self.appendCPUTotalSample()
             }
         }
+        // CPU activity sampler. Reads the governor's already-1Hz
+        // process snapshot at a coarser cadence and writes the top-N
+        // qualifying processes to the persistent activity log. Lives
+        // in its own Task so the sampling cadence (60s) is decoupled
+        // from the control loop's 1Hz cadence — and so cancelling
+        // sampling on quit doesn't have to coordinate with the
+        // control loop's lifecycle.
+        cpuActivityTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(Self.cpuActivitySampleIntervalSeconds))
+                guard let self else { break }
+                self.recordCPUActivitySample()
+            }
+        }
+    }
+
+    /// Take one CPU activity sample. Reads the governor's most
+    /// recent process snapshot and writes the top-N qualifying
+    /// processes to the activity log. Called from
+    /// `cpuActivityTask` at the configured cadence.
+    private func recordCPUActivitySample() {
+        let now = Date()
+        let candidates = governor.lastTopProcesses
+            .filter { $0.cpuPercent >= Self.cpuActivitySampleMinPercent }
+            .sorted { $0.cpuPercent > $1.cpuPercent }
+            .prefix(Self.cpuActivitySampleTopN)
+        let samples = candidates.map { p in
+            CPUActivitySample(
+                timestamp: now,
+                bundleID: p.bundleID,
+                name: p.name,
+                displayName: p.displayName,
+                cpuPercent: p.cpuPercent
+            )
+        }
+        guard !samples.isEmpty else { return }
+        cpuActivityLog.recordBatch(samples)
     }
 
     func stop() {
@@ -316,6 +395,8 @@ final class ThermalStore {
         logTask = nil
         controlLoopTask?.cancel()
         controlLoopTask = nil
+        cpuActivityTask?.cancel()
+        cpuActivityTask = nil
         sleepWakeObserver?.stop()
         sleepWakeObserver = nil
         batteryAware.stop()
@@ -343,6 +424,66 @@ final class ThermalStore {
     /// otherwise see a blank menu bar. The fallback keeps the slot useful
     /// without silently lying: the highest-overall reading is still a
     /// meaningful number, just not category-filtered.
+    /// Top-level slot resolver — branches on `metric` and routes to
+    /// the appropriate underlying source (existing temperature path,
+    /// new CPU total path, etc.). Use this instead of `resolveSlot`
+    /// from new call sites; `resolveSlot` is kept as the temperature-
+    /// only path so existing tests / call sites don't need to know
+    /// about the metric concept.
+    func resolveSlotMetric(_ metric: SlotMetric,
+                           category: String,
+                           value: String) -> MenuBarSlotState {
+        switch metric {
+        case .none:
+            return .empty
+        case .temperature:
+            return resolveSlot(category: category, value: value)
+        case .cpuTotal:
+            return resolveCPUTotalSlot()
+        }
+    }
+
+    /// CPU total slot — single global value, no sub-config. Headroom
+    /// and color thresholds use a hard-coded warm/hot pair (60% / 85%)
+    /// since `ThresholdSettings` is sensor-category-shaped today; if
+    /// users want configurable CPU thresholds we'll add a parallel
+    /// settings struct.
+    private func resolveCPUTotalSlot() -> MenuBarSlotState {
+        let v = governor.lastTotalCPUPercent
+        return MenuBarSlotState(
+            value: v,
+            unit: .percent,
+            sourceCategory: nil,
+            headroom: cpuTotalHeadroom(v),
+            history: cpuTotalHistory
+        )
+    }
+
+    /// Hard-coded CPU% thresholds. Picked from common monitoring-app
+    /// conventions — 60% sustained = "noticeable", 85% sustained =
+    /// "actively under load." Pinned in tests; change here means
+    /// changing the test expectation too.
+    static let cpuTotalWarmPercent: Double = 60
+    static let cpuTotalHotPercent: Double = 85
+
+    private func cpuTotalHeadroom(_ value: Double) -> Double {
+        Self.headroom(value: value,
+                      warm: Self.cpuTotalWarmPercent,
+                      hot:  Self.cpuTotalHotPercent) ?? 0
+    }
+
+    /// Linear-interpolate `value` across the warm→hot range, clamped
+    /// to 0…1. Returns `nil` if the range is degenerate (warm ≥ hot).
+    /// Callers in this file translate "value below warm" to 0 and
+    /// "above hot" to 1; this helper does both sides of that work in
+    /// one place so temperature and CPU% share the same math.
+    static func headroom(value: Double, warm: Double, hot: Double) -> Double? {
+        let span = hot - warm
+        guard span > 0 else { return nil }
+        let raw = (value - warm) / span
+        return min(max(raw, 0), 1)
+    }
+
     /// Rich version of `temperature(category:value:)` — returns enough
     /// context for the menu bar renderer to paint the source badge,
     /// trend glyph, and headroom strip without round-tripping back here.
@@ -438,10 +579,7 @@ final class ThermalStore {
     private func headroom(value: Double?, category: SensorCategory) -> Double? {
         guard let value else { return nil }
         let t = thresholds.thresholds(for: category)
-        let span = t.hot - t.warm
-        guard span > 0 else { return nil }
-        let raw = (value - t.warm) / span
-        return min(max(raw, 0), 1)
+        return Self.headroom(value: value, warm: t.warm, hot: t.hot)
     }
 
     func temperature(category: String, value: String) -> Double? {
