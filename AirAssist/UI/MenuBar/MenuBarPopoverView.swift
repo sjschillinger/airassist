@@ -40,15 +40,31 @@ struct MenuBarPopoverView: View {
         VStack(spacing: 0) {
             header
             Divider()
-            sensorList
-            sparklineRow
-            Divider()
-            cpuActivitySection
-            manualThrottlesSection
-            throttleSection
-            Divider()
-            controlsSection
-            Divider()
+            // Phase 2 of the visibility sprint: each customizable
+            // section is gated behind PopoverSectionPrefs. Order
+            // stays fixed in code for now; Phase 5 adds the
+            // user-facing Preferences UI to flip these. Defaults =
+            // every section visible, so this changes nothing for
+            // existing users.
+            if PopoverSectionPrefs.isVisible(.sensors) {
+                sensorList
+                sparklineRow
+                Divider()
+            }
+            if PopoverSectionPrefs.isVisible(.cpuActivity) {
+                cpuActivitySection      // includes own trailing Divider
+            }
+            if PopoverSectionPrefs.isVisible(.manualThrottles) {
+                manualThrottlesSection  // includes own trailing Divider
+            }
+            if PopoverSectionPrefs.isVisible(.governorStatus) {
+                throttleSection
+                Divider()
+            }
+            if PopoverSectionPrefs.isVisible(.controls) {
+                controlsSection
+                Divider()
+            }
             actionButtons
         }
         .onReceive(countdownTimer) { countdownTick = $0 }

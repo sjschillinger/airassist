@@ -11,6 +11,15 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ### Added
 
+- **Popover section visibility model.** Internal data layer for
+  which sections appear in the menu-bar popover. Defaults match
+  current behavior — every section visible — so this changes
+  nothing for existing users. Sets up the persistence (two
+  UserDefaults keys: ordered list of all sections, set of hidden
+  sections) for the user-facing customization UI in a later phase
+  of this sprint. Forward-compatible: a future release adding new
+  sections will surface them automatically without users having to
+  re-enable anything.
 - **CPU Activity panel in the popover.** A new section between the
   sensor list and the throttle status shows the top 5 processes by
   CPU% right now, refreshed at 1 Hz off the existing governor tick.
