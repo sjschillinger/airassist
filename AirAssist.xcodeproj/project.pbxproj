@@ -116,6 +116,7 @@
 		DA468550C7C0B1564688DBF2 /* SensorCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD667C42F60AF2E26D510B5F /* SensorCardView.swift */; };
 		DA5906764C2BEB76C0FB8479 /* ThrottleEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17EFF04B9F40695804D56B3F /* ThrottleEventLog.swift */; };
 		DE977BF95BCAEC213B071E1B /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B8F67C6B8D8B0CD7E191D3E /* AppIntents.framework */; };
+		E03DF570F595733A3B5F111F /* ProcessInspectorProtectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9E2245F738C83F693803D71 /* ProcessInspectorProtectionTests.swift */; };
 		E0659C2FEE440E9197683AE8 /* ThrottleActivityLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B92AD6B874E16CC33B22F2 /* ThrottleActivityLogTests.swift */; };
 		E2458B7CBBF8B4E03A83F9BA /* GovernorAggressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC8FE313121C2DEB4E782C2 /* GovernorAggressionTests.swift */; };
 		E421277A46C55704D12DEDB4 /* RunningProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EAF397631AE11D4B570EC4D /* RunningProcess.swift */; };
@@ -299,6 +300,7 @@
 		F7FB4450C23B79C33E2CBA5C /* SafetyCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinatorTests.swift; sourceTree = "<group>"; };
 		F8C15D67B3F0B0BCE3515381 /* ThresholdPresetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThresholdPresetTests.swift; sourceTree = "<group>"; };
 		F8C1BBF3AA8B15BA14C37857 /* StayAwakeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayAwakeService.swift; sourceTree = "<group>"; };
+		F9E2245F738C83F693803D71 /* ProcessInspectorProtectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInspectorProtectionTests.swift; sourceTree = "<group>"; };
 		FAE7B1E9B83D8BC64EA57633 /* IOKitBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IOKitBridge.h; sourceTree = "<group>"; };
 		FB12A736A62BA39A609E7C19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FBD24DA45D1516F00A0ACA6F /* SIGCONTFailureAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SIGCONTFailureAlert.swift; sourceTree = "<group>"; };
@@ -581,6 +583,7 @@
 				6AB91F210A3619DE8362A837 /* PersistenceSchemaTests.swift */,
 				63E335A7861F5C571CE779E9 /* PopoverSectionTests.swift */,
 				F10566982345E91583B70DED /* ProcessInspectorPerfTests.swift */,
+				F9E2245F738C83F693803D71 /* ProcessInspectorProtectionTests.swift */,
 				1E38AF8B6D89383B136037DA /* ProcessThrottlerArbitrationTests.swift */,
 				D8142F86A470706E55D4E73D /* ProcessThrottlerSignalTests.swift */,
 				C7EB97E138B61FA2FD28EE16 /* RuleTemplatesTests.swift */,
@@ -891,6 +894,7 @@
 				0B438F68E276A81545D9F0B3 /* PersistenceSchemaTests.swift in Sources */,
 				AC5CFA9A44B741BFAF1151BD /* PopoverSectionTests.swift in Sources */,
 				50258C58F65338E95509046D /* ProcessInspectorPerfTests.swift in Sources */,
+				E03DF570F595733A3B5F111F /* ProcessInspectorProtectionTests.swift in Sources */,
 				2B6962559FBCFCF4DDF1A3DF /* ProcessThrottlerArbitrationTests.swift in Sources */,
 				EB5A02FB05F0BD561A6D5495 /* ProcessThrottlerSignalTests.swift in Sources */,
 				299495A4528A366F04A3FA11 /* RuleTemplatesTests.swift in Sources */,

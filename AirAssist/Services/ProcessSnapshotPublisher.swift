@@ -30,9 +30,22 @@ final class ProcessSnapshotPublisher {
 
     /// Take a fresh snapshot. Call once per governor/rule tick from a single
     /// driver (ThermalStore).
+    ///
+    /// Uses `topVisibleProcessesByCPU` (lighter exclusion — only
+    /// system-hidden names dropped) so visibility surfaces fed by
+    /// `latest` (popover CPU Activity, dashboard panel, Throttling-
+    /// prefs Top Consumers, persistent activity log) can show the
+    /// user the apps they care about (Xcode, terminals, agents).
+    /// Throttle-targeting code paths (`ThermalGovernor.applyThrottle`)
+    /// add their own `isProtected` filter on top so user-protected
+    /// names don't get SIGSTOPed.
+    ///
+    /// `latestTotalCPU` includes protected processes — that's
+    /// correct: the user wants the on-screen "system CPU" number to
+    /// reflect everything running, regardless of throttle eligibility.
     @discardableResult
     func refresh() -> [RunningProcess] {
-        let procs = inspector.topUserProcessesByCPU(limit: 50, minPercent: 0.0)
+        let procs = inspector.topVisibleProcessesByCPU(limit: 50, minPercent: 0.0)
         latest = procs
         latestTotalCPU = procs.reduce(0.0) { $0 + $1.cpuPercent }
         lastRefresh = Date()

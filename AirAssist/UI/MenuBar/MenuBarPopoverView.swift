@@ -351,10 +351,23 @@ struct MenuBarPopoverView: View {
 
     @ViewBuilder
     private func cpuActivityRow(_ p: RunningProcess) -> some View {
+        let isSystemProtected = ProcessInspector.isProtected(p.name)
         HStack(spacing: 6) {
             Text(p.displayName)
                 .lineLimit(1)
                 .truncationMode(.middle)
+            // System-protected apps (Xcode, terminals, the agent
+            // currently helping you, etc.) appear in the list so
+            // their CPU contribution is visible, but get a small
+            // shield glyph so the user knows the row's actions are
+            // limited.
+            if isSystemProtected {
+                Image(systemName: "shield.lefthalf.filled")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+                    .help("Protected by Air Assist's safety list — won't be auto-throttled.")
+                    .accessibilityHidden(true)
+            }
             Spacer()
             Text("\(Int(p.cpuPercent.rounded()))%")
                 .monospacedDigit()
@@ -363,35 +376,54 @@ struct MenuBarPopoverView: View {
         .font(.caption2)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(p.displayName), \(Int(p.cpuPercent.rounded())) percent CPU")
-        .accessibilityHint("Right click for throttle and rule options")
+        .accessibilityLabel(isSystemProtected
+            ? "\(p.displayName), \(Int(p.cpuPercent.rounded())) percent CPU, protected by Air Assist's safety list"
+            : "\(p.displayName), \(Int(p.cpuPercent.rounded())) percent CPU")
+        .accessibilityHint(isSystemProtected
+            ? "This process is on Air Assist's protection list and can only be inspected, not throttled"
+            : "Right click for throttle and rule options")
         .contextMenu {
-            // Default duty matches the existing frontmost-throttle
-            // user preference so this menu and the popover's
-            // "Throttle [frontmost]" button behave the same way for
-            // the same user. Hardcoded duration of 1h matches the
-            // Throttle Frontmost intent default.
-            Button("Throttle now (\(Int(frontmostDuty * 100))% for 1 hour)") {
-                store.throttleFrontmost(
-                    pid: p.id,
-                    name: p.name,
-                    duty: frontmostDuty,
-                    duration: 60 * 60
-                )
-            }
-            Button("Add throttle rule (\(Int(frontmostDuty * 100))% cap)") {
-                store.upsertRule(for: p, duty: frontmostDuty)
-            }
-            Button("Add \"\(p.name)\" to Never-Throttle list") {
-                NeverThrottleList.add(p.name)
-            }
-            Divider()
-            Button("Show in Activity Monitor") {
-                Self.openActivityMonitor()
-            }
-            Button("Copy process name") {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(p.name, forType: .string)
+            if isSystemProtected {
+                // Protected apps get a read-only menu — view in
+                // Activity Monitor and copy the name. Throttle / rule
+                // options are deliberately omitted because applying
+                // them to Xcode mid-build (or to the agent currently
+                // running this session) is a footgun.
+                Button("Show in Activity Monitor") {
+                    Self.openActivityMonitor()
+                }
+                Button("Copy process name") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(p.name, forType: .string)
+                }
+            } else {
+                // Default duty matches the existing frontmost-throttle
+                // user preference so this menu and the popover's
+                // "Throttle [frontmost]" button behave the same way for
+                // the same user. Hardcoded duration of 1h matches the
+                // Throttle Frontmost intent default.
+                Button("Throttle now (\(Int(frontmostDuty * 100))% for 1 hour)") {
+                    store.throttleFrontmost(
+                        pid: p.id,
+                        name: p.name,
+                        duty: frontmostDuty,
+                        duration: 60 * 60
+                    )
+                }
+                Button("Add throttle rule (\(Int(frontmostDuty * 100))% cap)") {
+                    store.upsertRule(for: p, duty: frontmostDuty)
+                }
+                Button("Add \"\(p.name)\" to Never-Throttle list") {
+                    NeverThrottleList.add(p.name)
+                }
+                Divider()
+                Button("Show in Activity Monitor") {
+                    Self.openActivityMonitor()
+                }
+                Button("Copy process name") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(p.name, forType: .string)
+                }
             }
         }
     }
