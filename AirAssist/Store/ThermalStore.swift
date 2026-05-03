@@ -439,195 +439,41 @@ final class ThermalStore {
     /// from new call sites; `resolveSlot` is kept as the temperature-
     /// only path so existing tests / call sites don't need to know
     /// about the metric concept.
+    ///
+    /// Implementation lives in `MenuBarSlotResolver` (Models/) — the
+    /// store just hands over the live data the resolver needs and
+    /// gets back a fully-baked state. `resolveSlot(category:value:)`
+    /// below is the same path with `metric` defaulted to `.temperature`
+    /// for back-compat with pre-v0.14 callers.
     func resolveSlotMetric(_ metric: SlotMetric,
                            category: String,
                            value: String) -> MenuBarSlotState {
-        switch metric {
-        case .none:
-            return .empty
-        case .temperature:
-            return resolveSlot(category: category, value: value)
-        case .cpuTotal:
-            return resolveCPUTotalSlot()
-        }
-    }
-
-    /// CPU total slot — single global value, no sub-config. Headroom
-    /// and color thresholds use a hard-coded warm/hot pair (60% / 85%)
-    /// since `ThresholdSettings` is sensor-category-shaped today; if
-    /// users want configurable CPU thresholds we'll add a parallel
-    /// settings struct.
-    private func resolveCPUTotalSlot() -> MenuBarSlotState {
-        let v = governor.lastTotalCPUPercent
-        return MenuBarSlotState(
-            value: v,
-            unit: .percent,
-            sourceCategory: nil,
-            headroom: cpuTotalHeadroom(v),
-            history: cpuTotalHistory
+        MenuBarSlotResolver.resolve(
+            metric: metric,
+            category: category,
+            value: value,
+            sensors: enabledSensors,
+            thresholds: thresholds,
+            cpuTotalPercent: governor.lastTotalCPUPercent,
+            cpuTotalHistory: cpuTotalHistory
         )
     }
 
-    /// Hard-coded CPU% thresholds. Picked from common monitoring-app
-    /// conventions — 60% sustained = "noticeable", 85% sustained =
-    /// "actively under load." Pinned in tests; change here means
-    /// changing the test expectation too.
-    static let cpuTotalWarmPercent: Double = 60
-    static let cpuTotalHotPercent: Double = 85
-
-    private func cpuTotalHeadroom(_ value: Double) -> Double {
-        Self.headroom(value: value,
-                      warm: Self.cpuTotalWarmPercent,
-                      hot:  Self.cpuTotalHotPercent) ?? 0
-    }
-
-    /// Linear-interpolate `value` across the warm→hot range, clamped
-    /// to 0…1. Returns `nil` if the range is degenerate (warm ≥ hot).
-    /// Callers in this file translate "value below warm" to 0 and
-    /// "above hot" to 1; this helper does both sides of that work in
-    /// one place so temperature and CPU% share the same math.
-    static func headroom(value: Double, warm: Double, hot: Double) -> Double? {
-        let span = hot - warm
-        guard span > 0 else { return nil }
-        let raw = (value - warm) / span
-        return min(max(raw, 0), 1)
-    }
-
-    /// Rich version of `temperature(category:value:)` — returns enough
-    /// context for the menu bar renderer to paint the source badge,
-    /// trend glyph, and headroom strip without round-tripping back here.
-    /// `temperature(...)` is kept for the few call sites that just want
-    /// the number (Shortcuts, URL scheme).
+    /// Temperature-only resolver — pre-v0.14 entry point preserved
+    /// for the few call sites that haven't migrated yet (mostly tests
+    /// and the renderer's internal default).
     func resolveSlot(category: String, value: String) -> MenuBarSlotState {
-        switch category {
-        case "highest":
-            // "overall" → winner across all enabled sensors, regardless
-            // of category. Source badge follows the winner.
-            if value == "overall" {
-                if let winner = enabledSensors
-                    .filter({ $0.currentValue != nil })
-                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
-                    return MenuBarSlotState(
-                        value: winner.currentValue,
-                        sourceCategory: winner.category,
-                        headroom: headroom(value: winner.currentValue, category: winner.category),
-                        history: winner.history
-                    )
-                }
-                return .empty
-            }
-            // Category-pinned highest — winner *within* that category.
-            if let cat = SensorCategory(rawValue: value) {
-                if let winner = enabledSensors
-                    .filter({ $0.category == cat && $0.currentValue != nil })
-                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
-                    return MenuBarSlotState(
-                        value: winner.currentValue,
-                        sourceCategory: cat,
-                        headroom: headroom(value: winner.currentValue, category: cat),
-                        history: winner.history
-                    )
-                }
-                // Category empty — fall back to overall highest, same as
-                // `temperature(...)` does, so the user isn't staring at a
-                // blank slot when their preferred category has no sensors.
-                if let winner = enabledSensors
-                    .filter({ $0.currentValue != nil })
-                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
-                    return MenuBarSlotState(
-                        value: winner.currentValue,
-                        sourceCategory: winner.category,
-                        headroom: headroom(value: winner.currentValue, category: winner.category),
-                        history: winner.history
-                    )
-                }
-            }
-            return .empty
-        case "average":
-            // Average has no single source category, so the badge is
-            // suppressed. Trend can still be computed off the value
-            // itself — but we'd need a separate buffer for the average,
-            // and that's out of scope for now (the trend glyph is most
-            // useful on a single-sensor reading anyway). History is
-            // intentionally empty here.
-            if value == "all" {
-                return MenuBarSlotState(
-                    value: averageTemp(),
-                    sourceCategory: nil, headroom: nil, history: []
-                )
-            }
-            if let cat = SensorCategory(rawValue: value) {
-                return MenuBarSlotState(
-                    value: averageTemp(in: cat) ?? averageTemp(),
-                    sourceCategory: cat,
-                    headroom: headroom(value: averageTemp(in: cat), category: cat),
-                    history: []
-                )
-            }
-            return .empty
-        case "individual":
-            if let s = enabledSensors.first(where: { $0.id == value }) {
-                return MenuBarSlotState(
-                    value: s.currentValue,
-                    sourceCategory: s.category,
-                    headroom: headroom(value: s.currentValue, category: s.category),
-                    history: s.history
-                )
-            }
-            return .empty
-        default:
-            return .empty
-        }
+        resolveSlotMetric(.temperature, category: category, value: value)
     }
 
-    /// Distance toward the *hot* threshold for `category`, clamped 0…1.
-    /// 0 = at-or-below the cool/warm boundary, 1 = at-or-above hot.
-    /// Returns nil if value or thresholds are missing. Used by the
-    /// menu-bar headroom strip — gives the user pre-warm visibility
-    /// rather than waiting for the tint to flip.
-    private func headroom(value: Double?, category: SensorCategory) -> Double? {
-        guard let value else { return nil }
-        let t = thresholds.thresholds(for: category)
-        return Self.headroom(value: value, warm: t.warm, hot: t.hot)
-    }
-
-    func temperature(category: String, value: String) -> Double? {
-        switch category {
-        case "highest":
-            if value == "overall" { return enabledSensors.compactMap(\.currentValue).max() }
-            if let cat = SensorCategory(rawValue: value) {
-                return highestTemp(in: cat)
-                    ?? enabledSensors.compactMap(\.currentValue).max()
-            }
-            return nil
-        case "average":
-            if value == "all" { return averageTemp() }
-            if let cat = SensorCategory(rawValue: value) {
-                return averageTemp(in: cat) ?? averageTemp()
-            }
-            return nil
-        case "individual":
-            return enabledSensors.first { $0.id == value }?.currentValue
-        default:
-            return nil
-        }
-    }
-
+    /// External callers (currently HistoryLogger) use this to log per-
+    /// category peaks. Logic stays here rather than moving to the
+    /// resolver because it doesn't relate to slot resolution.
     func highestTemp(in category: SensorCategory) -> Double? {
         enabledSensors
             .filter { $0.category == category }
             .compactMap(\.currentValue)
             .max()
-    }
-
-    func averageTemp(in category: SensorCategory) -> Double? {
-        let vals = enabledSensors.filter { $0.category == category }.compactMap(\.currentValue)
-        return vals.isEmpty ? nil : vals.reduce(0, +) / Double(vals.count)
-    }
-
-    func averageTemp() -> Double? {
-        let vals = enabledSensors.compactMap(\.currentValue)
-        return vals.isEmpty ? nil : vals.reduce(0, +) / Double(vals.count)
     }
 
     // MARK: - Manual throttle (menu-bar escape hatch)

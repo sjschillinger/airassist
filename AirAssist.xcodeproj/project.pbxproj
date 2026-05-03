@@ -70,6 +70,7 @@
 		8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8351D3477D799FE481369D40 /* MenuBarPopoverView.swift */; };
 		8EDE88F52ED18CCF2EFC8CBD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C1EA66578373DFC8BB8830 /* AppDelegate.swift */; };
 		952832FB8387EBCEF926C744 /* MetricKitReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD32BF366F8E6D8B74D4EAB5 /* MetricKitReporter.swift */; };
+		9544E9586D330A87A1D63CB6 /* MenuBarSlotResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC16125ADA42046FE33FBDA7 /* MenuBarSlotResolver.swift */; };
 		96364AA71968BC08B8C14C16 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73665E744DF97F6A87703F65 /* DashboardView.swift */; };
 		99A282DF04C7D4C1BB390142 /* PopoverSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F22EFE0E177A131ADC3A149B /* PopoverSection.swift */; };
 		99CCB4C7F83F69F150A2594D /* LaunchAtLoginService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EAD7FCA44F3E19EC9BC2BAD /* LaunchAtLoginService.swift */; };
@@ -277,6 +278,7 @@
 		D8142F86A470706E55D4E73D /* ProcessThrottlerSignalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessThrottlerSignalTests.swift; sourceTree = "<group>"; };
 		D84B45CFA95D408F01D4D5A3 /* SafetyCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyCoordinator.swift; sourceTree = "<group>"; };
 		DB592F505C75589E597E4423 /* PauseAndStayAwakeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseAndStayAwakeTests.swift; sourceTree = "<group>"; };
+		DC16125ADA42046FE33FBDA7 /* MenuBarSlotResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarSlotResolver.swift; sourceTree = "<group>"; };
 		DD2ACECEB5D102216552A1F6 /* CPUActivitySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUActivitySample.swift; sourceTree = "<group>"; };
 		E195513AB2DA802AD3B203E3 /* MenuBarQuickMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarQuickMenu.swift; sourceTree = "<group>"; };
 		E2DD49B9C83A47D20934170F /* TemperatureFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormatterTests.swift; sourceTree = "<group>"; };
@@ -439,6 +441,7 @@
 				26333C8B394F39AA715056E6 /* FrontmostSnapshot.swift */,
 				9E7F4FA7F3E12822AFFD48AC /* GovernorConfig.swift */,
 				46E2E83F20C8453A62109CD1 /* MenuBarLayout.swift */,
+				DC16125ADA42046FE33FBDA7 /* MenuBarSlotResolver.swift */,
 				EFE5FB26F5FE3B40C038C065 /* MenuBarTrend.swift */,
 				98C0C0C4F9AAD961A0AFF4C2 /* NeverThrottleList.swift */,
 				F22EFE0E177A131ADC3A149B /* PopoverSection.swift */,
@@ -921,6 +924,7 @@
 				8DC04E3A457334A8CD3D7EA3 /* MenuBarPopoverView.swift in Sources */,
 				1A0F0707769B5E1104E65551 /* MenuBarPrefsView.swift in Sources */,
 				2C02FDC905DF81A8091E7AD3 /* MenuBarQuickMenu.swift in Sources */,
+				9544E9586D330A87A1D63CB6 /* MenuBarSlotResolver.swift in Sources */,
 				1F18580118407140B3963E84 /* MenuBarTrend.swift in Sources */,
 				952832FB8387EBCEF926C744 /* MetricKitReporter.swift in Sources */,
 				4BBDD1D7610EB2BBF0E1ACED /* NeverThrottleList.swift in Sources */,
