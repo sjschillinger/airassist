@@ -11,6 +11,16 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ### Added
 
+- **Customize what the popover shows.** New "Show in popover"
+  section in Preferences › Menu Bar lets you toggle each part of
+  the popover on or off — Sensors, CPU Activity, Manual throttles,
+  Governor status, Controls. Defaults to all visible (matching
+  pre-v0.14 behavior). The header (app name + pause menu) and
+  action buttons (Dashboard / Preferences / Quit) are always
+  visible — they're how you reach the prefs in the first place.
+  Drag-to-reorder is intentionally not in this release; the data
+  model already supports it, so a follow-up can layer in handles
+  without migration.
 - **CPU usage in the menu bar.** Slots can now show total system CPU
   usage as a percentage in addition to the existing temperature
   options. New two-tier slot picker in Preferences › Display: pick
