@@ -194,7 +194,7 @@ struct DashboardView: View {
                 Spacer()
                 Text("\(Int(p.cpuPercent))%")
                     .font(.system(.subheadline, design: .rounded).monospacedDigit())
-                    .foregroundStyle(cpuTint(p.cpuPercent))
+                    .foregroundStyle(CPUTint.color(p.cpuPercent))
                 if throttled {
                     Image(systemName: "tortoise.fill")
                         .foregroundStyle(.orange).font(.caption)
@@ -244,13 +244,11 @@ struct DashboardView: View {
         .accessibilityLabel("\(p.displayName), \(Int(p.cpuPercent)) percent CPU\(throttled ? ", currently throttled" : "")")
     }
 
-    private func cpuTint(_ pct: Double) -> Color {
-        switch pct {
-        case 80...:  return .red
-        case 40...:  return .orange
-        default:     return .primary
-        }
-    }
+    // CPU% color tier — see `CPUTint` for the palette + rationale.
+    // Note: pre-v0.14 this view used a different palette (40/80
+    // thresholds, no .secondary tier). Switched to the unified
+    // 4-tier palette so the same CPU% is the same color across
+    // popover / throttling prefs / dashboard.
 
     // MARK: - Summary band (always visible)
 

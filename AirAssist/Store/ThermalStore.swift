@@ -467,9 +467,20 @@ final class ThermalStore {
     static let cpuTotalHotPercent: Double = 85
 
     private func cpuTotalHeadroom(_ value: Double) -> Double {
-        let span = Self.cpuTotalHotPercent - Self.cpuTotalWarmPercent
-        guard span > 0 else { return 0 }
-        let raw = (value - Self.cpuTotalWarmPercent) / span
+        Self.headroom(value: value,
+                      warm: Self.cpuTotalWarmPercent,
+                      hot:  Self.cpuTotalHotPercent) ?? 0
+    }
+
+    /// Linear-interpolate `value` across the warm→hot range, clamped
+    /// to 0…1. Returns `nil` if the range is degenerate (warm ≥ hot).
+    /// Callers in this file translate "value below warm" to 0 and
+    /// "above hot" to 1; this helper does both sides of that work in
+    /// one place so temperature and CPU% share the same math.
+    static func headroom(value: Double, warm: Double, hot: Double) -> Double? {
+        let span = hot - warm
+        guard span > 0 else { return nil }
+        let raw = (value - warm) / span
         return min(max(raw, 0), 1)
     }
 
@@ -568,10 +579,7 @@ final class ThermalStore {
     private func headroom(value: Double?, category: SensorCategory) -> Double? {
         guard let value else { return nil }
         let t = thresholds.thresholds(for: category)
-        let span = t.hot - t.warm
-        guard span > 0 else { return nil }
-        let raw = (value - t.warm) / span
-        return min(max(raw, 0), 1)
+        return Self.headroom(value: value, warm: t.warm, hot: t.hot)
     }
 
     func temperature(category: String, value: String) -> Double? {

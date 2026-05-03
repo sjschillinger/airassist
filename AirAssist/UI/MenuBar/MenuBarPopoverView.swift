@@ -358,7 +358,7 @@ struct MenuBarPopoverView: View {
             Spacer()
             Text("\(Int(p.cpuPercent.rounded()))%")
                 .monospacedDigit()
-                .foregroundStyle(cpuTint(p.cpuPercent))
+                .foregroundStyle(CPUTint.color(p.cpuPercent))
         }
         .font(.caption2)
         .contentShape(Rectangle())
@@ -396,17 +396,7 @@ struct MenuBarPopoverView: View {
         }
     }
 
-    /// Color tier for CPU% — matches the existing dashboard's
-    /// `topCPURow` palette so the same number tints the same way
-    /// regardless of which surface the user is looking at.
-    private func cpuTint(_ percent: Double) -> Color {
-        switch percent {
-        case ..<25:    return .secondary
-        case ..<75:    return .primary
-        case ..<150:   return .orange
-        default:       return .red
-        }
-    }
+    /// CPU% color tier — see `CPUTint` for the palette + rationale.
 
     // MARK: - Manual throttles strip (v0.10)
 

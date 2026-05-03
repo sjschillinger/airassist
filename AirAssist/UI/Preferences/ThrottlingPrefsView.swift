@@ -583,7 +583,7 @@ private struct TopCPUConsumersSection: View {
             // number / color combo across surfaces.
             Text("\(Int(p.cpuPercent.rounded()))%")
                 .monospacedDigit()
-                .foregroundStyle(cpuTint(p.cpuPercent))
+                .foregroundStyle(CPUTint.color(p.cpuPercent))
                 .frame(width: 50, alignment: .trailing)
 
             // Action column — three states.
@@ -644,16 +644,7 @@ private struct TopCPUConsumersSection: View {
         return "\(p.displayName), \(cpu). Click Cap to add a throttle rule."
     }
 
-    /// Color tier for CPU% — matches the popover's CPU Activity
-    /// palette. See `MenuBarPopoverView.cpuTint` for the source.
-    private func cpuTint(_ percent: Double) -> Color {
-        switch percent {
-        case ..<25:    return .secondary
-        case ..<75:    return .primary
-        case ..<150:   return .orange
-        default:       return .red
-        }
-    }
+    // CPU% color tier — see `CPUTint` for the palette + rationale.
 }
 
 // MARK: - Rules
