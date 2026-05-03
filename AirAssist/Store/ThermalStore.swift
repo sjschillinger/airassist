@@ -17,38 +17,25 @@ final class ThermalStore {
     // MARK: - Battery-aware auto-mode (#59)
     let batteryAware = BatteryAwareMode()
 
-    // MARK: - Popover sparkline (#45)
-    /// Ring buffer of the hottest enabled-sensor reading, one sample per
-    /// control-loop tick (~1 Hz). Capped at `sparklineCapacity` (60 ≈ 1 min).
-    /// Kept in-memory only — the on-disk `HistoryLogger` is the source of
-    /// truth for the Dashboard's longer charts; this is just a cheap live
-    /// strip for the menu bar popover.
-    private(set) var sparklineSamples: [Double] = []
-    static let sparklineCapacity: Int = 60
+    // MARK: - Menu bar history buffers
+    //
+    // Consolidates the two rolling sample arrays the menu bar reads
+    // from: the popover sparkline (hottest enabled sensor) and the
+    // CPU% slot's trend arrow. See `MenuBarHistoryBuffers` for the
+    // append + trim policy and the buffer capacity (60 = ~1 min at
+    // 1 Hz). Kept in-memory only — the on-disk `HistoryLogger` is
+    // the source of truth for the Dashboard's longer charts; these
+    // are cheap live strips for the menu bar surfaces.
+    let history = MenuBarHistoryBuffers()
 
-    private func appendSparklineSample() {
-        if let t = enabledSensors.compactMap(\.currentValue).max() {
-            sparklineSamples.append(t)
-            if sparklineSamples.count > Self.sparklineCapacity {
-                sparklineSamples.removeFirst(sparklineSamples.count - Self.sparklineCapacity)
-            }
-        }
-    }
+    /// Pass-through for the popover, which historically read
+    /// `store.sparklineSamples` directly. Internal callers can use
+    /// `history.sparkline`.
+    var sparklineSamples: [Double] { history.sparkline }
 
-    // MARK: - CPU total history (#metric-arch v0.14)
-    /// Rolling buffer of total system CPU% — the value the menu bar's
-    /// `cpuTotal` metric shows. Captured at the same 1Hz cadence as
-    /// the sparkline so the trend arrow has enough samples to compute
-    /// a slope without extra polling. Capped at the same capacity.
-    private(set) var cpuTotalHistory: [Double] = []
-
-    private func appendCPUTotalSample() {
-        let v = governor.lastTotalCPUPercent
-        cpuTotalHistory.append(v)
-        if cpuTotalHistory.count > Self.sparklineCapacity {
-            cpuTotalHistory.removeFirst(cpuTotalHistory.count - Self.sparklineCapacity)
-        }
-    }
+    /// Pass-through for the slot resolver, which reads CPU%
+    /// history when building the `cpuTotal` slot.
+    var cpuTotalHistory: [Double] { history.cpuTotal }
 
     /// User-facing API: change the stay-awake mode. Persists the choice
     /// so the selection survives a quit.
@@ -258,6 +245,17 @@ final class ThermalStore {
         // ever add a longer view we can dial this back.
         cpuActivityLog.pruneOldEntries(keepDays: 7)
         self.snapshots = ProcessSnapshotPublisher(inspector: processInspector)
+        // Wire the manual-throttle coordinator. It needs the
+        // throttler (to apply / clear caps) and a way to read the
+        // current snapshot (for the bundle-keyed APIs that target
+        // every matching PID). Closed over the snapshot publisher
+        // rather than holding a reference so the coordinator stays
+        // ignorant of snapshot lifecycle.
+        let publisher = self.snapshots
+        self.manualThrottle = ManualThrottleCoordinator(
+            throttler: processThrottler,
+            snapshotProvider: { publisher.latest }
+        )
         // Capture self weakly in the hottest-temp closure.
         self.governor = ThermalGovernor(
             snapshots: snapshots,
@@ -347,8 +345,11 @@ final class ThermalStore {
                 self.ruleEngine.tick()
                 self.governor.tick()
                 self.governorNotifier?.evaluate()
-                self.appendSparklineSample()
-                self.appendCPUTotalSample()
+                // Sparkline samples the hottest enabled sensor;
+                // CPU buffer samples whatever the governor just
+                // observed. Both feed menu bar surfaces.
+                self.history.appendSparkline(self.enabledSensors.compactMap(\.currentValue).max())
+                self.history.appendCPUTotal(self.governor.lastTotalCPUPercent)
             }
         }
         // CPU activity sampler. Reads the governor's already-1Hz
@@ -407,9 +408,7 @@ final class ThermalStore {
         processThrottler.releaseAll()
         safety.stopWatchdog()
         stayAwake.shutdown()
-        for (_, task) in manualExpiryTasks { task.cancel() }
-        manualExpiryTasks.removeAll()
-        manualExpiryDeadlines.removeAll()
+        manualThrottle.shutdownAll()
     }
 
     /// Resolves a temperature from the two-part slot encoding stored in UserDefaults.
@@ -430,180 +429,36 @@ final class ThermalStore {
     /// from new call sites; `resolveSlot` is kept as the temperature-
     /// only path so existing tests / call sites don't need to know
     /// about the metric concept.
+    ///
+    /// Implementation lives in `MenuBarSlotResolver` (Models/) — the
+    /// store just hands over the live data the resolver needs and
+    /// gets back a fully-baked state. `resolveSlot(category:value:)`
+    /// below is the same path with `metric` defaulted to `.temperature`
+    /// for back-compat with pre-v0.14 callers.
     func resolveSlotMetric(_ metric: SlotMetric,
                            category: String,
                            value: String) -> MenuBarSlotState {
-        switch metric {
-        case .none:
-            return .empty
-        case .temperature:
-            return resolveSlot(category: category, value: value)
-        case .cpuTotal:
-            return resolveCPUTotalSlot()
-        }
-    }
-
-    /// CPU total slot — single global value, no sub-config. Headroom
-    /// and color thresholds use a hard-coded warm/hot pair (60% / 85%)
-    /// since `ThresholdSettings` is sensor-category-shaped today; if
-    /// users want configurable CPU thresholds we'll add a parallel
-    /// settings struct.
-    private func resolveCPUTotalSlot() -> MenuBarSlotState {
-        let v = governor.lastTotalCPUPercent
-        return MenuBarSlotState(
-            value: v,
-            unit: .percent,
-            sourceCategory: nil,
-            headroom: cpuTotalHeadroom(v),
-            history: cpuTotalHistory
+        MenuBarSlotResolver.resolve(
+            metric: metric,
+            category: category,
+            value: value,
+            sensors: enabledSensors,
+            thresholds: thresholds,
+            cpuTotalPercent: governor.lastTotalCPUPercent,
+            cpuTotalHistory: cpuTotalHistory
         )
     }
 
-    /// Hard-coded CPU% thresholds. Picked from common monitoring-app
-    /// conventions — 60% sustained = "noticeable", 85% sustained =
-    /// "actively under load." Pinned in tests; change here means
-    /// changing the test expectation too.
-    static let cpuTotalWarmPercent: Double = 60
-    static let cpuTotalHotPercent: Double = 85
-
-    private func cpuTotalHeadroom(_ value: Double) -> Double {
-        Self.headroom(value: value,
-                      warm: Self.cpuTotalWarmPercent,
-                      hot:  Self.cpuTotalHotPercent) ?? 0
-    }
-
-    /// Linear-interpolate `value` across the warm→hot range, clamped
-    /// to 0…1. Returns `nil` if the range is degenerate (warm ≥ hot).
-    /// Callers in this file translate "value below warm" to 0 and
-    /// "above hot" to 1; this helper does both sides of that work in
-    /// one place so temperature and CPU% share the same math.
-    static func headroom(value: Double, warm: Double, hot: Double) -> Double? {
-        let span = hot - warm
-        guard span > 0 else { return nil }
-        let raw = (value - warm) / span
-        return min(max(raw, 0), 1)
-    }
-
-    /// Rich version of `temperature(category:value:)` — returns enough
-    /// context for the menu bar renderer to paint the source badge,
-    /// trend glyph, and headroom strip without round-tripping back here.
-    /// `temperature(...)` is kept for the few call sites that just want
-    /// the number (Shortcuts, URL scheme).
+    /// Temperature-only resolver — pre-v0.14 entry point preserved
+    /// for the few call sites that haven't migrated yet (mostly tests
+    /// and the renderer's internal default).
     func resolveSlot(category: String, value: String) -> MenuBarSlotState {
-        switch category {
-        case "highest":
-            // "overall" → winner across all enabled sensors, regardless
-            // of category. Source badge follows the winner.
-            if value == "overall" {
-                if let winner = enabledSensors
-                    .filter({ $0.currentValue != nil })
-                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
-                    return MenuBarSlotState(
-                        value: winner.currentValue,
-                        sourceCategory: winner.category,
-                        headroom: headroom(value: winner.currentValue, category: winner.category),
-                        history: winner.history
-                    )
-                }
-                return .empty
-            }
-            // Category-pinned highest — winner *within* that category.
-            if let cat = SensorCategory(rawValue: value) {
-                if let winner = enabledSensors
-                    .filter({ $0.category == cat && $0.currentValue != nil })
-                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
-                    return MenuBarSlotState(
-                        value: winner.currentValue,
-                        sourceCategory: cat,
-                        headroom: headroom(value: winner.currentValue, category: cat),
-                        history: winner.history
-                    )
-                }
-                // Category empty — fall back to overall highest, same as
-                // `temperature(...)` does, so the user isn't staring at a
-                // blank slot when their preferred category has no sensors.
-                if let winner = enabledSensors
-                    .filter({ $0.currentValue != nil })
-                    .max(by: { ($0.currentValue ?? 0) < ($1.currentValue ?? 0) }) {
-                    return MenuBarSlotState(
-                        value: winner.currentValue,
-                        sourceCategory: winner.category,
-                        headroom: headroom(value: winner.currentValue, category: winner.category),
-                        history: winner.history
-                    )
-                }
-            }
-            return .empty
-        case "average":
-            // Average has no single source category, so the badge is
-            // suppressed. Trend can still be computed off the value
-            // itself — but we'd need a separate buffer for the average,
-            // and that's out of scope for now (the trend glyph is most
-            // useful on a single-sensor reading anyway). History is
-            // intentionally empty here.
-            if value == "all" {
-                return MenuBarSlotState(
-                    value: averageTemp(),
-                    sourceCategory: nil, headroom: nil, history: []
-                )
-            }
-            if let cat = SensorCategory(rawValue: value) {
-                return MenuBarSlotState(
-                    value: averageTemp(in: cat) ?? averageTemp(),
-                    sourceCategory: cat,
-                    headroom: headroom(value: averageTemp(in: cat), category: cat),
-                    history: []
-                )
-            }
-            return .empty
-        case "individual":
-            if let s = enabledSensors.first(where: { $0.id == value }) {
-                return MenuBarSlotState(
-                    value: s.currentValue,
-                    sourceCategory: s.category,
-                    headroom: headroom(value: s.currentValue, category: s.category),
-                    history: s.history
-                )
-            }
-            return .empty
-        default:
-            return .empty
-        }
+        resolveSlotMetric(.temperature, category: category, value: value)
     }
 
-    /// Distance toward the *hot* threshold for `category`, clamped 0…1.
-    /// 0 = at-or-below the cool/warm boundary, 1 = at-or-above hot.
-    /// Returns nil if value or thresholds are missing. Used by the
-    /// menu-bar headroom strip — gives the user pre-warm visibility
-    /// rather than waiting for the tint to flip.
-    private func headroom(value: Double?, category: SensorCategory) -> Double? {
-        guard let value else { return nil }
-        let t = thresholds.thresholds(for: category)
-        return Self.headroom(value: value, warm: t.warm, hot: t.hot)
-    }
-
-    func temperature(category: String, value: String) -> Double? {
-        switch category {
-        case "highest":
-            if value == "overall" { return enabledSensors.compactMap(\.currentValue).max() }
-            if let cat = SensorCategory(rawValue: value) {
-                return highestTemp(in: cat)
-                    ?? enabledSensors.compactMap(\.currentValue).max()
-            }
-            return nil
-        case "average":
-            if value == "all" { return averageTemp() }
-            if let cat = SensorCategory(rawValue: value) {
-                return averageTemp(in: cat) ?? averageTemp()
-            }
-            return nil
-        case "individual":
-            return enabledSensors.first { $0.id == value }?.currentValue
-        default:
-            return nil
-        }
-    }
-
+    /// External callers (currently HistoryLogger) use this to log per-
+    /// category peaks. Logic stays here rather than moving to the
+    /// resolver because it doesn't relate to slot resolution.
     func highestTemp(in category: SensorCategory) -> Double? {
         enabledSensors
             .filter { $0.category == category }
@@ -611,148 +466,72 @@ final class ThermalStore {
             .max()
     }
 
-    func averageTemp(in category: SensorCategory) -> Double? {
-        let vals = enabledSensors.filter { $0.category == category }.compactMap(\.currentValue)
-        return vals.isEmpty ? nil : vals.reduce(0, +) / Double(vals.count)
-    }
-
-    func averageTemp() -> Double? {
-        let vals = enabledSensors.compactMap(\.currentValue)
-        return vals.isEmpty ? nil : vals.reduce(0, +) / Double(vals.count)
-    }
-
     // MARK: - Manual throttle (menu-bar escape hatch)
+    //
+    // The actual coordination lives in `ManualThrottleCoordinator`
+    // (Services/). The methods on `ThermalStore` are thin pass-throughs
+    // so existing call sites in the UI / URL scheme / Shortcuts layer
+    // didn't need to change when this was extracted in the post-v0.14
+    // refactor. New callers should read `manualThrottle` directly.
 
-    /// Pending auto-release timers for `throttleFrontmost` / `throttleBundle`.
-    /// Keyed by PID (frontmost) or lowercased bundle ID (bundle). On
-    /// re-invocation we cancel the prior task before scheduling a new one
-    /// — without this, two quick clicks create two sleepers and the first
-    /// fires early, clearing the cap the user just renewed. (audit Tier 0
-    /// item 2; Codex VERIFIED).
     /// Snapshot of the frontmost app captured by `MenuBarController`
-    /// just before it opens the popover. Calling `NSWorkspace.shared
-    /// .frontmostApplication` from inside the popover returns Air
-    /// Assist itself (the popover's `makeKey()` activates us), so the
-    /// "Throttle [frontmost]" button can't trust a live query — it
-    /// has to read from this captured value.
-    struct FrontmostSnapshot: Sendable, Equatable {
-        let pid: pid_t
-        let name: String
-    }
+    /// just before it opens the popover. Stored on the store rather
+    /// than on the coordinator because it's a stash, not a piece of
+    /// throttle coordination state — written by the controller, read
+    /// by the popover's "Throttle [frontmost]" button.
     var capturedFrontmost: FrontmostSnapshot?
 
-    private var manualExpiryTasks: [String: Task<Void, Never>] = [:]
-    /// Wall-clock deadlines paired with `manualExpiryTasks`. Surfaced
-    /// to the UI so the popover can show "47m left" next to each
-    /// active manual throttle. `nil`-valued entries (sentinel: very
-    /// large duration treated as "until cleared") render with no
-    /// countdown.
-    private(set) var manualExpiryDeadlines: [String: Date] = [:]
-    private static func manualExpiryKey(pid: pid_t) -> String { "pid:\(pid)" }
-    private static func manualExpiryKey(bundleID: String) -> String { "bundle:\(bundleID.lowercased())" }
+    /// The actual coordinator. Owned by the store so it can wire it
+    /// up with the throttler and snapshot publisher in `init`.
+    private(set) var manualThrottle: ManualThrottleCoordinator!
+
+    /// Wall-clock deadlines for active manual throttles. Forwarded
+    /// from the coordinator for back-compat with UI that read this
+    /// directly off the store. New code should use
+    /// `manualThrottle.manualExpiryDeadlines`.
+    var manualExpiryDeadlines: [String: Date] {
+        manualThrottle.manualExpiryDeadlines
+    }
 
     /// Returns the wall-clock deadline (if any) for a manual throttle
     /// on this PID. UI uses this for the countdown badge.
     func manualThrottleDeadline(pid: pid_t) -> Date? {
-        manualExpiryDeadlines[Self.manualExpiryKey(pid: pid)]
+        manualThrottle.manualThrottleDeadline(pid: pid)
     }
 
     /// Release a manual throttle on this PID and cancel its pending
-    /// auto-release task. Use this from UI instead of calling
-    /// `processThrottler.clearDuty` directly so the deadline tracker
-    /// stays in sync.
+    /// auto-release task.
     func releaseManualThrottle(pid: pid_t) {
-        processThrottler.clearDuty(source: .manual, for: pid)
-        let key = Self.manualExpiryKey(pid: pid)
-        manualExpiryTasks[key]?.cancel()
-        manualExpiryTasks[key] = nil
-        manualExpiryDeadlines[key] = nil
+        manualThrottle.releaseManualThrottle(pid: pid)
     }
 
-    /// Fire-and-forget cap on a specific PID via the `.manual` source. Used
-    /// by the "Throttle frontmost at X%" quick-menu action. Bypasses the
-    /// foreground-duty floor because the whole point is to rein in the app
-    /// the user is currently interacting with. Auto-releases after
-    /// `duration` (default 1h) so the user can't accidentally leave
-    /// something pegged forever. Re-invoking replaces the cap.
+    /// Fire-and-forget cap on a specific PID via the `.manual`
+    /// source. See `ManualThrottleCoordinator.throttleFrontmost(...)`
+    /// for the full contract.
     func throttleFrontmost(pid: pid_t,
                            name: String,
                            duty: Double,
                            duration: TimeInterval = 60 * 60) {
-        guard pid > 0, pid != getpid() else { return }
-        processThrottler.setDuty(duty, for: pid, name: name, source: .manual)
-
-        let key = Self.manualExpiryKey(pid: pid)
-        manualExpiryTasks[key]?.cancel()
-        // Treat very long durations (≥ 30 days) as "until I clear it"
-        // — no deadline shown in the UI countdown.
-        manualExpiryDeadlines[key] = duration < 60 * 60 * 24 * 30
-            ? Date().addingTimeInterval(duration)
-            : nil
-        manualExpiryTasks[key] = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
-            guard !Task.isCancelled, let self else { return }
-            self.processThrottler.clearDuty(source: .manual, for: pid)
-            self.manualExpiryTasks[key] = nil
-            self.manualExpiryDeadlines[key] = nil
-        }
+        manualThrottle.throttleFrontmost(pid: pid, name: name,
+                                         duty: duty, duration: duration)
     }
 
-    /// URL-scheme / Shortcuts entry point: throttle every PID currently
-    /// matching `bundleID` (case-insensitive) via `.manual` duty. Like
-    /// `throttleFrontmost` but identifies the target by bundle instead of
-    /// PID, so it survives the app being killed and re-launched within the
-    /// duration (the next matching snapshot picks it up again).
-    /// Returns the number of PIDs affected.
+    /// URL-scheme / Shortcuts entry point: throttle every PID
+    /// currently matching `bundleID`. Returns the number of PIDs
+    /// affected.
     @discardableResult
     func throttleBundle(bundleID: String,
                         duty: Double,
                         duration: TimeInterval = 60 * 60) -> Int {
-        let target = bundleID.lowercased()
-        let pids = snapshots.latest.filter {
-            ($0.bundleID?.lowercased() == target) && $0.id > 0 && $0.id != getpid()
-        }
-        for p in pids {
-            processThrottler.setDuty(duty, for: p.id, name: p.name, source: .manual)
-        }
-        // Auto-release after the duration. Clear by bundle so we catch PIDs
-        // that were spawned after the initial call too. Cancel any prior
-        // expiry for this bundle so back-to-back invocations don't have an
-        // old sleeper clear the new cap.
-        let key = Self.manualExpiryKey(bundleID: bundleID)
-        manualExpiryTasks[key]?.cancel()
-        manualExpiryDeadlines[key] = duration < 60 * 60 * 24 * 30
-            ? Date().addingTimeInterval(duration)
-            : nil
-        manualExpiryTasks[key] = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
-            guard !Task.isCancelled, let self else { return }
-            self.releaseBundle(bundleID: bundleID)
-            self.manualExpiryTasks[key] = nil
-            self.manualExpiryDeadlines[key] = nil
-        }
-        return pids.count
+        manualThrottle.throttleBundle(bundleID: bundleID,
+                                      duty: duty, duration: duration)
     }
 
     /// Release any manual throttles on processes matching `bundleID`.
-    /// Called explicitly by URL scheme / Shortcuts, and automatically by
-    /// the `throttleBundle` expiry timer. Also cancels any pending expiry
-    /// task so an explicit release isn't followed by a stale auto-release
-    /// firing later for the same bundle.
+    /// Returns the number of PIDs released.
     @discardableResult
     func releaseBundle(bundleID: String) -> Int {
-        let target = bundleID.lowercased()
-        let pids = snapshots.latest
-            .filter { $0.bundleID?.lowercased() == target }
-            .map { $0.id }
-        for pid in pids {
-            processThrottler.clearDuty(source: .manual, for: pid)
-        }
-        let key = Self.manualExpiryKey(bundleID: bundleID)
-        manualExpiryTasks[key]?.cancel()
-        manualExpiryTasks[key] = nil
-        manualExpiryDeadlines[key] = nil
-        return pids.count
+        manualThrottle.releaseBundle(bundleID: bundleID)
     }
 
     // MARK: - Rule management helpers (used by UI)

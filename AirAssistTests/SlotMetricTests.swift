@@ -113,16 +113,19 @@ final class SlotMetricTests: XCTestCase {
 
     // MARK: - CPU thresholds
 
-    @MainActor
     func testCPUThresholdConstants() {
         // Pinned because the dashboard, the menu bar tint, and the
         // Phase 5 Preferences UI will all read these. Bumping
         // either is a UX-visible decision.
-        XCTAssertEqual(ThermalStore.cpuTotalWarmPercent, 60)
-        XCTAssertEqual(ThermalStore.cpuTotalHotPercent,  85)
+        //
+        // Constants moved from ThermalStore to MenuBarSlotResolver in
+        // the post-v0.14 carve-up — they live with the resolution
+        // logic, not with the store's general state.
+        XCTAssertEqual(MenuBarSlotResolver.cpuTotalWarmPercent, 60)
+        XCTAssertEqual(MenuBarSlotResolver.cpuTotalHotPercent,  85)
         XCTAssertGreaterThan(
-            ThermalStore.cpuTotalHotPercent,
-            ThermalStore.cpuTotalWarmPercent,
+            MenuBarSlotResolver.cpuTotalHotPercent,
+            MenuBarSlotResolver.cpuTotalWarmPercent,
             "Hot must be strictly greater than warm or headroom math goes negative"
         )
     }
