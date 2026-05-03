@@ -74,6 +74,8 @@ struct DashboardView: View {
             }
             Divider()
             WeeklySummaryView(store: store)
+            Divider()
+            CPUConsumersView(store: store)
         }
         .frame(minWidth: 760, minHeight: 460)
     }

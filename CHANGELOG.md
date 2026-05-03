@@ -11,6 +11,22 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ### Added
 
+- **"Top CPU consumers — last 7 days" panel on the dashboard.** A
+  new section beneath the weekly throttle summary rolls up which
+  apps were habitually heavy on CPU over the rolling 7-day window:
+  total active time above a 10% activity floor, average CPU during
+  active periods, peak observed. Different signal from the throttle
+  log — captures CPU hogs even when the governor or rules never
+  needed to step in. Each row gets a width-proportional bar tinted
+  by peak CPU% (blue for sustained-mid, orange for high, red for
+  spike) so a 30%-for-hours app reads visually different from a
+  briefly-pegged-200% app.
+- **CPU activity sampling.** A new background task writes to a
+  persistent NDJSON log (`cpu-activity.ndjson` in Application
+  Support) every 60 seconds, capturing the top 10 processes above
+  5% CPU per tick. 7-day pruning on launch keeps the file bounded.
+  Drives the new dashboard panel; future memory / GPU / disk panels
+  can reuse the same shape.
 - **Popover section visibility model.** Internal data layer for
   which sections appear in the menu-bar popover. Defaults match
   current behavior — every section visible — so this changes
