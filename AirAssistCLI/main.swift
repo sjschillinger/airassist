@@ -32,7 +32,7 @@ import Foundation
 
 let bundleID = "com.sjschillinger.airassist"
 let scheme   = "airassist"
-let version  = "0.13.0"
+let version  = "0.14.0"
 
 // Completion script literals are declared up-front because top-level
 // `let` in main.swift initializes in source order; if they lived

@@ -9,6 +9,18 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+## [0.14.0] — 2026-05-02
+
+The visibility release. The popover and the dashboard learn to
+answer "what is my Mac actually doing right now" — top CPU
+processes are surfaced live with one-click throttle / rule / never-
+throttle actions, and a dashboard rollup shows which apps have
+been habitual heavy hitters over the last seven days. Menu bar
+slots can now show CPU usage in addition to temperatures, and the
+popover itself becomes user-customizable: hide whichever sections
+you don't need. Distribution format moves from `.zip` to `.dmg`
+matching what every commercial Mac app ships with.
+
 ### Added
 
 - **Top CPU consumers in Throttling preferences.** New "Top CPU
