@@ -39,9 +39,9 @@ enum SlotMetric: String, CaseIterable, Identifiable {
     /// User-facing label in the Preferences picker.
     var label: String {
         switch self {
-        case .temperature: return "Temperature"
-        case .cpuTotal:    return "CPU usage"
-        case .none:        return "None"
+        case .temperature: return String(localized: "Temperature")
+        case .cpuTotal:    return String(localized: "CPU usage")
+        case .none:        return String(localized: "None")
         }
     }
 
@@ -61,10 +61,10 @@ enum SlotCategory: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .none:       return "None"
-        case .highest:    return "Highest"
-        case .average:    return "Average"
-        case .individual: return "Individual"
+        case .none:       return String(localized: "None")
+        case .highest:    return String(localized: "Highest")
+        case .average:    return String(localized: "Average")
+        case .individual: return String(localized: "Individual")
         }
     }
 

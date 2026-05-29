@@ -13,6 +13,16 @@ struct HistoryView: View {
         case all     = "All"
         var id: String { rawValue }
 
+        var displayName: String {
+            switch self {
+            case .last1h:  return String(localized: "1h")
+            case .last6h:  return String(localized: "6h")
+            case .last24h: return String(localized: "24h")
+            case .last7d:  return String(localized: "7d")
+            case .all:     return String(localized: "All")
+            }
+        }
+
         var hours: Double? {
             switch self {
             case .last1h:  return 1
@@ -64,7 +74,7 @@ struct HistoryView: View {
     private var toolbar: some View {
         HStack {
             Picker("Range", selection: $range) {
-                ForEach(Range.allCases) { r in Text(r.rawValue).tag(r) }
+                ForEach(Range.allCases) { r in Text(r.displayName).tag(r) }
             }
             .pickerStyle(.segmented)
             .frame(width: 260)

@@ -52,7 +52,7 @@ enum OnboardingWindow {
             styleMask: [.titled, .closable],
             backing: .buffered, defer: false
         )
-        window.title = "Welcome to Air Assist"
+        window.title = String(localized: "Welcome to Air Assist")
         window.contentView = host
         window.isReleasedWhenClosed = false
         window.center()

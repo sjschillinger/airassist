@@ -98,17 +98,17 @@ struct MenuBarPopoverView: View {
     private var pauseMenu: some View {
         Menu {
             if store.isPauseActive {
-                Button("Resume now") { store.resumeThrottling() }
+                Button(String(localized: "Resume now")) { store.resumeThrottling() }
             } else {
-                Section("Pause throttling for") {
-                    Button("15 minutes") { store.pauseThrottling(for: 15 * 60) }
-                    Button("1 hour")     { store.pauseThrottling(for: 60 * 60) }
-                    Button("4 hours")    { store.pauseThrottling(for: 4 * 60 * 60) }
-                    Button("Until quit") { store.pauseThrottling(for: nil) }
+                Section(String(localized: "Pause throttling for")) {
+                    Button(String(localized: "15 minutes")) { store.pauseThrottling(for: 15 * 60) }
+                    Button(String(localized: "1 hour"))     { store.pauseThrottling(for: 60 * 60) }
+                    Button(String(localized: "4 hours"))    { store.pauseThrottling(for: 4 * 60 * 60) }
+                    Button(String(localized: "Until quit")) { store.pauseThrottling(for: nil) }
                 }
                 if GlobalHotkeyService.shared.isEnabled {
                     Divider()
-                    Text("Global hotkey: ⌘⌥P")
+                    Text(String(localized: "Global hotkey: ⌘⌥P"))
                 }
             }
         } label: {
@@ -121,16 +121,20 @@ struct MenuBarPopoverView: View {
         .help(hotkeyTooltip)
         // Label voices state; hint voices the affordance. VoiceOver
         // already announces "menu" via the trait, so we don't say it.
-        .accessibilityLabel(store.isPauseActive ? "Throttling paused" : "Pause throttling")
+        .accessibilityLabel(store.isPauseActive
+                           ? String(localized: "Throttling paused")
+                           : String(localized: "Pause throttling"))
         .accessibilityHint(store.isPauseActive
-                           ? "Activate to resume immediately"
-                           : "Activate to choose a pause duration")
+                           ? String(localized: "Activate to resume immediately")
+                           : String(localized: "Activate to choose a pause duration"))
     }
 
     /// Combined tooltip for the pause menu: state + hotkey when enabled.
     /// Surfaces ⌘⌥P without requiring a Preferences trip (#P0-1).
     private var hotkeyTooltip: String {
-        let state = store.isPauseActive ? "Throttling paused" : "Pause throttling"
+        let state = store.isPauseActive
+            ? String(localized: "Throttling paused")
+            : String(localized: "Pause throttling")
         if GlobalHotkeyService.shared.isEnabled {
             return state + " (⌘⌥P)"
         }
@@ -145,7 +149,7 @@ struct MenuBarPopoverView: View {
             case .booting:
                 VStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text("Reading sensors…")
+                    Text(String(localized: "Reading sensors…"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -154,9 +158,9 @@ struct MenuBarPopoverView: View {
                 VStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle")
                         .foregroundStyle(.orange)
-                    Text("Sensors unavailable")
+                    Text(String(localized: "Sensors unavailable"))
                         .font(.caption).bold()
-                    Text("macOS didn't return any thermal sensors. Re-launch Air Assist, and if it persists, check Preferences → Sensors for details.")
+                    Text(String(localized: "macOS didn't return any thermal sensors. Re-launch Air Assist, and if it persists, check Preferences → Sensors for details."))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -229,16 +233,16 @@ struct MenuBarPopoverView: View {
     private func sourcesDescription(_ sources: Set<ThrottleSource>) -> String {
         let labels = sources.map { src -> String in
             switch src {
-            case .rule:     return "per-app rule"
-            case .governor: return "system governor"
-            case .manual:   return "manual throttle"
+            case .rule:     return String(localized: "per-app rule")
+            case .governor: return String(localized: "system governor")
+            case .manual:   return String(localized: "manual throttle")
             }
         }
         .sorted()
-        if labels.isEmpty { return "unknown source" }
-        if labels.count == 1 { return "Throttled by \(labels[0])." }
-        return "Throttled by " + labels.prefix(labels.count - 1).joined(separator: ", ")
-            + " and " + labels.last! + "."
+        if labels.isEmpty { return String(localized: "unknown source") }
+        if labels.count == 1 { return String(localized: "Throttled by \(labels[0]).") }
+        return String(localized: "Throttled by ") + labels.prefix(labels.count - 1).joined(separator: ", ")
+            + String(localized: " and ") + labels.last! + "."
     }
 
     private func sourceBadge(_ sources: Set<ThrottleSource>) -> (symbol: String, tint: Color) {
@@ -256,7 +260,7 @@ struct MenuBarPopoverView: View {
         let samples = store.sparklineSamples
         if samples.count >= 4 {
             HStack(spacing: 8) {
-                Text("Last min")
+                Text(String(localized: "Last min"))
                     .font(.caption2).foregroundStyle(.secondary)
                 Sparkline(samples: samples)
                     .frame(height: 18)
@@ -303,7 +307,7 @@ struct MenuBarPopoverView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Image(systemName: "cpu").foregroundStyle(.blue)
-                Text("CPU Activity").font(.caption).bold()
+                Text(String(localized: "CPU Activity")).font(.caption).bold()
                 Spacer()
                 if !rows.isEmpty {
                     Text("\(rows.count)")
@@ -315,7 +319,7 @@ struct MenuBarPopoverView: View {
             if rows.isEmpty {
                 // Friendly empty state — happens when nothing's above
                 // the visibility floor (>1% CPU, not user-managed).
-                Text("Nothing notable. Your Mac is idle.")
+                Text(String(localized: "Nothing notable. Your Mac is idle."))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else {
@@ -364,14 +368,14 @@ struct MenuBarPopoverView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(p.displayName), \(Int(p.cpuPercent.rounded())) percent CPU")
-        .accessibilityHint("Right click for throttle and rule options")
+        .accessibilityHint(String(localized: "Right click for throttle and rule options"))
         .contextMenu {
             // Default duty matches the existing frontmost-throttle
             // user preference so this menu and the popover's
             // "Throttle [frontmost]" button behave the same way for
             // the same user. Hardcoded duration of 1h matches the
             // Throttle Frontmost intent default.
-            Button("Throttle now (\(Int(frontmostDuty * 100))% for 1 hour)") {
+            Button(String(localized: "Throttle now (\(Int(frontmostDuty * 100))% for 1 hour)")) {
                 store.throttleFrontmost(
                     pid: p.id,
                     name: p.name,
@@ -379,17 +383,17 @@ struct MenuBarPopoverView: View {
                     duration: 60 * 60
                 )
             }
-            Button("Add throttle rule (\(Int(frontmostDuty * 100))% cap)") {
+            Button(String(localized: "Add throttle rule (\(Int(frontmostDuty * 100))% cap)")) {
                 store.upsertRule(for: p, duty: frontmostDuty)
             }
-            Button("Add \"\(p.name)\" to Never-Throttle list") {
+            Button(String(localized: "Add \"\(p.name)\" to Never-Throttle list")) {
                 NeverThrottleList.add(p.name)
             }
             Divider()
-            Button("Show in Activity Monitor") {
+            Button(String(localized: "Show in Activity Monitor")) {
                 Self.openActivityMonitor()
             }
-            Button("Copy process name") {
+            Button(String(localized: "Copy process name")) {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(p.name, forType: .string)
             }
@@ -441,13 +445,15 @@ struct MenuBarPopoverView: View {
         guard let deadline else { return nil }
         _ = countdownTick
         let secs = Int(deadline.timeIntervalSinceNow.rounded())
-        if secs <= 0 { return "0s" }
-        if secs < 60 { return "\(secs)s left" }
+        if secs <= 0 { return String(localized: "0s") }
+        if secs < 60 { return String(localized: "\(secs)s left") }
         let m = secs / 60
-        if m < 60 { return "\(m)m left" }
+        if m < 60 { return String(localized: "\(m)m left") }
         let h = m / 60
         let rm = m % 60
-        return rm == 0 ? "\(h)h left" : "\(h)h \(rm)m left"
+        return rm == 0
+            ? String(localized: "\(h)h left")
+            : String(localized: "\(h)h \(rm)m left")
     }
 
     @ViewBuilder
@@ -458,10 +464,10 @@ struct MenuBarPopoverView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "hand.point.up.left.fill")
                         .foregroundStyle(.purple)
-                    Text("Quick throttles")
+                    Text(String(localized: "Quick throttles"))
                         .font(.caption).bold()
                     Spacer()
-                    Text("\(rows.count) active")
+                    Text(String(localized: "\(rows.count) active"))
                         .font(.caption2).foregroundStyle(.secondary)
                 }
                 ForEach(rows) { row in
@@ -483,8 +489,8 @@ struct MenuBarPopoverView: View {
                                 .foregroundStyle(.secondary)
                         }
                         .buttonStyle(.plain)
-                        .help("Release this manual throttle now.")
-                        .accessibilityLabel("Release manual throttle for \(row.name)")
+                        .help(String(localized: "Release this manual throttle now."))
+                        .accessibilityLabel(String(localized: "Release manual throttle for \(row.name)"))
                     }
                     .font(.caption2)
                     // Combine the row so VoiceOver reads name + duty + remaining
@@ -493,15 +499,15 @@ struct MenuBarPopoverView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel(manualThrottleA11yLabel(row))
                     .contextMenu {
-                        Button("Show in Activity Monitor") {
+                        Button(String(localized: "Show in Activity Monitor")) {
                             Self.openActivityMonitor()
                         }
-                        Button("Add \"\(row.name)\" to Never-Throttle list") {
+                        Button(String(localized: "Add \"\(row.name)\" to Never-Throttle list")) {
                             NeverThrottleList.add(row.name)
                             store.releaseManualThrottle(pid: row.pid)
                         }
                         Divider()
-                        Button("Copy process name") {
+                        Button(String(localized: "Copy process name")) {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(row.name, forType: .string)
                         }
@@ -525,7 +531,7 @@ struct MenuBarPopoverView: View {
                 Text(governorSummary).font(.caption).bold()
                 Spacer()
                 if totalLive > 0 {
-                    Text("\(totalLive) active")
+                    Text(String(localized: "\(totalLive) active"))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -567,18 +573,18 @@ struct MenuBarPopoverView: View {
                     // or release this app's throttle without opening prefs.
                     .contextMenu {
                         Section(sourcesDescription(row.sources)) {
-                            Button("Set to 85% (light)") { setManualDuty(row: row, duty: 0.85) }
-                            Button("Set to 50%")          { setManualDuty(row: row, duty: 0.50) }
-                            Button("Set to 25% (heavy)")  { setManualDuty(row: row, duty: 0.25) }
+                            Button(String(localized: "Set to 85% (light)")) { setManualDuty(row: row, duty: 0.85) }
+                            Button(String(localized: "Set to 50%"))          { setManualDuty(row: row, duty: 0.50) }
+                            Button(String(localized: "Set to 25% (heavy)"))  { setManualDuty(row: row, duty: 0.25) }
                             Divider()
                             if row.sources.contains(.manual) {
-                                Button("Clear manual throttle") {
+                                Button(String(localized: "Clear manual throttle")) {
                                     for pid in row.pids {
                                         store.processThrottler.clearDuty(source: .manual, for: pid)
                                     }
                                 }
                             }
-                            Button("Release all throttling for this app") {
+                            Button(String(localized: "Release all throttling for this app")) {
                                 for pid in row.pids {
                                     store.processThrottler.release(pid: pid)
                                 }
@@ -587,7 +593,7 @@ struct MenuBarPopoverView: View {
                     }
                 }
                 if rows.count > 3 {
-                    Text("+ \(rows.count - 3) more")
+                    Text(String(localized: "+ \(rows.count - 3) more"))
                         .font(.caption2).foregroundStyle(.secondary)
                 }
             }
@@ -613,27 +619,24 @@ struct MenuBarPopoverView: View {
     private var governorSummary: String {
         if store.isPauseActive {
             if let until = store.pausedUntil, until != .distantFuture {
-                return "Paused · resumes \(relative(to: until))"
+                return String(localized: "Paused · resumes \(relative(to: until))")
             }
-            return "Paused"
+            return String(localized: "Paused")
         }
         if store.governorConfig.isOff && !store.throttleRules.enabled {
-            return "Throttling: Off"
+            return String(localized: "Throttling: Off")
         }
         if store.governor.isTempThrottling || store.governor.isCPUThrottling {
-            return "Governor active"
+            return String(localized: "Governor active")
         }
-        // On-battery-only gate firing on AC — governor is armed but
-        // deliberately silent. Flag it in the summary so the toggle has a
-        // visible effect.
         if store.governorConfig.onBatteryOnly
             && store.governor.reason.hasPrefix("Idle · on AC") {
-            return "Governor idle (on AC)"
+            return String(localized: "Governor idle (on AC)")
         }
         if !store.liveThrottledPIDs.isEmpty {
-            return "Rules active"
+            return String(localized: "Rules active")
         }
-        return "Governor armed"
+        return String(localized: "Governor armed")
     }
 
     /// Secondary line under the summary: the governor's own plain-language
@@ -674,8 +677,8 @@ struct MenuBarPopoverView: View {
         VStack(spacing: 0) {
             // Governor master toggle.
             controlRow(icon: "gauge.with.dots.needle.67percent",
-                       label: "Governor",
-                       help: "Enable or disable the system-wide thermal/CPU governor.") {
+                       label: String(localized: "Governor"),
+                       help: String(localized: "Enable or disable the system-wide thermal/CPU governor.")) {
                 Toggle("", isOn: governorEnabledBinding)
                     .toggleStyle(.switch)
                     .controlSize(.mini)
@@ -684,9 +687,9 @@ struct MenuBarPopoverView: View {
 
             // On-battery-only gate (sub-control of the governor).
             controlRow(icon: "battery.75percent",
-                       label: "Only on battery",
+                       label: String(localized: "Only on battery"),
                        indent: true,
-                       help: "Only act while on battery; armed-but-silent on AC.") {
+                       help: String(localized: "Only act while on battery; armed-but-silent on AC.")) {
                 Toggle("", isOn: Binding(
                     get: { store.governorConfig.onBatteryOnly },
                     set: { store.governorConfig.onBatteryOnly = $0 }
@@ -709,7 +712,7 @@ struct MenuBarPopoverView: View {
                            label: throttleFrontmostLabel,
                            indent: false) {
                     Text(isFrontmostManuallyThrottled
-                         ? "Release"
+                         ? String(localized: "Release")
                          : "\(Int((frontmostDuty * 100).rounded()))%")
                         .font(.callout).monospacedDigit()
                         .foregroundStyle(.secondary)
@@ -723,16 +726,16 @@ struct MenuBarPopoverView: View {
             // Stay Awake quick picker.
             controlRow(icon: store.stayAwake.isActive ? "cup.and.saucer.fill" : "cup.and.saucer",
                        iconTint: store.stayAwake.isActive ? .yellow : nil,
-                       label: "Stay Awake",
-                       help: "Keep the Mac awake — system, display, or with a timeout.") {
+                       label: String(localized: "Stay Awake"),
+                       help: String(localized: "Keep the Mac awake — system, display, or with a timeout.")) {
                 stayAwakeMenu
             }
 
             // Scenario preset — one-click profiles. Bundles governor
             // mode, caps, on-battery flag, and stay-awake mode.
             controlRow(icon: "wand.and.stars",
-                       label: "Scenario",
-                       help: "Apply a one-click preset (Presenting / Lap / Cool / Performance / Auto).") {
+                       label: String(localized: "Scenario"),
+                       help: String(localized: "Apply a one-click preset (Presenting / Lap / Cool / Performance / Auto).")) {
                 scenarioMenu
             }
         }
@@ -750,13 +753,13 @@ struct MenuBarPopoverView: View {
                 .help(preset.tagline)
             }
         } label: {
-            Text("Apply…")
+            Text(String(localized: "Apply…"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
-        .accessibilityLabel("Apply scenario preset")
+        .accessibilityLabel(String(localized: "Apply scenario preset"))
     }
 
     /// Standard row for a control whose trailing widget is a Toggle/Menu.
@@ -846,24 +849,26 @@ struct MenuBarPopoverView: View {
     }
 
     private var throttleFrontmostLabel: String {
-        guard let name = frontmost?.name else { return "Throttle frontmost" }
-        return isFrontmostManuallyThrottled ? "Release \(name)" : "Throttle \(name)"
+        guard let name = frontmost?.name else { return String(localized: "Throttle frontmost") }
+        return isFrontmostManuallyThrottled
+            ? String(localized: "Release \(name)")
+            : String(localized: "Throttle \(name)")
     }
 
     private var throttleFrontmostHelp: String {
         if isFrontmostManuallyThrottled {
-            return "Release the manual cap on this app."
+            return String(localized: "Release the manual cap on this app.")
         }
         let pct = Int((frontmostDuty * 100).rounded())
         let dur: String = {
-            if frontmostDurationMinutes < 0 { return "until you clear it" }
+            if frontmostDurationMinutes < 0 { return String(localized: "until you clear it") }
             if frontmostDurationMinutes >= 60 {
                 let h = frontmostDurationMinutes / 60
-                return "for \(h) hour\(h > 1 ? "s" : "")"
+                return String(localized: "for \(h) hour\(h > 1 ? "s" : "")")
             }
-            return "for \(frontmostDurationMinutes) minutes"
+            return String(localized: "for \(frontmostDurationMinutes) minutes")
         }()
-        return "Cap the frontmost app at \(pct)% \(dur). Adjust in Preferences → Throttling."
+        return String(localized: "Cap the frontmost app at \(pct)% \(dur). Adjust in Preferences → Throttling.")
     }
 
     /// Click handler. Throttles or releases depending on current state.
@@ -899,27 +904,27 @@ struct MenuBarPopoverView: View {
     private var stayAwakeMenu: some View {
         Menu {
             Button(action: { store.setStayAwakeMode(.off) }) {
-                Label("Off", systemImage: store.stayAwake.currentMode == .off ? "checkmark" : "")
+                Label(String(localized: "Off"), systemImage: store.stayAwake.currentMode == .off ? "checkmark" : "")
             }
             Button(action: { store.setStayAwakeMode(.system) }) {
-                Label("Keep system awake (allow display sleep)",
+                Label(String(localized: "Keep system awake (allow display sleep)"),
                       systemImage: store.stayAwake.currentMode == .system ? "checkmark" : "")
             }
             Button(action: { store.setStayAwakeMode(.display) }) {
-                Label("Keep system & display awake",
+                Label(String(localized: "Keep system & display awake"),
                       systemImage: store.stayAwake.currentMode == .display ? "checkmark" : "")
             }
             let mins = stayAwakeTimeoutMinutes
             let timeoutMode = StayAwakeService.Mode.displayThenSystem(minutes: mins)
             Button(action: { store.setStayAwakeMode(timeoutMode) }) {
-                Label("Display on \(mins) min, then system only",
+                Label(String(localized: "Display on \(mins) min, then system only"),
                       systemImage: store.stayAwake.currentMode == timeoutMode ? "checkmark" : "")
             }
             if let remaining = store.stayAwake.displayTimerRemaining, remaining > 0 {
                 Divider()
                 let m = Int(remaining / 60)
                 let s = Int(remaining.truncatingRemainder(dividingBy: 60))
-                Text(String(format: "Display sleeps in %d:%02d", m, s))
+                Text(String(localized: "Display sleeps in \(m):\(String(format: "%02d", s))"))
             }
         } label: {
             Text(stayAwakeShortLabel)
@@ -928,17 +933,17 @@ struct MenuBarPopoverView: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
-        .accessibilityLabel("Stay Awake mode: \(stayAwakeShortLabel)")
+        .accessibilityLabel(String(localized: "Stay Awake mode: \(stayAwakeShortLabel)"))
     }
 
     /// Short one-word-ish label for the menu's collapsed state — full
     /// `menuLabel` is too long for a 260px-wide popover row.
     private var stayAwakeShortLabel: String {
         switch store.stayAwake.currentMode {
-        case .off:                           return "Off"
-        case .system:                        return "System"
-        case .display:                       return "System & display"
-        case .displayThenSystem(let m):      return "\(m) min then system"
+        case .off:                      return String(localized: "Off")
+        case .system:                   return String(localized: "System")
+        case .display:                  return String(localized: "System & display")
+        case .displayThenSystem(let m): return String(localized: "\(m) min then system")
         }
     }
 

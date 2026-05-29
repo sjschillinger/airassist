@@ -7,6 +7,16 @@ enum SensorSortOrder: String, CaseIterable, Identifiable {
     case tempDesc  = "Temp ↓"
     case tempAsc   = "Temp ↑"
     var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .category: return String(localized: "Category")
+        case .nameAsc:  return String(localized: "Name A→Z")
+        case .nameDesc: return String(localized: "Name Z→A")
+        case .tempDesc: return String(localized: "Temp ↓")
+        case .tempAsc:  return String(localized: "Temp ↑")
+        }
+    }
 }
 
 struct DashboardView: View {
@@ -138,9 +148,9 @@ struct DashboardView: View {
 
     private func sourceLabel(_ s: ThrottleSource) -> String {
         switch s {
-        case .governor: return "Governor"
-        case .rule:     return "Rule"
-        case .manual:   return "Manual"
+        case .governor: return String(localized: "Governor")
+        case .rule:     return String(localized: "Rule")
+        case .manual:   return String(localized: "Manual")
         }
     }
 
@@ -241,7 +251,9 @@ struct DashboardView: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(p.displayName), \(Int(p.cpuPercent)) percent CPU\(throttled ? ", currently throttled" : "")")
+        .accessibilityLabel(throttled
+            ? String(localized: "\(p.displayName), \(Int(p.cpuPercent)) percent CPU, currently throttled")
+            : String(localized: "\(p.displayName), \(Int(p.cpuPercent)) percent CPU"))
     }
 
     // CPU% color tier — see `CPUTint` for the palette + rationale.
@@ -256,26 +268,26 @@ struct DashboardView: View {
         HStack(spacing: 10) {
             summaryChip(
                 icon: "thermometer.medium",
-                label: "Hottest",
+                label: String(localized: "Hottest"),
                 value: hottestSummaryValue,
                 tint: hottestSummaryTint
             )
             summaryChip(
                 icon: "cpu",
-                label: "Total CPU",
+                label: String(localized: "Total CPU"),
                 value: formattedTotalCPU,
                 tint: .blue
             )
             summaryChip(
                 icon: governorChipIcon,
-                label: "Governor",
+                label: String(localized: "Governor"),
                 value: governorChipLabel,
                 tint: governorChipTint
             )
             if !store.liveThrottledPIDs.isEmpty {
                 summaryChip(
                     icon: "tortoise.fill",
-                    label: "Throttling",
+                    label: String(localized: "Throttling"),
                     value: "\(store.liveThrottledPIDs.count)",
                     tint: .orange
                 )
@@ -297,7 +309,7 @@ struct DashboardView: View {
         .padding(.horizontal, 10).padding(.vertical, 6)
         .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(value)")
+        .accessibilityLabel(String(localized: "\(label): \(value)"))
     }
 
     private var hottestSummaryValue: String {
@@ -330,10 +342,10 @@ struct DashboardView: View {
     }
 
     private var governorChipLabel: String {
-        if store.isPauseActive                        { return "Paused" }
-        if store.governorConfig.isOff                 { return "Off" }
-        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return "Active" }
-        return "Armed"
+        if store.isPauseActive                        { return String(localized: "Paused") }
+        if store.governorConfig.isOff                 { return String(localized: "Off") }
+        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return String(localized: "Active") }
+        return String(localized: "Armed")
     }
     private var governorChipTint: Color {
         if store.isPauseActive                        { return .yellow }
@@ -374,7 +386,7 @@ struct DashboardView: View {
                 set: { sortRaw = $0.rawValue }
             )) {
                 ForEach(SensorSortOrder.allCases) { order in
-                    Text(order.rawValue).tag(order)
+                    Text(order.displayName).tag(order)
                 }
             }
             .frame(width: 140)
@@ -418,7 +430,7 @@ struct DashboardView: View {
                 }
                 .font(.caption)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(item.name), PID \(item.pid), capped at \(Int((item.duty * 100).rounded())) percent")
+                .accessibilityLabel(String(localized: "\(item.name), PID \(item.pid), capped at \(Int((item.duty * 100).rounded())) percent"))
             }
         }
         .padding(.horizontal, 16)

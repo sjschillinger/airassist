@@ -28,6 +28,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             exit(0)
         }
 
+        // Apply the user's language preference before the UI loads so
+        // .xcstrings picks up the correct locale from the start.
+        AppStrings.AppLanguage.applyOnLaunch()
+
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate
@@ -138,14 +142,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Quit Air Assist?"
-        alert.informativeText = """
+        alert.messageText = String(localized: "Quit Air Assist?")
+        alert.informativeText = String(localized: """
         Air Assist is currently throttling \(store.liveThrottledPIDs.count) \
         process(es). Quitting will release them — they'll run at full speed \
         again until you relaunch the app.
-        """
-        alert.addButton(withTitle: "Quit")
-        let cancelButton = alert.addButton(withTitle: "Cancel")
+        """)
+        alert.addButton(withTitle: String(localized: "Quit"))
+        let cancelButton = alert.addButton(withTitle: String(localized: "Cancel"))
         // ESC cancels — standard macOS convention. Without this the only way
         // out of the confirm is clicking Cancel, which breaks keyboard users
         // (and the tired muscle memory of everyone else).
@@ -188,24 +192,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 // A newer release exists — hand the user the release page
                 // rather than trying to install over a running ad-hoc app.
                 let alert = NSAlert()
-                alert.messageText = "Air Assist \(newer) is available"
-                alert.informativeText = """
+                alert.messageText = String(localized: "Air Assist \(newer) is available")
+                alert.informativeText = String(localized: """
                 You're running \(UpdateCheckService.currentVersion). \
                 Open the release page to download and install.
 
                 Homebrew users can instead run:
                     brew upgrade --cask airassist
-                """
-                alert.addButton(withTitle: "Open Release Page")
-                alert.addButton(withTitle: "Later")
+                """)
+                alert.addButton(withTitle: String(localized: "Open Release Page"))
+                alert.addButton(withTitle: String(localized: "Later"))
                 if alert.runModal() == .alertFirstButtonReturn {
                     UpdateCheckService.shared.openReleasePage()
                 }
             } else {
                 let alert = NSAlert()
-                alert.messageText = "Air Assist is up to date"
-                alert.informativeText = "You're running \(UpdateCheckService.currentVersion), the latest release."
-                alert.addButton(withTitle: "OK")
+                alert.messageText = String(localized: "Air Assist is up to date")
+                alert.informativeText = String(localized: "You're running \(UpdateCheckService.currentVersion), the latest release.")
+                alert.addButton(withTitle: String(localized: "OK"))
                 alert.runModal()
             }
         }

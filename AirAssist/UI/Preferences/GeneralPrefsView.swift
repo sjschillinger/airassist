@@ -6,6 +6,7 @@ struct GeneralPrefsView: View {
 
     @AppStorage("showDockIcon")    private var showDockIcon: Bool   = false
     @AppStorage("updateInterval")  private var updateInterval: Double = 1.0
+    @AppStorage("appLanguage")     private var appLanguage: String = AppStrings.AppLanguage.current.rawValue
 
     // Stay Awake — stored as two halves so UserDefaults stays forward-
     // compatible if we add more mode variants. `stayAwake.mode` is the
@@ -35,17 +36,17 @@ struct GeneralPrefsView: View {
 
     var body: some View {
         Form {
-            Section("Startup") {
+            Section(String(localized: "Startup")) {
                 PrefRow(
                     AppStrings.Preferences.launchAtLogin,
-                    info: "Registers Air Assist as a macOS login item via SMAppService. The app must be in /Applications (or ~/Applications) for this to work — DerivedData builds will fail. If macOS asks for approval, we'll open the Login Items pane in System Settings."
+                    info: String(localized: "Registers Air Assist as a macOS login item via SMAppService. The app must be in /Applications (or ~/Applications) for this to work — DerivedData builds will fail. If macOS asks for approval, we'll open the Login Items pane in System Settings.")
                 ) {
                     Toggle("", isOn: launchAtLoginBinding)
                         .labelsHidden()
                 }
                 PrefRow(
                     AppStrings.Preferences.showDockIcon,
-                    info: "Air Assist normally lives only in the menu bar (LSUIElement). Turn this on to also show a Dock icon — useful if you prefer ⌘-Tab access or want the standard window-management affordances."
+                    info: String(localized: "Air Assist normally lives only in the menu bar (LSUIElement). Turn this on to also show a Dock icon — useful if you prefer ⌘-Tab access or want the standard window-management affordances.")
                 ) {
                     Toggle("", isOn: $showDockIcon)
                         .labelsHidden()
@@ -55,37 +56,63 @@ struct GeneralPrefsView: View {
                 }
             }
 
-            Section("Throttling") {
+            Section(String(localized: "Language")) {
+                LabeledContent(String(localized: "App language")) {
+                    Picker("", selection: $appLanguage) {
+                        ForEach(AppStrings.AppLanguage.allCases) { lang in
+                            Text(lang.label).tag(lang.rawValue)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 130)
+                    .onChange(of: appLanguage) { _, newValue in
+                        guard let lang = AppStrings.AppLanguage(rawValue: newValue) else { return }
+                        lang.activate()
+                        let alert = NSAlert()
+                        alert.messageText = String(localized: "Language Changed")
+                        alert.informativeText = String(localized: "Please restart Air Assist for the language change to take effect.")
+                        alert.addButton(withTitle: String(localized: "Restart Now"))
+                        alert.addButton(withTitle: String(localized: "Later"))
+                        if alert.runModal() == .alertFirstButtonReturn {
+                            NSApp.terminate(nil)
+                        }
+                    }
+                }
+                Text(String(localized: "Restart the app for the language change to take full effect."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
+            Section(String(localized: "Throttling")) {
                 if store.isPauseActive {
-                    LabeledContent("Status") {
+                    LabeledContent(String(localized: "Status")) {
                         HStack(spacing: 6) {
-                            Text("Paused").foregroundStyle(.yellow)
+                            Text(String(localized: "Paused")).foregroundStyle(.yellow)
                             if let until = store.pausedUntil, until != .distantFuture {
                                 Text("· resumes \(until, style: .relative) from now")
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                         }
                     }
-                    Button("Resume now") { store.resumeThrottling() }
+                    Button(String(localized: "Resume now")) { store.resumeThrottling() }
                 } else {
-                    LabeledContent("Pause for") {
+                    LabeledContent(String(localized: "Pause for")) {
                         HStack(spacing: 6) {
-                            Button("15 minutes")     { store.pauseThrottling(for: 15 * 60) }
-                                .help("Release every throttled PID and hold off for 15 minutes. Governor and rules resume automatically when the timer expires.")
-                            Button("1 hour")         { store.pauseThrottling(for: 60 * 60) }
-                            Button("4 hours")        { store.pauseThrottling(for: 4 * 60 * 60) }
-                            Button("Until quit")     { store.pauseThrottling(for: nil) }
-                                .help("Pause indefinitely — until you click Resume, or relaunch the app.")
+                            Button(String(localized: "15 minutes"))     { store.pauseThrottling(for: 15 * 60) }
+                                .help(String(localized: "Release every throttled PID and hold off for 15 minutes. Governor and rules resume automatically when the timer expires."))
+                            Button(String(localized: "1 hour"))         { store.pauseThrottling(for: 60 * 60) }
+                            Button(String(localized: "4 hours"))        { store.pauseThrottling(for: 4 * 60 * 60) }
+                            Button(String(localized: "Until quit"))     { store.pauseThrottling(for: nil) }
+                                .help(String(localized: "Pause indefinitely — until you click Resume, or relaunch the app."))
                         }
                         .controlSize(.small)
                     }
-                    Text("Temporarily stop both the governor and per-app rules. Useful for gaming or rendering sessions.")
+                    Text(String(localized: "Temporarily stop both the governor and per-app rules. Useful for gaming or rendering sessions."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
 
                 PrefRow(
-                    "Global hotkey ⌘⌥P",
-                    info: "Toggle pause/resume from any app, even when Air Assist isn't focused. Built on Carbon's RegisterEventHotKey — no Accessibility permission required, and the shortcut is reserved system-wide so it works inside full-screen apps and games."
+                    String(localized: "Global hotkey ⌘⌥P"),
+                    info: String(localized: "Toggle pause/resume from any app, even when Air Assist isn't focused. Built on Carbon's RegisterEventHotKey — no Accessibility permission required, and the shortcut is reserved system-wide so it works inside full-screen apps and games.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { hotkeyEnabled },
@@ -97,14 +124,14 @@ struct GeneralPrefsView: View {
                     .labelsHidden()
                     .accessibilityLabel("Enable global pause hotkey Command Option P")
                 }
-                Text("Toggle pause/resume from any app. Carbon-based — no Accessibility permission required.")
+                Text(String(localized: "Toggle pause/resume from any app. Carbon-based — no Accessibility permission required."))
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Section("Battery-aware thresholds") {
+            Section(String(localized: "Battery-aware thresholds")) {
                 PrefRow(
-                    "Enabled",
-                    info: "Swap your sensor warm/hot color thresholds based on power source. AC stays cooler-feeling (you'd unplug if it got hot); battery stays useful longer (don't trip warnings on every modest workload). Governor caps and per-app rules are not affected."
+                    String(localized: "Enabled"),
+                    info: String(localized: "Swap your sensor warm/hot color thresholds based on power source. AC stays cooler-feeling (you'd unplug if it got hot); battery stays useful longer (don't trip warnings on every modest workload). Governor caps and per-app rules are not affected.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { batteryAwareEnabled },
@@ -117,7 +144,7 @@ struct GeneralPrefsView: View {
                     .accessibilityLabel("Enable battery-aware threshold swapping")
                 }
                 if batteryAwareEnabled {
-                    LabeledContent("On battery") {
+                    LabeledContent(String(localized: "On battery")) {
                         Picker("", selection: Binding(
                             get: { batteryAwareOnBattery },
                             set: { p in
@@ -133,7 +160,7 @@ struct GeneralPrefsView: View {
                         .frame(width: 180)
                         .accessibilityLabel("Threshold preset while on battery")
                     }
-                    LabeledContent("On AC") {
+                    LabeledContent(String(localized: "On AC")) {
                         Picker("", selection: Binding(
                             get: { batteryAwareOnPowered },
                             set: { p in
@@ -150,20 +177,20 @@ struct GeneralPrefsView: View {
                         .accessibilityLabel("Threshold preset while on AC power")
                     }
                 }
-                Text("Swaps your sensor thresholds based on power source. Only the warm/hot color bands change — governor caps and per-app rules are untouched.")
+                Text(String(localized: "Swaps your sensor thresholds based on power source. Only the warm/hot color bands change — governor caps and per-app rules are untouched."))
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Section("Stay Awake") {
-                LabeledContent("Mode") {
+            Section(String(localized: "Stay Awake")) {
+                LabeledContent(String(localized: "Mode")) {
                     Picker("", selection: stayAwakeModeBinding) {
-                        Text("Off").tag(StayAwakeMode.off)
-                        Text("Keep system awake").tag(StayAwakeMode.system)
-                            .help("Prevents idle sleep. Display follows its normal schedule. Equivalent to caffeinate -i.")
-                        Text("Keep system & display awake").tag(StayAwakeMode.display)
-                            .help("Prevents both system and display sleep. Equivalent to caffeinate -id.")
-                        Text("Display on, then system only").tag(StayAwakeMode.displayThenSystem)
-                            .help("Holds the display awake for the configured minutes, then lets it sleep while the system itself stays up for background work.")
+                        Text(String(localized: "Off")).tag(StayAwakeMode.off)
+                        Text(String(localized: "Keep system awake")).tag(StayAwakeMode.system)
+                            .help(String(localized: "Prevents idle sleep. Display follows its normal schedule. Equivalent to caffeinate -i."))
+                        Text(String(localized: "Keep system & display awake")).tag(StayAwakeMode.display)
+                            .help(String(localized: "Prevents both system and display sleep. Equivalent to caffeinate -id."))
+                        Text(String(localized: "Display on, then system only")).tag(StayAwakeMode.displayThenSystem)
+                            .help(String(localized: "Holds the display awake for the configured minutes, then lets it sleep while the system itself stays up for background work."))
                     }
                     .labelsHidden()
                     .frame(width: 260)
@@ -171,7 +198,7 @@ struct GeneralPrefsView: View {
                 }
 
                 if currentModeTag == .displayThenSystem {
-                    LabeledContent("Turn display off after") {
+                    LabeledContent(String(localized: "Turn display off after")) {
                         HStack(spacing: 6) {
                             Stepper(value: $displayTimeoutMinutes, in: 1...240) {
                                 Text("\(displayTimeoutMinutes) min")
@@ -186,7 +213,7 @@ struct GeneralPrefsView: View {
                         }
                     }
                     if let remaining = store.stayAwake.displayTimerRemaining, remaining > 0 {
-                        LabeledContent("Display sleeps in") {
+                        LabeledContent(String(localized: "Display sleeps in")) {
                             Text(formatCountdown(remaining))
                                 .font(.system(.body).monospacedDigit())
                                 .foregroundStyle(.secondary)
@@ -195,19 +222,12 @@ struct GeneralPrefsView: View {
                 }
 
                 if currentModeTag != .off {
-                    LabeledContent("When the display sleeps") {
+                    LabeledContent(String(localized: "When the display sleeps")) {
                         Toggle(isOn: releaseOnScreenSleepBinding) {
-                            Text("Release Stay Awake")
+                            Text(String(localized: "Release Stay Awake"))
                         }
                         .toggleStyle(.switch)
-                        .help("When on, Air Assist drops the Stay Awake "
-                              + "assertion whenever the display sleeps — "
-                              + "lid close without an external display, "
-                              + "screen lock, or an idle display-off — "
-                              + "and re-takes it when the display wakes. "
-                              + "Useful if you use Stay Awake for long "
-                              + "unattended jobs but want the machine to "
-                              + "rest while you're not at it.")
+                        .help(String(localized: "When on, Air Assist drops the Stay Awake assertion whenever the display sleeps — lid close without an external display, screen lock, or an idle display-off — and re-takes it when the display wakes. Useful if you use Stay Awake for long unattended jobs but want the machine to rest while you're not at it."))
                     }
                 }
 
@@ -215,10 +235,10 @@ struct GeneralPrefsView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Section("Monitoring") {
+            Section(String(localized: "Monitoring")) {
                 PrefRow(
                     AppStrings.Preferences.updateInterval,
-                    info: "How often Air Assist polls IOKit sensors. 1s gives the most responsive menu bar, 5-10s is gentler on battery. The thermal governor's control loop ticks at this rate too, so longer intervals make throttling decisions slower."
+                    info: String(localized: "How often Air Assist polls IOKit sensors. 1s gives the most responsive menu bar, 5-10s is gentler on battery. The thermal governor's control loop ticks at this rate too, so longer intervals make throttling decisions slower.")
                 ) {
                     Picker("", selection: Binding(
                         get: { updateInterval },
@@ -236,10 +256,10 @@ struct GeneralPrefsView: View {
                 }
             }
 
-            Section("Notifications") {
+            Section(String(localized: "Notifications")) {
                 PrefRow(
-                    "Notify when governor engages",
-                    info: "Posts a system notification the first time the governor breaches a temperature or CPU cap after a quiet period. Rate-limited so a single sustained workload posts once, not dozens of times. macOS will ask for notification permission the first time you turn this on."
+                    String(localized: "Notify when governor engages"),
+                    info: String(localized: "Posts a system notification the first time the governor breaches a temperature or CPU cap after a quiet period. Rate-limited so a single sustained workload posts once, not dozens of times. macOS will ask for notification permission the first time you turn this on.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { UserDefaults.standard.bool(forKey: "notifications.governor") },
@@ -253,15 +273,15 @@ struct GeneralPrefsView: View {
                     .labelsHidden()
                     .accessibilityLabel("Show a system notification when the thermal governor first engages")
                 }
-                Text("Posts a system notification the first time the governor breaches a cap after a quiet period. Useful when Air Assist is hidden and you want to know the OS is being throttled. macOS asks for permission the first time you turn this on.")
+                Text(String(localized: "Posts a system notification the first time the governor breaches a cap after a quiet period. Useful when Air Assist is hidden and you want to know the OS is being throttled. macOS asks for permission the first time you turn this on."))
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            Section("Updates") {
+            Section(String(localized: "Updates")) {
                 PrefRow(
-                    "Check automatically",
-                    info: "Once a day, Air Assist asks api.github.com for the latest release tag. No telemetry, no user data — just the version number. Off by default for users who prefer to control when network calls happen."
+                    String(localized: "Check automatically"),
+                    info: String(localized: "Once a day, Air Assist asks api.github.com for the latest release tag. No telemetry, no user data — just the version number. Off by default for users who prefer to control when network calls happen.")
                 ) {
                     Toggle("", isOn: Binding(
                         get: { UpdateCheckService.shared.automaticChecksEnabled },
@@ -270,11 +290,11 @@ struct GeneralPrefsView: View {
                     .labelsHidden()
                     .accessibilityLabel("Check for updates automatically every day")
                 }
-                LabeledContent("Status") {
+                LabeledContent(String(localized: "Status")) {
                     HStack(spacing: 8) {
                         if let v = UpdateCheckService.shared.latestVersion {
                             Text("Version \(v) available").foregroundStyle(.orange)
-                            Button("Open Release Page") {
+                            Button(String(localized: "Open Release Page")) {
                                 UpdateCheckService.shared.openReleasePage()
                             }
                             .controlSize(.small)
@@ -282,9 +302,9 @@ struct GeneralPrefsView: View {
                             Text("Up to date — last checked \(last, style: .relative) ago")
                                 .font(.caption).foregroundStyle(.secondary)
                         } else {
-                            Text("Never checked").font(.caption).foregroundStyle(.secondary)
+                            Text(String(localized: "Never checked")).font(.caption).foregroundStyle(.secondary)
                         }
-                        Button("Check Now") {
+                        Button(String(localized: "Check Now")) {
                             Task { @MainActor in
                                 await UpdateCheckService.shared.checkNow()
                             }
@@ -293,17 +313,17 @@ struct GeneralPrefsView: View {
                         .disabled(UpdateCheckService.shared.isChecking)
                     }
                 }
-                Text("One daily request to api.github.com to see if a newer release exists. No telemetry, no personal data — just the version tag. Turning this off leaves the \"Check for Updates…\" menu item working for manual checks.")
+                Text(String(localized: "One daily request to api.github.com to see if a newer release exists. No telemetry, no personal data — just the version tag. Turning this off leaves the \"Check for Updates…\" menu item working for manual checks."))
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Section("Support") {
-                LabeledContent("Diagnostics") {
-                    Button("Export Diagnostic Bundle…") {
+            Section(String(localized: "Support")) {
+                LabeledContent(String(localized: "Diagnostics")) {
+                    Button(String(localized: "Export Diagnostic Bundle…")) {
                         DiagnosticBundle.exportInteractively(store: store)
                     }
                 }
-                Text("Bundles your current configuration, live throttle state, and recent thermal history into a single .zip you can attach to a GitHub issue. Nothing is uploaded — the file is saved locally.")
+                Text(String(localized: "Bundles your current configuration, live throttle state, and recent thermal history into a single .zip you can attach to a GitHub issue. Nothing is uploaded — the file is saved locally."))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -363,21 +383,16 @@ struct GeneralPrefsView: View {
         let base: String
         switch currentModeTag {
         case .off:
-            return "The Mac follows its normal Energy Saver settings."
+            base = String(localized: "The Mac follows its normal Energy Saver settings.")
         case .system:
-            base = "Prevents idle sleep. The display can still turn off on its normal schedule — useful for downloads, renders, or long builds."
+            base = String(localized: "Prevents idle sleep. The display can still turn off on its normal schedule — useful for downloads, renders, or long builds.")
         case .display:
-            base = "Prevents both system and display sleep. Think of it as caffeinate with the screen locked on."
+            base = String(localized: "Prevents both system and display sleep. Think of it as caffeinate with the screen locked on.")
         case .displayThenSystem:
-            base = "The screen stays on for the configured minutes, then sleeps while background work continues. Great for presentations or long reads that eventually need to go idle."
+            base = String(localized: "The screen stays on for the configured minutes, then sleeps while background work continues. Great for presentations or long reads that eventually need to go idle.")
         }
-        // Clamshell caveat. Apple Silicon portables without an external
-        // display go to sleep on lid-close regardless of which assertion
-        // we hold — PreventUserIdle{System,Display}Sleep blocks idle-
-        // initiated sleep, not clamshell-initiated sleep. We empirically
-        // verified this on 2026-04-19 (#37 runbook). Surface it so users
-        // don't expect "Stay Awake" to keep a closed-lid Air running.
-        return base + " Note: closing the lid still sleeps the Mac unless an external display is connected — that's a macOS-level rule Stay Awake can't override."
+        let note = String(localized: "Note: closing the lid still sleeps the Mac unless an external display is connected — that's a macOS-level rule Stay Awake can't override.")
+        return base + " " + note
     }
 
     private func formatCountdown(_ seconds: TimeInterval) -> String {

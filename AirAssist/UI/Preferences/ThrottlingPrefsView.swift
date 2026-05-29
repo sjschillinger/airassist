@@ -75,7 +75,7 @@ private struct GovernorSection: View {
             HStack {
                 Image(systemName: "gauge.with.dots.needle.67percent")
                 Text("Automatic governor").font(.headline)
-                InfoButton(text: "The governor watches sensors and total CPU% on a 1-second control loop. When a cap is breached, it picks the top N CPU processes (excluding ones covered by per-app rules and the never-throttle list) and applies a duty cycle to bring the readings back below cap minus hysteresis. It releases automatically when temps fall.")
+                InfoButton(text: String(localized: "The governor watches sensors and total CPU% on a 1-second control loop. When a cap is breached, it picks the top N CPU processes (excluding ones covered by per-app rules and the never-throttle list) and applies a duty cycle to bring the readings back below cap minus hysteresis. It releases automatically when temps fall."))
                 Spacer()
                 statusChip
             }
@@ -168,10 +168,10 @@ private struct GovernorSection: View {
         let isActive = store.governor.isTempThrottling || store.governor.isCPUThrottling
         let text: String
         let color: Color
-        if store.isPauseActive      { text = "Paused"; color = .yellow }
-        else if store.governorConfig.isOff { text = "Off"; color = .secondary }
-        else if isActive            { text = "Throttling"; color = .orange }
-        else                        { text = "Armed"; color = .green }
+        if store.isPauseActive      { text = String(localized: "Paused"); color = .yellow }
+        else if store.governorConfig.isOff { text = String(localized: "Off"); color = .secondary }
+        else if isActive            { text = String(localized: "Throttling"); color = .orange }
+        else                        { text = String(localized: "Armed"); color = .green }
         return Text(text)
             .font(.caption.weight(.semibold))
             .padding(.horizontal, 8).padding(.vertical, 3)
@@ -412,21 +412,12 @@ private struct FrontmostThrottleSection: View {
     @AppStorage("throttleFrontmost.duty") private var duty: Double = 0.30
     @AppStorage("throttleFrontmost.durationMinutes") private var durationMinutes: Int = 60
 
-    /// Allowed durations. -1 sentinel = "until I clear it" (no
-    /// auto-release). Same convention as the right-click pause submenu.
-    private let durationOptions: [(label: String, minutes: Int)] = [
-        ("15 minutes",      15),
-        ("1 hour",          60),
-        ("4 hours",         4 * 60),
-        ("Until I clear it", -1),
-    ]
-
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 4) {
                 Text("Frontmost-app quick throttle")
                     .font(.headline)
-                InfoButton(text: "Manual override for the popover's \"Throttle [app]\" button. Hits whatever app is currently in the front (Safari, Xcode, whatever you can see), with a fixed duty and duration you set here. Useful for one-off cooling without writing a permanent rule.")
+                InfoButton(text: String(localized: "Manual override for the popover's \"Throttle [app]\" button. Hits whatever app is currently in the front (Safari, Xcode, whatever you can see), with a fixed duty and duration you set here. Useful for one-off cooling without writing a permanent rule."))
             }
             Text("Settings for the popover’s “Throttle [app]” button. The cap auto-releases after the chosen duration, or you can click the button again to release immediately.")
                 .font(.caption).foregroundStyle(.secondary)
@@ -446,9 +437,10 @@ private struct FrontmostThrottleSection: View {
 
                 LabeledContent("Duration") {
                     Picker("", selection: $durationMinutes) {
-                        ForEach(durationOptions, id: \.minutes) { opt in
-                            Text(opt.label).tag(opt.minutes)
-                        }
+                        Text(String(localized: "15 minutes")).tag(15)
+                        Text(String(localized: "1 hour")).tag(60)
+                        Text(String(localized: "4 hours")).tag(240)
+                        Text(String(localized: "Until I clear it")).tag(-1)
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
@@ -498,7 +490,7 @@ private struct TopCPUConsumersSection: View {
             HStack(spacing: 6) {
                 Image(systemName: "cpu").foregroundStyle(.blue)
                 Text("Top CPU consumers").font(.headline)
-                InfoButton(text: "Live list of the top processes by CPU usage right now. Click any one to instantly cap it at your default throttle duty (configured in Frontmost-app quick throttle above). Apps already covered by a rule show their current cap; protected apps show as such.")
+                InfoButton(text: String(localized: "Live list of the top processes by CPU usage right now. Click any one to instantly cap it at your default throttle duty (configured in Frontmost-app quick throttle above). Apps already covered by a rule show their current cap; protected apps show as such."))
                 Spacer()
                 if !rows.isEmpty {
                     Text("Updates every second")
@@ -634,14 +626,15 @@ private struct TopCPUConsumersSection: View {
     private func accessibilityLabel(for p: RunningProcess,
                                     existingRule: ThrottleRule?,
                                     isProtected: Bool) -> String {
-        let cpu = "\(Int(p.cpuPercent.rounded())) percent CPU"
+        let cpuPercent = Int(p.cpuPercent.rounded())
         if isProtected {
-            return "\(p.displayName), \(cpu), protected by Never-Throttle list"
+            return String(localized: "\(p.displayName), \(cpuPercent) percent CPU, protected by Never-Throttle list")
         }
         if let rule = existingRule {
-            return "\(p.displayName), \(cpu), currently capped at \(Int((rule.duty * 100).rounded())) percent"
+            let capped = Int((rule.duty * 100).rounded())
+            return String(localized: "\(p.displayName), \(cpuPercent) percent CPU, currently capped at \(capped) percent")
         }
-        return "\(p.displayName), \(cpu). Click Cap to add a throttle rule."
+        return String(localized: "\(p.displayName), \(cpuPercent) percent CPU. Click Cap to add a throttle rule.")
     }
 
     // CPU% color tier — see `CPUTint` for the palette + rationale.
@@ -673,7 +666,7 @@ private struct RulesSection: View {
             HStack {
                 Image(systemName: "tortoise")
                 Text("Per-app rules").font(.headline)
-                InfoButton(text: "Persistent caps on specific apps regardless of temperature. The governor leaves rule-covered PIDs alone (no double-throttling). Rules engage whenever a matching process spends sustained time above 5% CPU, and release automatically when the app idles. Re-applies on relaunch — survives quit/reopen of either app.")
+                InfoButton(text: String(localized: "Persistent caps on specific apps regardless of temperature. The governor leaves rule-covered PIDs alone (no double-throttling). Rules engage whenever a matching process spends sustained time above 5% CPU, and release automatically when the app idles. Re-applies on relaunch — survives quit/reopen of either app."))
                 Spacer()
                 Toggle("Enabled", isOn: Binding(
                     get: { store.throttleRules.enabled },
@@ -896,7 +889,7 @@ private struct AddRuleSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Add Throttle Rule").font(.headline)
-            TextField("Search…", text: $filterText)
+            TextField(String(localized: "Search…"), text: $filterText)
                 .textFieldStyle(.roundedBorder)
             Table(filtered, selection: $selectedPID) {
                 TableColumn("App")     { Text($0.displayName) }
@@ -958,7 +951,7 @@ private struct NeverThrottleSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Never throttle these apps").font(.headline)
-                InfoButton(text: "Hard allowlist. The governor, per-app rules, and even an explicit \"Throttle [app]\" click will all refuse to touch processes whose names match. Use for anything where SIGSTOP would be catastrophic — backup tools, audio I/O, the foreground call you're on right now.")
+                InfoButton(text: String(localized: "Hard allowlist. The governor, per-app rules, and even an explicit \"Throttle [app]\" click will all refuse to touch processes whose names match. Use for anything where SIGSTOP would be catastrophic — backup tools, audio I/O, the foreground call you're on right now."))
                 Spacer()
                 Button {
                     showAddSheet = true
@@ -1049,7 +1042,7 @@ private struct AddNeverThrottleSheet: View {
                 .font(.caption).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            TextField("Search or type a name…", text: $search)
+            TextField(String(localized: "Search or type a name…"), text: $search)
                 .textFieldStyle(.roundedBorder)
 
             ScrollView {

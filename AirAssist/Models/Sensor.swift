@@ -27,8 +27,8 @@ enum SensorDisplayMode: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .detailed: return "Detailed"
-        case .summary:  return "Summary"
+        case .detailed: return String(localized: "Detailed")
+        case .summary:  return String(localized: "Summary")
         }
     }
 }
@@ -94,17 +94,17 @@ enum ThresholdPreset: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .conservative: return "Conservative"
-        case .balanced:     return "Balanced"
-        case .aggressive:   return "Aggressive"
+        case .conservative: return String(localized: "Conservative")
+        case .balanced:     return String(localized: "Balanced")
+        case .aggressive:   return String(localized: "Aggressive")
         }
     }
 
     var tagline: String {
         switch self {
-        case .conservative: return "Warn later — for users who run hot workloads as normal."
-        case .balanced:     return "Sensible defaults — recommended."
-        case .aggressive:   return "Warn earlier — for users who want to stay cool."
+        case .conservative: return String(localized: "Warn later — for users who run hot workloads as normal.")
+        case .balanced:     return String(localized: "Sensible defaults — recommended.")
+        case .aggressive:   return String(localized: "Warn earlier — for users who want to stay cool.")
         }
     }
 
