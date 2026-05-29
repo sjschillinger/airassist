@@ -22,10 +22,12 @@ _inbox/
 screenshots/
 graphify-out/
 .claude/
+.idea/
 
 # Third-party reference binaries kept locally for study.
 # MUST NOT be committed or redistributed.
 References/
+Release/
 
 # Release / signing secrets
 *.p12
