@@ -12,6 +12,10 @@ struct DashboardContainerView: View {
                 .tabItem {
                     Label("Dashboard", systemImage: "gauge.with.dots.needle.67percent")
                 }
+            ActivityMonitorView(store: store)
+                .tabItem {
+                    Label("Activity", systemImage: "cpu")
+                }
             HistoryView()
                 .tabItem {
                     Label("History", systemImage: "chart.xyaxis.line")

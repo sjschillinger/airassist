@@ -82,6 +82,7 @@
 		9E6616158B87A294EEF72BBD /* MetricKitReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C0F9749EA68E67A14CC294E /* MetricKitReporter.swift */; };
 		9FB60D92AFFE49CF0EDD7553 /* AppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F9AD0F27B91B71B0AE7F07 /* AppIntents.swift */; };
 		A1732C96BEA8BA3F243EF577 /* CPUConsumersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C875BB84C9735E4683A3CF /* CPUConsumersView.swift */; };
+		AA01AC01AC01AC01AC010001 /* ActivityMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02FE02FE02FE02FE020002 /* ActivityMonitorView.swift */; };
 		A3E4ECD5E3F45AD7267537C2 /* PrefRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53731461DDE4D068E0AE8ADD /* PrefRow.swift */; };
 		A421ADB89070A8D476A827E9 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4BCFA6DC35F8B8C60EFC9DD /* TemperatureFormatter.swift */; };
 		A5B74A36D44F389797534E71 /* MenuBarIconRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33E14DCBD5EA4C7C5865E92A /* MenuBarIconRenderer.swift */; };
@@ -202,6 +203,7 @@
 		3E970680DFB8E1FEF786AAC6 /* SensorFavorites.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorFavorites.swift; sourceTree = "<group>"; };
 		3EAD7FCA44F3E19EC9BC2BAD /* LaunchAtLoginService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginService.swift; sourceTree = "<group>"; };
 		41C875BB84C9735E4683A3CF /* CPUConsumersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUConsumersView.swift; sourceTree = "<group>"; };
+		BB02FE02FE02FE02FE020002 /* ActivityMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityMonitorView.swift; sourceTree = "<group>"; };
 		43403D677D51F2FAC26B14EA /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		4629A6D06B14E1E69D71A6E0 /* AppIcon-composed.svg */ = {isa = PBXFileReference; path = "AppIcon-composed.svg"; sourceTree = "<group>"; };
 		46E2E83F20C8453A62109CD1 /* MenuBarLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarLayout.swift; sourceTree = "<group>"; };
@@ -447,6 +449,7 @@
 			isa = PBXGroup;
 			children = (
 				41C875BB84C9735E4683A3CF /* CPUConsumersView.swift */,
+				BB02FE02FE02FE02FE020002 /* ActivityMonitorView.swift */,
 				F30853DE6321B67F5A28A895 /* DashboardContainerView.swift */,
 				73665E744DF97F6A87703F65 /* DashboardView.swift */,
 				CA0BC8AB84FF9B6D0145B148 /* DashboardWindowController.swift */,
@@ -927,6 +930,7 @@
 				C7461494F1797F73543AE0AD /* CPUActivitySample.swift in Sources */,
 				58D35FEEA86838CF54D0EA1E /* CPUActivitySummary.swift in Sources */,
 				A1732C96BEA8BA3F243EF577 /* CPUConsumersView.swift in Sources */,
+				AA01AC01AC01AC01AC010001 /* ActivityMonitorView.swift in Sources */,
 				D1318D2B9C3782875AC0B778 /* CPUTint.swift in Sources */,
 				E9F23A842ABC54031BBAE6AB /* Constants.swift in Sources */,
 				EB79F540BA6F71D092CAA211 /* DashboardContainerView.swift in Sources */,
