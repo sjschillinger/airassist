@@ -93,6 +93,35 @@ final class ProcessInspectorPerfTests: XCTestCase {
         }
     }
 
+    // MARK: - CPU% scale: Mach ticks → nanoseconds
+
+    /// Regression for the Apple-Silicon CPU under-reporting bug:
+    /// `proc_taskinfo` CPU times are Mach absolute-time units, not
+    /// nanoseconds. Treating them as ns scaled every process's CPU% down
+    /// by the timebase ratio (125/3 ≈ 41.67 on M-series), so Activity
+    /// Monitor's 10% showed in the app as ~0.2%.
+    func test_machTicksToNanos_appliesAppleSiliconTimebase() {
+        // M-series timebase: 125/3. 3 ticks → 125 ns.
+        XCTAssertEqual(ProcessInspector.machTicksToNanos(3, numer: 125, denom: 3), 125)
+        // A real-world magnitude: 1 core-second of work is 1e9 ns, which
+        // is 1e9 * 3 / 125 = 24_000_000 mach ticks. Converting back must
+        // recover ~1e9 ns (exact here by construction).
+        XCTAssertEqual(ProcessInspector.machTicksToNanos(24_000_000, numer: 125, denom: 3),
+                       1_000_000_000)
+    }
+
+    /// Intel / identity timebase (1:1) must be a no-op — this is why the
+    /// bug stayed latent on Intel Macs.
+    func test_machTicksToNanos_identityTimebaseIsNoOp() {
+        XCTAssertEqual(ProcessInspector.machTicksToNanos(123_456_789, numer: 1, denom: 1),
+                       123_456_789)
+    }
+
+    /// Degenerate denom must not divide-by-zero; fall back to identity.
+    func test_machTicksToNanos_zeroDenomFallsBackToIdentity() {
+        XCTAssertEqual(ProcessInspector.machTicksToNanos(42, numer: 125, denom: 0), 42)
+    }
+
     // MARK: - #50: 1000+ PID stress
 
     /// Hard-ceiling perf test for #50. Spawns ~800 additional `sleep` children

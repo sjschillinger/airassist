@@ -69,6 +69,34 @@ final class ProcessInspector {
 
     private let currentUID: uid_t = getuid()
 
+    /// CPU times from `proc_taskinfo` (`pti_total_user`/`pti_total_system`)
+    /// are in **Mach absolute-time units, not nanoseconds**. On Apple
+    /// Silicon the timebase is 125/3 (~41.67), so treating the raw value as
+    /// nanoseconds under-reported every process's CPU% by that factor —
+    /// Activity Monitor's 10% showed here as ~0.2%. Intel's timebase is 1:1,
+    /// which is why the bug stayed latent. Read once; the timebase is fixed
+    /// for the life of the process.
+    private static let timebase: mach_timebase_info_data_t = {
+        var tb = mach_timebase_info_data_t()
+        mach_timebase_info(&tb)
+        // Guard against a degenerate 0/0 (never seen in practice) so the
+        // conversion is the identity rather than a divide-by-zero.
+        if tb.numer == 0 || tb.denom == 0 { tb.numer = 1; tb.denom = 1 }
+        return tb
+    }()
+
+    private static func machToNanos(_ ticks: UInt64) -> UInt64 {
+        machTicksToNanos(ticks, numer: timebase.numer, denom: timebase.denom)
+    }
+
+    /// Pure, testable Mach-ticks → nanoseconds conversion. Multiply before
+    /// divide to keep integer precision; `UInt64` headroom is ample (years
+    /// of CPU time × 125 stays well under overflow).
+    static func machTicksToNanos(_ ticks: UInt64, numer: UInt32, denom: UInt32) -> UInt64 {
+        guard denom != 0 else { return ticks }
+        return ticks &* UInt64(numer) / UInt64(denom)
+    }
+
     /// Take a fresh snapshot of all processes. CPU% is computed from the
     /// delta of cpuTimeNs between this call and the previous one. For newly
     /// seen processes, cpuPercent is 0 until the next snapshot.
@@ -221,8 +249,8 @@ final class ProcessInspector {
             name: name,
             parentPID: pid_t(bsd.pbi_ppid),
             uid: bsd.pbi_uid,
-            userTime: taskInfo.pti_total_user,
-            sysTime: taskInfo.pti_total_system,
+            userTime: Self.machToNanos(taskInfo.pti_total_user),
+            sysTime: Self.machToNanos(taskInfo.pti_total_system),
             rssBytes: UInt64(taskInfo.pti_resident_size)
         )
     }
