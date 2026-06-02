@@ -30,6 +30,9 @@ struct HistoryView: View {
     @State private var range: Range = .last6h
     @State private var entries: [ThermalEntry] = []
     @State private var refreshTask: Task<Void, Never>?
+    /// Timestamp of the sample currently under the cursor (snapped to the
+    /// nearest logged entry). Drives the hover rule + value readout.
+    @State private var hoverTime: Date?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -134,16 +137,89 @@ struct HistoryView: View {
 
     @ViewBuilder
     private var chart: some View {
-        Chart(points) { p in
-            LineMark(
-                x: .value("Time", p.time),
-                y: .value("Temp", p.value)
-            )
-            .foregroundStyle(by: .value("Category", p.category))
-            .interpolationMethod(.monotone)
+        Chart {
+            ForEach(points) { p in
+                LineMark(
+                    x: .value("Time", p.time),
+                    y: .value("Temp", p.value)
+                )
+                .foregroundStyle(by: .value("Category", p.category))
+                .interpolationMethod(.monotone)
+            }
+            // Hover indicator: a vertical rule at the snapped sample. The
+            // value readout is drawn in the overlay (below) so it can be
+            // clamped inside the plot and never crops at the top edge.
+            if let hoverTime, let entry = entry(nearest: hoverTime) {
+                RuleMark(x: .value("Time", entry.timestamp))
+                    .foregroundStyle(.secondary.opacity(0.5))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+            }
         }
         .chartYAxisLabel(unit == .celsius ? "°C" : "°F")
         .chartLegend(position: .bottom, alignment: .leading)
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                let plot = proxy.plotFrame.map { geo[$0] }
+                Rectangle().fill(.clear).contentShape(Rectangle())
+                    .onContinuousHover { phase in
+                        switch phase {
+                        case .active(let location):
+                            guard let plot else { return }
+                            if let date: Date = proxy.value(atX: location.x - plot.minX) {
+                                hoverTime = date
+                            }
+                        case .ended:
+                            hoverTime = nil
+                        }
+                    }
+                if let hoverTime, let entry = entry(nearest: hoverTime),
+                   let plot, let x = proxy.position(forX: entry.timestamp) {
+                    let cardW: CGFloat = 132
+                    // Keep the card fully inside the plot horizontally, and
+                    // pinned a little below the top edge so it never clips.
+                    let cx = min(max(plot.minX + x, plot.minX + cardW / 2),
+                                 plot.maxX - cardW / 2)
+                    hoverReadout(entry)
+                        .frame(width: cardW)
+                        .position(x: cx, y: plot.minY + 62)
+                        .allowsHitTesting(false)
+                }
+            }
+        }
+    }
+
+    /// Floating readout card listing each category's temperature at the
+    /// hovered sample.
+    private func hoverReadout(_ entry: ThermalEntry) -> some View {
+        let rows: [(String, Double?)] = [
+            ("CPU", entry.cpuMax), ("GPU", entry.gpuMax), ("SoC", entry.socMax),
+            ("Battery", entry.batteryMax), ("Storage", entry.storageMax),
+            ("Other", entry.otherMax)
+        ]
+        return VStack(alignment: .leading, spacing: 2) {
+            Text(entry.timestamp, format: .dateTime.month().day().hour().minute())
+                .font(.caption2).foregroundStyle(.secondary)
+            ForEach(rows.filter { $0.1 != nil }, id: \.0) { name, value in
+                HStack(spacing: 6) {
+                    Text(name).font(.caption2)
+                    Spacer(minLength: 8)
+                    Text("\(Int(convert(value!).rounded()))°\(unit == .celsius ? "C" : "F")")
+                        .font(.caption2.monospacedDigit()).bold()
+                }
+            }
+        }
+        .padding(8)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.secondary.opacity(0.2)))
+        .frame(width: 130)
+    }
+
+    /// Nearest logged entry to a hovered time, so the readout snaps to real
+    /// data points rather than interpolating between them.
+    private func entry(nearest target: Date) -> ThermalEntry? {
+        entries.min {
+            abs($0.timestamp.timeIntervalSince(target)) < abs($1.timestamp.timeIntervalSince(target))
+        }
     }
 
     // MARK: - Data
