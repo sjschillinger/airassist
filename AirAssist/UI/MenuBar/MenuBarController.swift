@@ -45,6 +45,7 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
         self.quickMenu = MenuBarQuickMenu(
             store: store,
             openDashboard:   { [weak self] in self?.openDashboard() },
+            openActivity:    { [weak self] in self?.openActivity() },
             openPreferences: { [weak self] in self?.openPreferences() }
         )
         setupStatusItem()
@@ -467,6 +468,7 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
         let vc = NSHostingController(rootView: MenuBarPopoverView(
             store: store,
             onDashboard:   { [weak self] in self?.openDashboard() },
+            onActivity:    { [weak self] in self?.openActivity() },
             onPreferences: { [weak self] in self?.openPreferences() },
             onQuit:        { NSApp.terminate(nil) }
         ))
@@ -519,6 +521,11 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
     func openDashboard() {
         popover.performClose(nil)
         DashboardWindowController.shared(store: store).show()
+    }
+
+    func openActivity() {
+        popover.performClose(nil)
+        ActivityWindowController.shared(store: store).show()
     }
 
     func openPreferences() {

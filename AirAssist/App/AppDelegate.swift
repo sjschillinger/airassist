@@ -163,6 +163,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         PreferencesWindowController.shared(store: store).show()
     }
 
+    @MainActor
+    @objc func openActivityFromMenu(_ sender: Any?) {
+        guard store != nil else { return }
+        ActivityWindowController.shared(store: store).show()
+    }
+
     /// Action target for "Help → Show Welcome…". Reopens the onboarding
     /// sheet without clearing the seen-version flag, so it behaves like a
     /// revisit rather than re-running the first-launch ceremony.

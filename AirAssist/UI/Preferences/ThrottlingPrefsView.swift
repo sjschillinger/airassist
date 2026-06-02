@@ -9,6 +9,7 @@ struct ThrottlingPrefsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 pauseBanner
+                activityBanner
                 GovernorSection(store: store)
                 Divider()
                 FrontmostThrottleSection()
@@ -21,6 +22,30 @@ struct ThrottlingPrefsView: View {
             }
             .padding(16)
         }
+    }
+
+    /// Points users at the standalone Activity window, where live
+    /// monitoring and direct per-app limit controls live. The settings on
+    /// this pane configure *automatic* throttling; the Activity window is
+    /// for *manually* watching apps and capping them on the spot.
+    private var activityBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "cpu")
+                .font(.title2).foregroundStyle(.blue)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Activity window").font(.subheadline).bold()
+                Text("Watch running apps live and set a per-app CPU limit on any process directly — your limits show up below under Rules. Open it any time from the menu-bar icon, the menu-bar right-click menu, or ⌘⇧A.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            Button("Open Activity") {
+                ActivityWindowController.shared(store: store).show()
+            }
+            .controlSize(.large)
+        }
+        .padding(12)
+        .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
     }
 
     @ViewBuilder

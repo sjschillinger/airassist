@@ -12,13 +12,16 @@ import AppKit
 final class MenuBarQuickMenu: NSObject {
     private weak var store: ThermalStore?
     private let openDashboard: () -> Void
+    private let openActivity: () -> Void
     private let openPreferences: () -> Void
 
     init(store: ThermalStore,
          openDashboard: @escaping () -> Void,
+         openActivity: @escaping () -> Void,
          openPreferences: @escaping () -> Void) {
         self.store = store
         self.openDashboard = openDashboard
+        self.openActivity = openActivity
         self.openPreferences = openPreferences
         super.init()
     }
@@ -49,6 +52,13 @@ final class MenuBarQuickMenu: NSObject {
         dashItem.target = self
         dashItem.keyEquivalentModifierMask = [.command]
         menu.addItem(dashItem)
+
+        let activityItem = NSMenuItem(title: "Open Activity",
+                                      action: #selector(qmActivity),
+                                      keyEquivalent: "a")
+        activityItem.target = self
+        activityItem.keyEquivalentModifierMask = [.command, .shift]
+        menu.addItem(activityItem)
 
         let prefItem = NSMenuItem(title: "Preferences…",
                                   action: #selector(qmPreferences),
@@ -169,6 +179,7 @@ final class MenuBarQuickMenu: NSObject {
     }
 
     @objc private func qmDashboard()    { openDashboard() }
+    @objc private func qmActivity()     { openActivity() }
     @objc private func qmPreferences()  { openPreferences() }
     @objc private func qmResume()       { store?.resumeThrottling() }
     @objc private func qmQuit()         { NSApp.terminate(nil) }

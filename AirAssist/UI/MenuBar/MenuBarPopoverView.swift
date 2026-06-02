@@ -6,6 +6,7 @@ import os
 struct MenuBarPopoverView: View {
     let store: ThermalStore
     var onDashboard: () -> Void    = {}
+    var onActivity: () -> Void     = {}
     var onPreferences: () -> Void  = {}
     var onQuit: () -> Void         = {}
 
@@ -983,6 +984,8 @@ struct MenuBarPopoverView: View {
         VStack(spacing: 0) {
             MenuBarButton(label: AppStrings.MenuBar.dashboard,
                           icon: "gauge.with.dots.needle.33percent") { onDashboard() }
+            MenuBarButton(label: "Activity",
+                          icon: "cpu") { onActivity() }
             MenuBarButton(label: AppStrings.MenuBar.preferences,
                           icon: "gearshape") { onPreferences() }
             Divider()
