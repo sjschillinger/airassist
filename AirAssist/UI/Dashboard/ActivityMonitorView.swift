@@ -95,15 +95,13 @@ struct ActivityMonitorView: View {
         HStack(spacing: 6) {
             Text(row.name).lineLimit(1)
             if row.isProtected {
-                Text("Protected")
-                    .font(.caption2).foregroundStyle(.secondary)
-                    .padding(.horizontal, 5).padding(.vertical, 1)
-                    .background(Color.secondary.opacity(0.15), in: Capsule())
+                badge("Protected", .secondary)
+            } else if let limit = ruleDuty(row) {
+                // Persistent per-app limit (shows even when the app is idle
+                // and not currently being throttled).
+                badge("limit \(Int(limit * 100))%", .purple)
             } else if let duty = row.cappedDuty {
-                Text("capped \(Int(duty * 100))%")
-                    .font(.caption2).foregroundStyle(.purple)
-                    .padding(.horizontal, 5).padding(.vertical, 1)
-                    .background(Color.purple.opacity(0.12), in: Capsule())
+                badge("capped \(Int(duty * 100))%", .purple)
             }
         }
     }
@@ -114,19 +112,30 @@ struct ActivityMonitorView: View {
             if row.isProtected {
                 Text("Protected — never throttled")
             } else {
+                // Persistent, per-app limit via the rule engine — keyed by
+                // bundle ID (or exec name) so it survives relaunch.
                 Menu("Limit CPU to…") {
                     ForEach([10, 25, 50, 75], id: \.self) { pct in
-                        Button("\(pct)%") { cap(row, duty: Double(pct) / 100) }
+                        Button("\(pct)%") { setLimit(row, duty: Double(pct) / 100) }
                     }
                 }
-                if row.cappedDuty != nil {
-                    Button("Release cap") { store.releaseManualThrottle(pid: row.id) }
-                } else {
-                    Button("Pause (suspend)") { cap(row, duty: ProcessThrottler.minDuty) }
+                if hasLimit(row) {
+                    Button("Remove limit") { removeLimit(row) }
                 }
                 Divider()
+                // One-off, this-session suspend (not persisted).
+                if row.cappedDuty != nil {
+                    Button("Resume now") { store.releaseManualThrottle(pid: row.id) }
+                } else {
+                    Button("Pause (suspend now)") {
+                        store.throttleFrontmost(pid: row.id, name: row.name,
+                                                duty: ProcessThrottler.minDuty,
+                                                duration: 60 * 60 * 24 * 365)
+                    }
+                }
                 Button("Never throttle this app") {
                     NeverThrottleList.add(row.name)
+                    removeLimit(row)
                     store.releaseManualThrottle(pid: row.id)
                 }
             }
@@ -144,14 +153,36 @@ struct ActivityMonitorView: View {
 
     // MARK: - Actions
 
-    /// Cap a process via the manual throttle. Long duration so the cap
-    /// reads as "until I release it" in the popover countdown rather than
-    /// silently expiring; Phase B replaces this with true cross-restart
-    /// persistence.
-    private func cap(_ row: ActivityRow, duty: Double) {
-        store.throttleFrontmost(pid: row.id, name: row.name,
-                                duty: duty,
-                                duration: 60 * 60 * 24 * 365)
+    private func badge(_ text: String, _ tint: Color) -> some View {
+        Text(text)
+            .font(.caption2).foregroundStyle(tint)
+            .padding(.horizontal, 5).padding(.vertical, 1)
+            .background(tint.opacity(0.12), in: Capsule())
+    }
+
+    /// Whether a persistent per-app rule already targets this process.
+    private func hasLimit(_ row: ActivityRow) -> Bool {
+        ruleDuty(row) != nil
+    }
+
+    /// The duty of the persistent per-app rule targeting this process, if any.
+    private func ruleDuty(_ row: ActivityRow) -> Double? {
+        let key = ThrottleRule.key(for: row.process)
+        return store.throttleRules.rules.first { $0.id == key }?.duty
+    }
+
+    /// Create or update a persistent per-app limit and make sure the rule
+    /// engine is on so it actually applies. Enabling the engine is the
+    /// intent of setting a limit — an off engine would silently ignore it.
+    private func setLimit(_ row: ActivityRow, duty: Double) {
+        store.upsertRule(for: row.process, duty: duty)
+        if !store.throttleRules.enabled {
+            store.setRulesEngineEnabled(true)
+        }
+    }
+
+    private func removeLimit(_ row: ActivityRow) {
+        store.removeRule(id: ThrottleRule.key(for: row.process))
     }
 
     private func reveal(_ row: ActivityRow) {
@@ -187,7 +218,8 @@ struct ActivityMonitorView: View {
                     rssBytes: p.rssBytes,
                     executablePath: p.executablePath,
                     isProtected: ProcessInspector.isProtected(p.name),
-                    cappedDuty: capped[p.id]
+                    cappedDuty: capped[p.id],
+                    process: p
                 )
             }
             .sorted(using: sortOrder)
@@ -222,4 +254,7 @@ struct ActivityRow: Identifiable {
     let isProtected: Bool
     /// Current applied duty if this PID is throttled, else nil.
     let cappedDuty: Double?
+    /// The underlying snapshot record, used to build/look up a persistent
+    /// per-app rule (keyed by bundle ID or exec name).
+    let process: RunningProcess
 }
