@@ -14,13 +14,16 @@ final class DashboardWindowController: NSWindowController {
 
     private init(store: ThermalStore) {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 520),
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 540),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = AppStrings.Dashboard.title
-        window.minSize = NSSize(width: 520, height: 380)
+        // Match DashboardView's content min so the window can't be forced
+        // wider/taller than the user's saved frame on open (the old 520×380
+        // window min vs 760-wide content mismatch made it open oversized).
+        window.minSize = NSSize(width: 640, height: 420)
         window.setFrameAutosaveName("AirAssist.Dashboard")
         let hostingController = NSHostingController(rootView: DashboardContainerView(store: store))
         // #14: Apple's accessibility audit flags the root NSHostingView

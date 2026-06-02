@@ -11,8 +11,10 @@ enum SensorSortOrder: String, CaseIterable, Identifiable {
 
 struct DashboardView: View {
     @Bindable var store: ThermalStore
-    @State private var addingPID: pid_t?
-    @State private var addingDuty: Double = 0.5
+    /// Which category group cards are expanded to show their individual
+    /// sensors. Collapsed by default so a Mac with dozens of dies shows a
+    /// handful of summary cards instead of one enormous scroll.
+    @State private var expandedCategories: Set<SensorCategory> = []
 
     @AppStorage("tempUnit")       private var tempUnitRaw: Int    = TempUnit.celsius.rawValue
     @AppStorage("dashSortOrder")  private var sortRaw: String     = SensorSortOrder.category.rawValue
@@ -54,30 +56,81 @@ struct DashboardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            summaryBand
+            // Header stays pinned; everything else lives in ONE scroll so
+            // the sensor grid flows at its natural height and the panels
+            // below it are always reachable. (Previously a fill-height
+            // HSplitView with no outer scroll squished the grid to a
+            // sliver and hid the lower panels off-screen.)
+            dashboardHeader
             Divider()
-            toolbar
-            Divider()
-            HSplitView {
-                sensorGrid
-                    .frame(minWidth: 340)
-                topCPUPanel
-                    .frame(minWidth: 240, idealWidth: 280, maxWidth: 340)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    sensorGrid
+                    Divider()
+                    topCPUSection
+                    if !store.liveThrottledPIDs.isEmpty || !store.governor.reason.isEmpty {
+                        Divider()
+                        throttlePanel
+                    }
+                    if !store.throttleActivityLog.entries.isEmpty {
+                        Divider()
+                        recentActivityPanel
+                    }
+                    Divider()
+                    WeeklySummaryView(store: store)
+                    Divider()
+                    CPUConsumersView(store: store)
+                }
             }
-            if !store.liveThrottledPIDs.isEmpty || !store.governor.reason.isEmpty {
-                Divider()
-                throttlePanel
-            }
-            if !store.throttleActivityLog.entries.isEmpty {
-                Divider()
-                recentActivityPanel
-            }
-            Divider()
-            WeeklySummaryView(store: store)
-            Divider()
-            CPUConsumersView(store: store)
         }
-        .frame(minWidth: 760, minHeight: 460)
+        .frame(minWidth: 560, minHeight: 400)
+    }
+
+    // MARK: - Header (status chips + sensor controls, one row)
+
+    /// Single top row: live status chips on the left, the sensor-list
+    /// controls (unit + sort) on the right. Replaces the old stacked
+    /// summary-band + toolbar, which read as two disconnected strips.
+    private var dashboardHeader: some View {
+        HStack(spacing: 10) {
+            summaryChip(icon: "thermometer.medium", label: "Hottest",
+                        value: hottestSummaryValue, tint: hottestSummaryTint)
+            summaryChip(icon: "cpu", label: "Total CPU",
+                        value: formattedTotalCPU, tint: .blue)
+            summaryChip(icon: governorChipIcon, label: "Governor",
+                        value: governorChipLabel, tint: governorChipTint)
+            if !store.liveThrottledPIDs.isEmpty {
+                summaryChip(icon: "tortoise.fill", label: "Throttling",
+                            value: "\(store.liveThrottledPIDs.count)", tint: .orange)
+            }
+            Spacer(minLength: 12)
+            Picker("", selection: Binding(
+                get: { unit },
+                set: { tempUnitRaw = $0.rawValue }
+            )) {
+                Text("°C").tag(TempUnit.celsius)
+                Text("°F").tag(TempUnit.fahrenheit)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 76)
+            .labelsHidden()
+            .accessibilityLabel("Temperature unit")
+
+            Picker("", selection: Binding(
+                get: { sortOrder },
+                set: { sortRaw = $0.rawValue }
+            )) {
+                ForEach(SensorSortOrder.allCases) { order in
+                    Text(order.rawValue).tag(order)
+                }
+            }
+            .pickerStyle(.menu)
+            .fixedSize()
+            .labelsHidden()
+            .accessibilityLabel("Sort sensors by")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Recent activity panel
@@ -144,99 +197,79 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Top CPU panel (right column)
+    // MARK: - Top CPU section (full-width, inline in the scroll)
 
-    private var topCPUPanel: some View {
+    /// Read-only "what's hot right now" — a compact glance, capped at a few
+    /// rows. The full interactive list (with limit controls) lives in the
+    /// Activity window, reachable via the header button. Inline rows only
+    /// (no inner ScrollView): the whole dashboard is one scroll now.
+    private var topCPUSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "cpu").foregroundStyle(.blue)
                 Text("Top CPU").font(.headline)
                 Spacer()
+                Button {
+                    ActivityWindowController.shared(store: store).show()
+                } label: {
+                    Label("Open Activity", systemImage: "arrow.up.forward.app")
+                        .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+                .help("Open the Activity window to monitor apps and set per-app CPU limits")
             }
-            .padding(.horizontal, 12).padding(.top, 10)
-            Divider()
             if store.governor.lastTopProcesses.isEmpty {
                 Text("Sampling processes…")
                     .font(.caption).foregroundStyle(.secondary)
-                    .padding(.horizontal, 12)
             } else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(topProcesses) { p in
-                            topCPURow(p)
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(topProcesses) { p in
+                        topCPURow(p)
+                        if p.id != topProcesses.last?.id {
                             Divider().padding(.leading, 12)
                         }
                     }
                 }
             }
         }
-        .background(Color.secondary.opacity(0.04))
+        .padding(.horizontal, 12).padding(.vertical, 10)
     }
 
     private var topProcesses: [RunningProcess] {
         let base = store.governor.lastTopProcesses
             .filter { $0.cpuPercent > 0.5 }
             .sorted { $0.cpuPercent > $1.cpuPercent }
-        return Array(base.prefix(12))
+        return Array(base.prefix(6))
     }
 
+    /// Read-only "what's hot right now" row. Setting limits moved to the
+    /// dedicated Activity window (the "Open Activity" button in this
+    /// panel's header) so the Dashboard stays monitoring-only and there's
+    /// one home for throttle controls.
     @ViewBuilder
     private func topCPURow(_ p: RunningProcess) -> some View {
         let existing = store.throttleRules.rule(for: p)
         let throttled = store.liveThrottledPIDs.contains { $0.pid == p.id }
 
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(p.displayName).font(.subheadline).lineLimit(1)
-                    Text(p.name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                }
-                Spacer()
-                Text("\(Int(p.cpuPercent))%")
-                    .font(.system(.subheadline, design: .rounded).monospacedDigit())
-                    .foregroundStyle(CPUTint.color(p.cpuPercent))
-                if throttled {
-                    Image(systemName: "tortoise.fill")
-                        .foregroundStyle(.orange).font(.caption)
-                        .help("Currently throttled")
-                }
-                if let rule = existing {
-                    Button {
-                        store.removeRule(id: rule.id)
-                    } label: {
-                        Image(systemName: "minus.circle")
-                    }
-                    .buttonStyle(.borderless)
-                    .help("Remove rule (\(Int(rule.duty * 100))% cap)")
-                } else if addingPID == p.id {
-                    EmptyView()
-                } else {
-                    Button {
-                        addingPID = p.id
-                        addingDuty = 0.5
-                    } label: {
-                        Image(systemName: "plus.circle")
-                    }
-                    .buttonStyle(.borderless)
-                    .help("Add throttle rule for this app")
-                }
+        HStack {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(p.displayName).font(.subheadline).lineLimit(1)
+                Text(p.name).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
             }
-            if addingPID == p.id {
-                HStack {
-                    Text("Cap at").font(.caption)
-                    Slider(value: $addingDuty, in: 0.05...1.0, step: 0.05)
-                    Text("\(Int(addingDuty * 100))%")
-                        .font(.caption.monospacedDigit())
-                        .frame(width: 40, alignment: .trailing)
-                    Button("Cancel") { addingPID = nil }
-                        .controlSize(.small)
-                    Button("Save") {
-                        store.upsertRule(for: p, duty: addingDuty)
-                        addingPID = nil
-                    }
-                    .controlSize(.small)
-                    .keyboardShortcut(.defaultAction)
-                }
+            Spacer()
+            if let rule = existing {
+                Text("limit \(Int(rule.duty * 100))%")
+                    .font(.caption2).foregroundStyle(.purple)
+                    .help("This app has a \(Int(rule.duty * 100))% CPU limit")
+            }
+            Text("\(Int(p.cpuPercent))%")
+                .font(.system(.subheadline, design: .rounded).monospacedDigit())
+                .foregroundStyle(CPUTint.color(p.cpuPercent))
+            if throttled {
+                Image(systemName: "tortoise.fill")
+                    .foregroundStyle(.orange).font(.caption)
+                    .help("Currently throttled")
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
@@ -250,41 +283,7 @@ struct DashboardView: View {
     // 4-tier palette so the same CPU% is the same color across
     // popover / throttling prefs / dashboard.
 
-    // MARK: - Summary band (always visible)
-
-    private var summaryBand: some View {
-        HStack(spacing: 10) {
-            summaryChip(
-                icon: "thermometer.medium",
-                label: "Hottest",
-                value: hottestSummaryValue,
-                tint: hottestSummaryTint
-            )
-            summaryChip(
-                icon: "cpu",
-                label: "Total CPU",
-                value: formattedTotalCPU,
-                tint: .blue
-            )
-            summaryChip(
-                icon: governorChipIcon,
-                label: "Governor",
-                value: governorChipLabel,
-                tint: governorChipTint
-            )
-            if !store.liveThrottledPIDs.isEmpty {
-                summaryChip(
-                    icon: "tortoise.fill",
-                    label: "Throttling",
-                    value: "\(store.liveThrottledPIDs.count)",
-                    tint: .orange
-                )
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-    }
+    // MARK: - Summary chip
 
     private func summaryChip(icon: String, label: String, value: String, tint: Color) -> some View {
         HStack(spacing: 6) {
@@ -346,43 +345,6 @@ struct DashboardView: View {
         return "gauge.with.dots.needle.67percent"
     }
 
-    // MARK: - Toolbar
-
-    private var toolbar: some View {
-        HStack(spacing: 16) {
-            // Unit toggle
-            Picker("", selection: Binding(
-                get: { unit },
-                set: { tempUnitRaw = $0.rawValue }
-            )) {
-                Text("°C").tag(TempUnit.celsius)
-                Text("°F").tag(TempUnit.fahrenheit)
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 80)
-            .accessibilityLabel("Temperature unit")
-
-            Spacer()
-
-            Text("\(store.enabledSensors.count) sensors")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            // Sort picker
-            Picker("Sort", selection: Binding(
-                get: { sortOrder },
-                set: { sortRaw = $0.rawValue }
-            )) {
-                ForEach(SensorSortOrder.allCases) { order in
-                    Text(order.rawValue).tag(order)
-                }
-            }
-            .frame(width: 140)
-            .accessibilityLabel("Sort sensors by")
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-    }
 
     // MARK: - Throttle panel
 
@@ -431,19 +393,110 @@ struct DashboardView: View {
     @ViewBuilder
     private var sensorGrid: some View {
         if sortedSensors.isEmpty {
+            // Keep a usable height for the empty/booting state inside the
+            // outer scroll, since it no longer fills the window.
             sensorGridEmpty
+                .frame(minHeight: 220)
         } else {
-            ScrollView {
+            // One collapsible card per category instead of a flat grid of
+            // every die — keeps the scroll short on Macs with many sensors.
+            VStack(spacing: 10) {
+                ForEach(store.sensorsByCategory, id: \.category) { group in
+                    groupCard(group.category, group.sensors)
+                }
+            }
+            .padding(16)
+        }
+    }
+
+    /// Large, tappable summary card for one sensor category. Collapsed it
+    /// shows the group's hottest reading + count; expanded it reveals the
+    /// individual sensor cards in a sub-grid.
+    @ViewBuilder
+    private func groupCard(_ category: SensorCategory, _ sensors: [Sensor]) -> some View {
+        let isExpanded = expandedCategories.contains(category)
+        let values = sensors.compactMap(\.currentValue)
+        let high = values.max()
+        let avg  = values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
+        let tint = categoryTint(sensors)
+
+        VStack(spacing: 0) {
+            Button {
+                if isExpanded { expandedCategories.remove(category) }
+                else          { expandedCategories.insert(category) }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: categoryIcon(category))
+                        .font(.title2).foregroundStyle(tint).frame(width: 26)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(category.rawValue).font(.headline)
+                        Text("\(sensors.count) sensor\(sensors.count == 1 ? "" : "s")"
+                             + (avg.map { " · avg \(formatTemp($0))" } ?? ""))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if let high {
+                        Text(formatTemp(high))
+                            .font(.system(.title3, design: .rounded).monospacedDigit())
+                            .foregroundStyle(tint)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
+                .padding(12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(category.rawValue), \(sensors.count) sensors"
+                + (high.map { ", hottest \(formatTemp($0))" } ?? "")
+                + (isExpanded ? ", expanded" : ", collapsed"))
+
+            if isExpanded {
+                Divider()
                 LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(sortedSensors) { sensor in
+                    ForEach(sortPartition(sensors)) { sensor in
                         SensorCardView(sensor: sensor,
                                        thresholds: store.thresholds,
                                        unit: unit)
                     }
                 }
-                .padding(16)
+                .padding(12)
             }
         }
+        .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(tint.opacity(0.25), lineWidth: 1)
+        )
+    }
+
+    /// Tint a group by the worst (hottest) threshold state across its
+    /// sensors — red if anything's hot, then orange, then green.
+    private func categoryTint(_ sensors: [Sensor]) -> Color {
+        let states = sensors.map { $0.thresholdState(using: store.thresholds) }
+        if states.contains(where: { $0 == .hot })  { return .red }
+        if states.contains(where: { $0 == .warm }) { return .orange }
+        if states.contains(where: { $0 == .cool }) { return .green }
+        return .secondary
+    }
+
+    private func categoryIcon(_ category: SensorCategory) -> String {
+        switch category {
+        case .cpu:     return "cpu"
+        case .gpu:     return "cpu.fill"
+        case .soc:     return "memorychip"
+        case .battery: return "battery.100"
+        case .storage: return "internaldrive"
+        case .other:   return "thermometer.medium"
+        }
+    }
+
+    /// Format a Celsius reading in the user's chosen unit.
+    private func formatTemp(_ celsius: Double) -> String {
+        let v = unit == .fahrenheit ? celsius * 9 / 5 + 32 : celsius
+        return "\(Int(v.rounded()))°\(unit == .celsius ? "C" : "F")"
     }
 
     /// Shown when the grid has nothing to render — either the sensor
