@@ -55,8 +55,17 @@ final class ProcessInspector {
     }
 
     private var lastSnapshot: [pid_t: (cpuTimeNs: UInt64, wallTime: Date)] = [:]
-    /// Pre-resolved bundle IDs, keyed by executable path (stable across snapshots).
-    private var bundleIDCache: [String: String] = [:]
+    /// Resolved bundle IDs, keyed by executable path (stable across snapshots).
+    /// Stores the *optional* result so negative lookups (processes with no
+    /// `.app` container — daemons, CLI tools, helpers) are cached too;
+    /// otherwise every such process re-walked its path and built an
+    /// `NSBundle` on every 1 Hz tick, the dominant idle-CPU cost.
+    private var bundleIDCache: [String: String?] = [:]
+    /// Executable paths keyed by PID. A PID's path never changes for its
+    /// lifetime, so `proc_pidpath` (a syscall) only needs to run once per
+    /// PID instead of once per PID per tick. Pruned to live PIDs each
+    /// snapshot so a reused PID number can't return a stale path.
+    private var pathCache: [pid_t: String] = [:]
 
     private let currentUID: uid_t = getuid()
 
@@ -107,6 +116,9 @@ final class ProcessInspector {
         }
 
         lastSnapshot = newSnapshot
+        // Drop cached paths for PIDs that no longer exist so a recycled
+        // PID number can't resolve to a dead process's path.
+        pathCache = pathCache.filter { newSnapshot.keys.contains($0.key) }
         return out
     }
 
@@ -216,15 +228,22 @@ final class ProcessInspector {
     }
 
     private func pathFor(pid: pid_t) -> String? {
+        if let cached = pathCache[pid] { return cached }
         // PROC_PIDPATHINFO_MAXSIZE = 4 * MAXPATHLEN; MAXPATHLEN = 1024.
         let bufSize = 4 * 1024
         var buf = [CChar](repeating: 0, count: bufSize)
         let written = proc_pidpath(pid, &buf, UInt32(bufSize))
         guard written > 0 else { return nil }
-        return String(cString: buf)
+        let path = String(cString: buf)
+        pathCache[pid] = path
+        return path
     }
 
     private func resolveBundleID(path: String) -> String? {
+        // `bundleIDCache[path]` is `String??`: the outer optional is
+        // "have we looked this path up", the inner is the result. Caching
+        // the inner `nil` is the whole point — non-.app processes must not
+        // re-resolve every tick.
         if let cached = bundleIDCache[path] { return cached }
         // Walk up from executable path to find the .app container.
         // `/Applications/Foo.app/Contents/MacOS/Foo` → `/Applications/Foo.app`
@@ -232,12 +251,9 @@ final class ProcessInspector {
         while url.pathExtension != "app" && url.pathComponents.count > 1 {
             url.deleteLastPathComponent()
         }
-        guard url.pathExtension == "app",
-              let bundle = Bundle(url: url),
-              let id = bundle.bundleIdentifier
-        else {
-            return nil
-        }
+        let id: String? = url.pathExtension == "app"
+            ? Bundle(url: url)?.bundleIdentifier
+            : nil
         bundleIDCache[path] = id
         return id
     }
