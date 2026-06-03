@@ -429,7 +429,7 @@ struct DashboardView: View {
                     Image(systemName: categoryIcon(category))
                         .font(.title2).foregroundStyle(tint).frame(width: 26)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(category.rawValue).font(.headline)
+                        Text(category.displayName).font(.headline)
                         Text("\(sensors.count) sensor\(sensors.count == 1 ? "" : "s")"
                              + (avg.map { " · avg \(formatTemp($0))" } ?? ""))
                             .font(.caption).foregroundStyle(.secondary)
@@ -449,7 +449,7 @@ struct DashboardView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(category.rawValue), \(sensors.count) sensors"
+            .accessibilityLabel("\(category.displayName), \(sensors.count) sensors"
                 + (high.map { ", hottest \(formatTemp($0))" } ?? "")
                 + (isExpanded ? ", expanded" : ", collapsed"))
 

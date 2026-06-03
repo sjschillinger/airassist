@@ -10,6 +10,21 @@ enum SensorCategory: String, Codable, CaseIterable {
     case battery = "Battery"
     case storage = "Storage"
     case other   = "Other"
+
+    /// Localized name for display. `rawValue` stays the stable English key
+    /// (persisted, used for sorting/lookup); this is what the UI shows.
+    /// CPU/GPU/SoC are universal acronyms and read the same in every
+    /// language; Battery/Storage/Other translate.
+    var displayName: String {
+        switch self {
+        case .cpu:     return String(localized: "CPU")
+        case .gpu:     return String(localized: "GPU")
+        case .soc:     return String(localized: "SoC")
+        case .battery: return String(localized: "Battery")
+        case .storage: return String(localized: "Storage")
+        case .other:   return String(localized: "Other")
+        }
+    }
 }
 
 enum ThresholdState {

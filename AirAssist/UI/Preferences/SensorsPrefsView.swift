@@ -131,7 +131,7 @@ struct SensorsPrefsView: View {
     private var sensorList: some View {
         List {
             ForEach(groups, id: \.category) { group in
-                Section(group.category.rawValue) {
+                Section(group.category.displayName) {
                     ForEach(group.sensors) { sensor in
                         SensorToggleRow(sensor: sensor)
                     }
