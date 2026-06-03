@@ -9,6 +9,67 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+## [0.15.0] — 2026-06-03
+
+The Activity release — and a CPU honesty pass. Process monitoring
+graduates from a Dashboard tab into its own standalone window with a
+full, sortable process table and per-app limits that survive relaunch.
+The Dashboard itself is rebuilt so it's actually navigable: one scroll,
+collapsible per-category sensor cards instead of a wall of individual
+dies, and hover readouts on the graphs. Underneath, three CPU bugs are
+fixed — most importantly, every CPU% the app showed on Apple Silicon
+was ~42× too low.
+
+### Added
+
+- **Activity window.** A standalone, Activity-Monitor-style window
+  (menu-bar icon, the right-click menu, Window › Activity / ⌘⇧A, or the
+  Dashboard's "Open Activity" button). A live, sortable table of running
+  processes — name, CPU%, memory — with per-process actions: limit CPU
+  to N%, pause/resume, reveal in Finder, and never-throttle. Protected
+  processes (Xcode, terminals, agents) show a badge instead of throttle
+  actions.
+- **Persistent per-app CPU limits.** Setting a limit in the Activity
+  window creates a per-app rule (keyed by bundle ID) that survives
+  quit/relaunch and re-applies automatically. Limits appear in
+  Preferences › Throttling for management.
+- **Collapsible sensor groups on the Dashboard.** One card per category
+  (CPU, GPU, SoC, Battery, Storage, Other) showing count, average, and
+  hottest reading; expand a card to see its individual sensors. Keeps the
+  Dashboard short on Macs with dozens of dies.
+- **Hover readouts on the graphs.** Hovering the History chart shows a
+  value card with every category's temperature at that moment; hovering a
+  sensor card's sparkline shows that sample's value.
+
+### Changed
+
+- **Dashboard rebuilt for navigation.** The whole view is now one scroll
+  with a pinned header, so nothing gets squished and the lower panels are
+  always reachable (previously a fill-height split with no scroll showed
+  one card at a time and hid everything below). The summary chips and the
+  unit/sort controls merged into a single header row.
+- **Top CPU panel on the Dashboard is now read-only** with an "Open
+  Activity" button — setting limits moved to the Activity window so
+  there's one home for throttle controls.
+
+### Fixed
+
+- **CPU% was ~42× too low on Apple Silicon.** `proc_taskinfo` CPU times
+  are Mach absolute-time units, not nanoseconds; the app treated them as
+  nanoseconds, so Activity Monitor's 10% showed here as ~0.2%. Every CPU
+  number — the Activity table, the menu-bar readout, the 7-day history,
+  and the governor's CPU-cap mode — was affected. The governor's CPU
+  throttling now triggers at the threshold you set (it effectively never
+  reached it before).
+- **Constant high CPU usage from the app itself.** The menu-bar popover's
+  hosting view was retained after first open and kept re-rendering at the
+  display refresh rate even while closed, burning a steady ~30% CPU. It's
+  now released on close.
+- **Wasteful 1 Hz process snapshot.** `proc_pidpath` ran once per process
+  per tick and bundle-ID lookups never cached their negative results,
+  spiking CPU each second; both are now cached. Idle CPU dropped from
+  ~11% spikes to a steady ~1%.
+
 ## [0.14.0] — 2026-05-02
 
 The visibility release. The popover and the dashboard learn to
@@ -126,7 +187,7 @@ default for new installs.
   (overall or category-pinned), the value is now prefixed with a
   single-letter category badge (`C` CPU, `G` GPU, `S` SoC, `B`
   battery, `D` disk, `·` other). Resolves the long-standing ambiguity
-  of "91° — but 91° from *which* sensor?" without forcing the user to
+  of "91° — but 91° from _which_ sensor?" without forcing the user to
   open the popover. Toggle in Preferences › Menu Bar › Source badge.
 - **Trend arrow next to each slot.** A small `↑` or `↓` appears when a
   slot's recent history shows a clear rise or fall; suppressed when
@@ -176,8 +237,8 @@ default for new installs.
   (Temperature thresholds, sensor list), Thresholds (Category
   header), and Throttling (Automatic governor, Frontmost quick
   throttle, Per-app rules, Never throttle list). Each one opens a
-  ~280pt popover with a paragraph that explains *what the setting
-  actually does and when you'd want it*, separate from the
+  ~280pt popover with a paragraph that explains _what the setting
+  actually does and when you'd want it_, separate from the
   one-liner section captions.
 
 - **VoiceOver source disclosure.** The menu bar's accessibility label
@@ -246,8 +307,8 @@ the scaffolding to ship localized builds when translations land.
 - **`airassist` command-line tool.** Single-binary CLI that bridges
   to the running app via the existing `airassist://` URL scheme:
   `airassist pause [<duration>]`, `resume`, `throttle <bundle>
-  --duty <N> [--duration <D>]`, `release <bundle>`, `scenario
-  <name>`, `status`. Status reads persisted preferences via
+--duty <N> [--duration <D>]`, `release <bundle>`, `scenario
+<name>`, `status`. Status reads persisted preferences via
   CFPreferences, so it works whether the app is currently running or
   not. Built as a sibling product (not bundled in the app); copy it
   to `/usr/local/bin` to put it on `$PATH`.
@@ -296,7 +357,7 @@ menu bar icon.
   Preferences → General. 60-second cooldown to avoid spam during
   oscillation, and only fires on the rising edge of a throttle event.
 - **Never-Throttle list.** A user-managed allowlist in
-  Preferences → Throttling. Anything on it is exempt from *every*
+  Preferences → Throttling. Anything on it is exempt from _every_
   throttle source — governor, per-app rules, and even an explicit
   manual click. Stronger than the built-in `excludedNames` (which
   protects only system-critical bundles); intended for "this is mine,
@@ -304,12 +365,12 @@ menu bar icon.
   Add by picking from running processes or by free-form name entry.
 - **Scenario presets.** One-click bundles in the popover and
   Preferences → Throttling: Presenting (governor off, display awake),
-  Quiet (aggressive thresholds, both modes, ignores battery), 
-  Performance (governor off, display awake), Auto (balanced + 
+  Quiet (aggressive thresholds, both modes, ignores battery),
+  Performance (governor off, display awake), Auto (balanced +
   battery-only). Persists last-applied scenario across launches.
   Per-app rules are deliberately untouched — different lifecycle.
 - **Recent activity panel on the dashboard.** Horizontal strip of the
-  last 20 throttle events: kind (apply/release), source 
+  last 20 throttle events: kind (apply/release), source
   (governor/rule/manual), process name, duty. Backed by an in-memory
   ring buffer with coalescing — the 10 Hz reapply tick can't drown it.
   Clear button included.
@@ -355,7 +416,7 @@ menu bar icon.
 - First-run + What's New sheets no longer block `airassist://` URL
   handling on launch. Previously, `NSAlert.runModal()` ran the runloop
   in `.modalPanel` mode and starved `application(_:open:)` of Apple
-  Events — a Shortcut or `open airassist://...` invocation that *triggered*
+  Events — a Shortcut or `open airassist://...` invocation that _triggered_
   a cold launch sat queued behind the modal until the user dismissed.
   Replaced with a non-modal floating window that keeps the runloop
   spinning.
@@ -392,7 +453,7 @@ the menu bar icon.
   duration. Click again to release immediately — the row swaps to
   "Release [app]". Refuses to target Air Assist itself. Label reflects
   the captured frontmost app name (snapshotted before the popover
-  steals focus, so the button targets the app you were *just* in, not
+  steals focus, so the button targets the app you were _just_ in, not
   Air Assist).
 - **Frontmost-app quick throttle preferences.** Preferences →
   Throttling now has a slider (10–85%, 5% steps) and a duration picker
@@ -551,7 +612,7 @@ Initial public release.
   surprising default.
 - **README "Automation" section** documenting the `airassist://`
   URL scheme with exact duration / duty formats and Shortcuts.app
-  + shell examples.
+  - shell examples.
 - **README "Data sources" note** in Privacy, spelling out that
   Air Assist reads from `IOHIDEventSystemClient` (public HID API,
   same interface `powermetrics` uses), does not call any private
