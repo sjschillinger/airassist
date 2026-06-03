@@ -408,14 +408,19 @@ struct GeneralPrefsView: View {
     /// alive), then reopens the bundle. Replaces the old behaviour where
     /// "Restart Now" merely terminated the app and never came back.
     static func relaunch() {
-        let bundlePath = Bundle.main.bundlePath
         let pid = getpid()
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        // The bundle path is passed via an environment variable and never
+        // interpolated into the script, so the shell never word-splits or
+        // expands it — a path containing quotes/`$()` can't break out.
         task.arguments = [
             "-c",
-            "while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done; open \"\(bundlePath)\"",
+            "while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done; exec /usr/bin/open -- \"$BUNDLE_PATH\"",
         ]
+        var env = ProcessInfo.processInfo.environment
+        env["BUNDLE_PATH"] = Bundle.main.bundlePath
+        task.environment = env
         try? task.run()
         NSApp.terminate(nil)
     }
