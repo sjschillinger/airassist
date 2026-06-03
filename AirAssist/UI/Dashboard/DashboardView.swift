@@ -7,6 +7,18 @@ enum SensorSortOrder: String, CaseIterable, Identifiable {
     case tempDesc  = "Temp ↓"
     case tempAsc   = "Temp ↑"
     var id: String { rawValue }
+
+    /// Localized label for the picker. `rawValue` stays the stable
+    /// persisted key (`@AppStorage("dashSortOrder")`).
+    var displayName: String {
+        switch self {
+        case .category: return String(localized: "Category")
+        case .nameAsc:  return String(localized: "Name A→Z")
+        case .nameDesc: return String(localized: "Name Z→A")
+        case .tempDesc: return String(localized: "Temp ↓")
+        case .tempAsc:  return String(localized: "Temp ↑")
+        }
+    }
 }
 
 struct DashboardView: View {
@@ -121,7 +133,7 @@ struct DashboardView: View {
                 set: { sortRaw = $0.rawValue }
             )) {
                 ForEach(SensorSortOrder.allCases) { order in
-                    Text(order.rawValue).tag(order)
+                    Text(order.displayName).tag(order)
                 }
             }
             .pickerStyle(.menu)
@@ -430,8 +442,9 @@ struct DashboardView: View {
                         .font(.title2).foregroundStyle(tint).frame(width: 26)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(category.displayName).font(.headline)
-                        Text("\(sensors.count) sensor\(sensors.count == 1 ? "" : "s")"
-                             + (avg.map { " · avg \(formatTemp($0))" } ?? ""))
+                        Text(avg == nil
+                             ? String(localized: "\(sensors.count) sensors")
+                             : String(localized: "\(sensors.count) sensors · avg \(formatTemp(avg!))"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()

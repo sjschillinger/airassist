@@ -374,9 +374,7 @@ private struct GovernorSection: View {
                 Toggle(isOn: bindBool(\.onBatteryOnly)) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Throttle only when on battery")
-                        Text("When unchecked, caps apply on AC and battery alike. "
-                             + "When checked, the governor stays armed-but-silent "
-                             + "whenever a charger is connected.")
+                        Text("When unchecked, caps apply on AC and battery alike. When checked, the governor stays armed-but-silent whenever a charger is connected.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -386,9 +384,7 @@ private struct GovernorSection: View {
                 Toggle(isOn: bindBool(\.respectOSThermalState)) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Factor in the OS thermal state")
-                        Text("Lets macOS's own thermal pressure reading bias the "
-                             + "duty cycle tighter when the system is already "
-                             + "reporting heat stress. Recommended.")
+                        Text("Lets macOS's own thermal pressure reading bias the duty cycle tighter when the system is already reporting heat stress. Recommended.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

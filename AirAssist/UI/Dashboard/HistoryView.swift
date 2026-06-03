@@ -13,6 +13,12 @@ struct HistoryView: View {
         case all     = "All"
         var id: String { rawValue }
 
+        /// Picker label. The hour abbreviations are universal; only "All"
+        /// needs translating.
+        var displayName: String {
+            self == .all ? String(localized: "All") : rawValue
+        }
+
         var hours: Double? {
             switch self {
             case .last1h:  return 1
@@ -67,7 +73,7 @@ struct HistoryView: View {
     private var toolbar: some View {
         HStack {
             Picker("Range", selection: $range) {
-                ForEach(Range.allCases) { r in Text(r.rawValue).tag(r) }
+                ForEach(Range.allCases) { r in Text(r.displayName).tag(r) }
             }
             .pickerStyle(.segmented)
             .frame(width: 260)
