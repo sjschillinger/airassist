@@ -436,10 +436,10 @@ private struct FrontmostThrottleSection: View {
     /// Allowed durations. -1 sentinel = "until I clear it" (no
     /// auto-release). Same convention as the right-click pause submenu.
     private let durationOptions: [(label: String, minutes: Int)] = [
-        ("15 minutes",      15),
-        ("1 hour",          60),
-        ("4 hours",         4 * 60),
-        ("Until I clear it", -1),
+        (String(localized: "15 minutes"),       15),
+        (String(localized: "1 hour"),           60),
+        (String(localized: "4 hours"),          4 * 60),
+        (String(localized: "Until I clear it"), -1),
     ]
 
     var body: some View {
