@@ -13,7 +13,7 @@ struct MenuBarPopoverView: View {
     @AppStorage("tempUnit") private var tempUnitRaw: Int = TempUnit.celsius.rawValue
     private var unit: TempUnit { TempUnit(rawValue: tempUnitRaw) ?? .celsius }
 
-    @AppStorage("sensorDisplayMode") private var displayModeRaw: String = SensorDisplayMode.detailed.rawValue
+    @AppStorage("sensorDisplayMode") private var displayModeRaw: String = SensorDisplayMode.summary.rawValue
     private var displayMode: SensorDisplayMode {
         SensorDisplayMode(rawValue: displayModeRaw) ?? .detailed
     }

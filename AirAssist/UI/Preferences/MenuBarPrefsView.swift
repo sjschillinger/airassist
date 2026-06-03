@@ -15,7 +15,7 @@ struct MenuBarPrefsView: View {
     @AppStorage("menuBarSlot2Metric")   private var slot2Metric: String = SlotMetric.none.rawValue
     @AppStorage("menuBarSlot2Category") private var slot2Cat: String    = SlotCategory.none.rawValue
     @AppStorage("menuBarSlot2Value")    private var slot2Val: String    = ""
-    @AppStorage("sensorDisplayMode")    private var displayModeRaw: String = SensorDisplayMode.detailed.rawValue
+    @AppStorage("sensorDisplayMode")    private var displayModeRaw: String = SensorDisplayMode.summary.rawValue
 
     private var layout: MenuBarLayout { MenuBarLayout(rawValue: layoutRaw) ?? .single }
 
