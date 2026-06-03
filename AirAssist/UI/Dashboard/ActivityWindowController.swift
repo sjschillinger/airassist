@@ -37,12 +37,7 @@ final class ActivityWindowController: NSWindowController {
     required init?(coder: NSCoder) { fatalError("not used") }
 
     func show() {
-        // Center only on the very first appearance; the autosaved frame
-        // restores size + position thereafter.
-        if window?.isVisible == false,
-           UserDefaults.standard.string(forKey: "NSWindow Frame AirAssist.Activity") == nil {
-            window?.center()
-        }
+        if window?.isVisible == false { recenterIfFramePoor() }
         NSApp.activate(ignoringOtherApps: true)
         showWindow(nil)
     }

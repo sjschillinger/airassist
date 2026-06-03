@@ -39,16 +39,37 @@ final class DashboardWindowController: NSWindowController {
     required init?(coder: NSCoder) { fatalError("not used") }
 
     func show() {
-        // Only center on the very first appearance. After that, the
-        // autosaved frame (keyed by `AirAssist.Dashboard`) restores
-        // the user's last size and position.
-        if window?.isVisible == false,
-           UserDefaults.standard.string(forKey: "NSWindow Frame AirAssist.Dashboard") == nil {
-            window?.center()
-        }
+        if window?.isVisible == false { recenterIfFramePoor() }
         // Activate BEFORE showing — see PreferencesWindowController.show()
         // for rationale.
         NSApp.activate(ignoringOtherApps: true)
         showWindow(nil)
+    }
+}
+
+extension NSWindowController {
+    /// Place a soon-to-be-shown window at a sensible on-screen position.
+    ///
+    /// We keep `setFrameAutosaveName` so a window remembers a size/position
+    /// the user actually chose — but a plain `window.center()` only ran when
+    /// *no* frame was saved, so a stale autosaved frame (or one written
+    /// before the window had a screen) could pin every window to the left
+    /// edge at x≈0 and never self-correct. This recenters explicitly when
+    /// the current frame is off-screen or jammed against the left edge,
+    /// and leaves genuine user positions untouched.
+    func recenterIfFramePoor() {
+        guard let window,
+              let vis = (window.screen ?? NSScreen.main)?.visibleFrame else { return }
+        let f = window.frame
+        let overlap = vis.intersection(f)
+        let mostlyVisible = overlap.width >= f.width * 0.6
+            && overlap.height >= f.height * 0.6
+        let pinnedLeft = f.minX <= vis.minX + 2
+        guard !mostlyVisible || pinnedLeft else { return }
+        let origin = NSPoint(
+            x: vis.minX + (vis.width  - f.width)  / 2,
+            y: vis.minY + (vis.height - f.height) / 2
+        )
+        window.setFrameOrigin(origin)
     }
 }

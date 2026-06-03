@@ -69,6 +69,11 @@ was ~42× too low.
   per tick and bundle-ID lookups never cached their negative results,
   spiking CPU each second; both are now cached. Idle CPU dropped from
   ~11% spikes to a steady ~1%.
+- **Windows opened pinned to the far-left edge.** The Dashboard, Activity,
+  and Preferences windows could open flush against the left of the screen
+  (a stale autosaved frame the old centering logic never corrected). They
+  now recenter when the saved frame is off-screen or edge-pinned, while
+  still remembering a position you chose.
 
 ## [0.14.0] — 2026-05-02
 
