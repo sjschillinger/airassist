@@ -12,6 +12,150 @@
         }
       }
     },
+    "%.1f%%": {},
+    "%1$@ hot threshold in degrees": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 高温阈值（度）"
+          }
+        }
+      }
+    },
+    "%1$@ warm threshold in degrees": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 温热阈值（度）"
+          }
+        }
+      }
+    },
+    "%1$@, %2$lld percent CPU": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，%2$lld%% CPU"
+          }
+        }
+      }
+    },
+    "%1$@, %2$lld percent CPU%3$@": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，%2$lld%% CPU%3$@"
+          }
+        }
+      }
+    },
+    "%1$@, %2$lld percent CPU, currently capped at %3$lld percent": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，%2$lld%% CPU，当前限制为 %3$lld%%"
+          }
+        }
+      }
+    },
+    "%1$@, %2$lld percent CPU, currently throttled": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，%2$lld%% CPU，正在限速"
+          }
+        }
+      }
+    },
+    "%1$@, %2$lld percent CPU, protected by Air Assist's safety list": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，%2$lld%% CPU，受 Air Assist 安全列表保护"
+          }
+        }
+      }
+    },
+    "%1$@, %2$lld percent CPU, protected by Never-Throttle list": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，%2$lld%% CPU，受“永不限速”列表保护"
+          }
+        }
+      }
+    },
+    "%1$@, %2$lld percent CPU. Click Cap to add a throttle rule.": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，%2$lld%% CPU。点击“限制”以添加限速规则。"
+          }
+        }
+      }
+    },
+    "%1$@, PID %2$d, capped at %3$lld percent": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，PID %2$d，限制为 %3$lld%%"
+          }
+        }
+      }
+    },
+    "%1$lld episode%2$@": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 次"
+          }
+        }
+      }
+    },
+    "%1$lld of %2$lld sensors shown": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示 %2$lld 个传感器中的 %1$lld 个"
+          }
+        }
+      }
+    },
+    "%1$lld processes · %2$lld%% CPU": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld 个进程 · %2$lld%% CPU"
+          }
+        }
+      }
+    },
     "%@ category": {
       "localizations": {
         "zh-Hans": {
@@ -24,16 +168,37 @@
     },
     "%@ hot threshold in degrees": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ hot threshold in degrees"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "new",
             "value": "%1$@ 过热阈值（摄氏度）"
           }
-        },
-        "en": {
+        }
+      }
+    },
+    "%@ is on Air Assist's built-in protection list. SIGSTOPing development tools, terminals or the agent running this session would do more harm than good, so they can be inspected but not capped.": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
           "stringUnit": {
-            "state": "new",
-            "value": "%1$@ hot threshold in degrees"
+            "state": "translated",
+            "value": "%@ 在 Air Assist 的内置保护列表中。对开发工具、终端或正在运行此会话的代理执行 SIGSTOP 弊大于利，因此它们只能被查看，无法被限速。"
+          }
+        }
+      }
+    },
+    "%@ is on Air Assist's built-in protection list. SIGSTOPing development tools, terminals, or the agent currently helping you can leave them in a broken state, so the app refuses to throttle them automatically.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 在 Air Assist 的内置保护列表中。对开发工具、终端或正在协助你的代理执行 SIGSTOP 可能使其陷入异常状态，因此应用拒绝自动限速这些进程。"
           }
         }
       }
@@ -70,16 +235,16 @@
     },
     "%@ warm threshold in degrees": {
       "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ 温热阈值（摄氏度）"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "new",
             "value": "%1$@ warm threshold in degrees"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ 温热阈值（摄氏度）"
           }
         }
       }
@@ -133,65 +298,79 @@
       }
     },
     "%@, %lld percent CPU, currently capped at %lld percent": {
+      "extractionState": "stale",
       "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@，%2$lld%% CPU，当前限制在 %3$lld%%"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "new",
             "value": "%1$@, %2$lld percent CPU, currently capped at %3$lld percent"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@，%2$lld%% CPU，当前限制在 %3$lld%%"
+          }
         }
       }
     },
     "%@, %lld percent CPU, currently throttled": {
+      "extractionState": "stale",
       "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@，%2$lld%% CPU，当前受限制"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "new",
             "value": "%1$@, %2$lld percent CPU, currently throttled"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@，%2$lld%% CPU，当前受限制"
+          }
+        }
+      }
+    },
+    "%@, %lld percent CPU, protected by Air Assist's safety list": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@, %2$lld percent CPU, protected by Air Assist's safety list"
+          }
         }
       }
     },
     "%@, %lld percent CPU, protected by Never-Throttle list": {
+      "extractionState": "stale",
       "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@，%2$lld%% CPU，受永不限制列表保护"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "new",
             "value": "%1$@, %2$lld percent CPU, protected by Never-Throttle list"
           }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@，%2$lld%% CPU，受永不限制列表保护"
+          }
         }
       }
     },
     "%@, %lld percent CPU. Click Cap to add a throttle rule.": {
+      "extractionState": "stale",
       "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@，%2$lld%% CPU。点击\"上限\"以添加限制规则。"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "new",
             "value": "%1$@, %2$lld percent CPU. Click Cap to add a throttle rule."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@，%2$lld%% CPU。点击\"上限\"以添加限制规则。"
           }
         }
       }
@@ -277,6 +456,7 @@
       }
     },
     "%lld min then system": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -302,6 +482,16 @@
         }
       }
     },
+    "%lld processes · %lld%% CPU": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld processes · %2$lld%% CPU"
+          }
+        }
+      }
+    },
     "%lld samples": {
       "localizations": {
         "zh-Hans": {
@@ -313,6 +503,7 @@
       }
     },
     "%lld sensors": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -324,6 +515,7 @@
     },
     "%lld%%": {},
     "%lldh %lldm left": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -334,6 +526,7 @@
       }
     },
     "%lldh left": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -344,6 +537,7 @@
       }
     },
     "%lldm left": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -354,11 +548,22 @@
       }
     },
     "%llds left": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "new",
             "value": "剩余 %lld 秒"
+          }
+        }
+      }
+    },
+    "%lld°%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld°%2$@"
           }
         }
       }
@@ -400,6 +605,7 @@
       }
     },
     "0s": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -474,6 +680,7 @@
       }
     },
     "1h": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -495,6 +702,7 @@
       }
     },
     "24h": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -540,6 +748,7 @@
     "5%": {},
     "50%": {},
     "6h": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -550,6 +759,7 @@
       }
     },
     "7d": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -570,6 +780,7 @@
       }
     },
     "About %@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -600,6 +811,7 @@
       }
     },
     "Active": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -700,6 +912,7 @@
       }
     },
     "Add throttle rule for this app": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -750,6 +963,7 @@
       }
     },
     "Air Assist %@ is available": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -760,6 +974,7 @@
       }
     },
     "Air Assist is currently throttling %lld process(es). Quitting will release them — they'll run at full speed again until you relaunch the app.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -770,6 +985,7 @@
       }
     },
     "Air Assist is up to date": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -833,6 +1049,7 @@
       }
     },
     "All": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -933,6 +1150,7 @@
       }
     },
     "Apply a one-click preset (Presenting / Lap / Cool / Performance / Auto).": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -994,6 +1212,7 @@
       }
     },
     "Armed": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1166,6 +1385,7 @@
       }
     },
     "Cap at": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1236,7 +1456,6 @@
       }
     },
     "Check automatically": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1247,6 +1466,7 @@
       }
     },
     "Check for Updates…": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1287,6 +1507,7 @@
       }
     },
     "Close Window": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1337,6 +1558,7 @@
       }
     },
     "Copy": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1356,12 +1578,34 @@
         }
       }
     },
+    "Copyright © 2026. All rights reserved.": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版权所有 © 2026。保留所有权利。"
+          }
+        }
+      }
+    },
     "Currently throttled": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "new",
             "value": "当前受限制"
+          }
+        }
+      }
+    },
+    "Currently throttling %1$lld process%2$@": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在限速 %1$lld 个进程"
           }
         }
       }
@@ -1383,6 +1627,7 @@
       }
     },
     "Cut": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1484,6 +1729,7 @@
       }
     },
     "Display sleeps in %@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1494,6 +1740,7 @@
       }
     },
     "Display sleeps in %@:%@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1544,6 +1791,7 @@
       }
     },
     "Edit": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1584,6 +1832,7 @@
       }
     },
     "Enable or disable the system-wide thermal/CPU governor.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1614,6 +1863,7 @@
       }
     },
     "Export Diagnostics…": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1634,6 +1884,7 @@
       }
     },
     "File": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1659,6 +1910,17 @@
           "stringUnit": {
             "state": "new",
             "value": "筛选传感器"
+          }
+        }
+      }
+    },
+    "Fired %1$lld time%2$@ today, total %3$@ of active throttling": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日触发 %1$lld 次，累计限速 %3$@"
           }
         }
       }
@@ -1741,7 +2003,6 @@
       }
     },
     "Global hotkey ⌘⌥P": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1782,6 +2043,7 @@
       }
     },
     "Governor active": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1792,6 +2054,7 @@
       }
     },
     "Governor armed": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1802,6 +2065,7 @@
       }
     },
     "Governor idle (on AC)": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1832,6 +2096,7 @@
       }
     },
     "Hard allowlist. The governor, per-app rules, and even an explicit \"Throttle [app]\" click will all refuse to touch processes whose names match. Use for anything where SIGSTOP would be catastrophic — backup tools, audio I/O, the foreground call you're on right now.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1862,6 +2127,7 @@
       }
     },
     "Help": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1872,6 +2138,7 @@
       }
     },
     "Hide %@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1882,6 +2149,7 @@
       }
     },
     "Hide Others": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1953,6 +2221,7 @@
       }
     },
     "Hottest": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2064,6 +2333,7 @@
       }
     },
     "Keep the Mac awake — system, display, or with a timeout.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2094,7 +2364,6 @@
       }
     },
     "Language Changed": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2156,7 +2425,6 @@
       }
     },
     "Layout": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2207,6 +2475,7 @@
       }
     },
     "Live list of the top processes by CPU usage right now. Click any one to instantly cap it at your default throttle duty (configured in Frontmost-app quick throttle above). Apps already covered by a rule show their current cap; protected apps show as such.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2227,6 +2496,7 @@
       }
     },
     "Manual override for the popover's \"Throttle [app]\" button. Hits whatever app is currently in the front (Safari, Xcode, whatever you can see), with a fixed duty and duration you set here. Useful for one-off cooling without writing a permanent rule.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2338,6 +2608,7 @@
       }
     },
     "Name A→Z": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2348,6 +2619,7 @@
       }
     },
     "Name Z→A": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2509,7 +2781,6 @@
       }
     },
     "Notify when governor engages": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2520,6 +2791,7 @@
       }
     },
     "OK": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2590,6 +2862,7 @@
       }
     },
     "Only act while on battery; armed-but-silent on AC.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2600,6 +2873,7 @@
       }
     },
     "Only on battery": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2630,6 +2904,7 @@
       }
     },
     "Open Dashboard": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2681,6 +2956,7 @@
       }
     },
     "Paste": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2782,6 +3058,7 @@
       }
     },
     "Paused · resumes %@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2832,6 +3109,7 @@
       }
     },
     "Persistent caps on specific apps regardless of temperature. The governor leaves rule-covered PIDs alone (no double-throttling). Rules engage whenever a matching process spends sustained time above 5% CPU, and release automatically when the app idles. Re-applies on relaunch — survives quit/reopen of either app.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2882,7 +3160,6 @@
       }
     },
     "Please restart Air Assist for the language change to take effect.": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3033,6 +3310,16 @@
         }
       }
     },
+    "Protected by Air Assist's safety list — won't be auto-throttled.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受 Air Assist 安全列表保护 — 不会被自动限速。"
+          }
+        }
+      }
+    },
     "Protected — never throttled": {
       "localizations": {
         "zh-Hans": {
@@ -3065,6 +3352,7 @@
       }
     },
     "Quit": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3075,6 +3363,7 @@
       }
     },
     "Quit %@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3096,6 +3385,7 @@
       }
     },
     "Quit Air Assist?": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3146,6 +3436,7 @@
       }
     },
     "Redo": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3176,6 +3467,7 @@
       }
     },
     "Release %@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3226,6 +3518,7 @@
       }
     },
     "Release the manual cap on this app.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3306,6 +3599,7 @@
       }
     },
     "Remove rule (%lld%% cap)": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3326,7 +3620,6 @@
       }
     },
     "Restart Now": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3427,6 +3720,7 @@
       }
     },
     "Rules active": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3437,6 +3731,7 @@
       }
     },
     "Samples": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3477,6 +3772,7 @@
       }
     },
     "Save": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3517,6 +3813,7 @@
       }
     },
     "Select All": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3547,7 +3844,6 @@
       }
     },
     "Sensor list": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3671,6 +3967,7 @@
       }
     },
     "Show All": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3681,6 +3978,7 @@
       }
     },
     "Show Welcome…": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3732,7 +4030,6 @@
       }
     },
     "Show icon": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3823,7 +4120,6 @@
       }
     },
     "Slot 1": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3834,7 +4130,6 @@
       }
     },
     "Slot 2": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3845,6 +4140,7 @@
       }
     },
     "Sort": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4026,6 +4322,7 @@
       }
     },
     "System": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4036,6 +4333,7 @@
       }
     },
     "System & display": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4066,6 +4364,7 @@
       }
     },
     "Temp ↑": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4076,6 +4375,7 @@
       }
     },
     "Temp ↓": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4176,6 +4476,7 @@
       }
     },
     "The governor watches sensors and total CPU% on a 1-second control loop. When a cap is breached, it picks the top N CPU processes (excluding ones covered by per-app rules and the never-throttle list) and applies a duty cycle to bring the readings back below cap minus hysteresis. It releases automatically when temps fall.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4225,12 +4526,32 @@
         }
       }
     },
+    "This app has a %lld%% CPU limit": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此应用的 CPU 限制为 %lld%%"
+          }
+        }
+      }
+    },
     "This app is in your Never-Throttle list. Remove it from there to enable rules.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "new",
             "value": "此应用在你的永不限制列表中。从列表中移除以启用规则。"
+          }
+        }
+      }
+    },
+    "This process is on Air Assist's protection list and can only be inspected, not throttled": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此进程在 Air Assist 的保护列表中，只能查看，无法限速"
           }
         }
       }
@@ -4266,6 +4587,7 @@
       }
     },
     "Throttle %@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4287,6 +4609,7 @@
       }
     },
     "Throttle %@ at 30%%": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4317,6 +4640,7 @@
       }
     },
     "Throttle frontmost": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4346,6 +4670,16 @@
         }
       }
     },
+    "Throttled by %@.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "由 %@ 限速。"
+          }
+        }
+      }
+    },
     "Throttling": {
       "comment": "Preferences tab: Throttling",
       "localizations": {
@@ -4353,6 +4687,17 @@
           "stringUnit": {
             "state": "new",
             "value": "限制"
+          }
+        }
+      }
+    },
+    "Throttling %1$@ to %2$lld%% for %3$@.": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在将 %1$@ 限制到 %2$lld%%，持续 %3$@。"
           }
         }
       }
@@ -4395,6 +4740,7 @@
       }
     },
     "Throttling: Off": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4485,6 +4831,7 @@
       }
     },
     "Total CPU": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4515,6 +4862,7 @@
       }
     },
     "Undo": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4525,7 +4873,6 @@
       }
     },
     "Unit": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4536,6 +4883,7 @@
       }
     },
     "Until I clear it": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4758,6 +5106,7 @@
       }
     },
     "You're running %@, the latest release.": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4768,6 +5117,7 @@
       }
     },
     "You're running %@. Open the release page to download and install.\n\nHomebrew users can instead run:\n    brew upgrade --cask airassist": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4788,6 +5138,7 @@
       }
     },
     "for %lld hour%s": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4798,11 +5149,22 @@
       }
     },
     "for %lld minutes": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "new",
             "value": "持续 %lld 分钟"
+          }
+        }
+      }
+    },
+    "limit %lld%%": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "限制 %lld%%"
           }
         }
       }
@@ -4838,6 +5200,7 @@
       }
     },
     "manual throttle": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4878,6 +5241,7 @@
       }
     },
     "per-app rule": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4888,6 +5252,7 @@
       }
     },
     "system governor": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4898,6 +5263,7 @@
       }
     },
     "total throttled": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4911,13 +5277,14 @@
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "未知来源"
           }
         }
       }
     },
     "until you clear it": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4946,6 +5313,7 @@
     "–": {},
     "—": {},
     "↑ Version %@ available — Get it": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {

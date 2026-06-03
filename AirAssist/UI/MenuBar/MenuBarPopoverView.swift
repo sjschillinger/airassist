@@ -236,10 +236,12 @@ struct MenuBarPopoverView: View {
             }
         }
         .sorted()
-        if labels.isEmpty { return "unknown source" }
-        if labels.count == 1 { return "Throttled by \(labels[0])." }
-        return "Throttled by " + labels.prefix(labels.count - 1).joined(separator: ", ")
-            + " and " + labels.last! + "."
+        if labels.isEmpty { return String(localized: "unknown source") }
+        // Locale-aware list joining ("A, B, and C" in en; "A、B和C" in zh)
+        // plus a single format string, so the sentence reads naturally in
+        // every language instead of being glued from " and " fragments.
+        let joined = labels.formatted(.list(type: .and))
+        return String(localized: "Throttled by \(joined).")
     }
 
     private func sourceBadge(_ sources: Set<ThrottleSource>) -> (symbol: String, tint: Color) {

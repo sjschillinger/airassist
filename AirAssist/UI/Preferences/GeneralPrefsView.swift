@@ -74,7 +74,7 @@ struct GeneralPrefsView: View {
                         alert.addButton(withTitle: String(localized: "Restart Now"))
                         alert.addButton(withTitle: String(localized: "Later"))
                         if alert.runModal() == .alertFirstButtonReturn {
-                            NSApp.terminate(nil)
+                            Self.relaunch()
                         }
                     }
                 }
@@ -400,6 +400,24 @@ struct GeneralPrefsView: View {
         let m = total / 60
         let s = total % 60
         return String(format: "%d:%02d", m, s)
+    }
+
+    /// Quit and relaunch so the new `AppleLanguages` takes effect.
+    /// A detached helper polls until *this* process has actually exited
+    /// (the single-instance guard would reject a new copy while we're still
+    /// alive), then reopens the bundle. Replaces the old behaviour where
+    /// "Restart Now" merely terminated the app and never came back.
+    static func relaunch() {
+        let bundlePath = Bundle.main.bundlePath
+        let pid = getpid()
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        task.arguments = [
+            "-c",
+            "while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done; open \"\(bundlePath)\"",
+        ]
+        try? task.run()
+        NSApp.terminate(nil)
     }
 
     private var launchAtLoginBinding: Binding<Bool> {

@@ -17,6 +17,17 @@ Dates are in ISO 8601 (YYYY-MM-DD).
   a String Catalog so untranslated strings fall back to English. Based on
   community contribution #7 by @ng-life, reconciled onto the v0.15.0 UI
   (Activity window, redesigned dashboard) with the new strings translated.
+  Coverage audited via `xcodebuild -exportLocalizations`: every user-facing
+  string is translated except universal symbols (°C, %, CPU) and the brand
+  name. Concatenated sentences (e.g. "Throttled by A, B and C") were
+  switched to locale-aware list formatting so they read naturally in 中文.
+
+### Fixed
+
+- **"Restart Now" after changing language stranded the app.** The language
+  picker's restart prompt called `NSApp.terminate` — quitting without
+  relaunching. It now spawns a helper that waits for the app to exit, then
+  reopens it.
 
 ## [0.15.0] — 2026-06-03
 
