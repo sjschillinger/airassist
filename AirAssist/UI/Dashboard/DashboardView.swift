@@ -93,14 +93,14 @@ struct DashboardView: View {
     /// summary-band + toolbar, which read as two disconnected strips.
     private var dashboardHeader: some View {
         HStack(spacing: 10) {
-            summaryChip(icon: "thermometer.medium", label: "Hottest",
+            summaryChip(icon: "thermometer.medium", label: String(localized: "Hottest"),
                         value: hottestSummaryValue, tint: hottestSummaryTint)
-            summaryChip(icon: "cpu", label: "Total CPU",
+            summaryChip(icon: "cpu", label: String(localized: "Total CPU"),
                         value: formattedTotalCPU, tint: .blue)
-            summaryChip(icon: governorChipIcon, label: "Governor",
+            summaryChip(icon: governorChipIcon, label: String(localized: "Governor"),
                         value: governorChipLabel, tint: governorChipTint)
             if !store.liveThrottledPIDs.isEmpty {
-                summaryChip(icon: "tortoise.fill", label: "Throttling",
+                summaryChip(icon: "tortoise.fill", label: String(localized: "Throttling"),
                             value: "\(store.liveThrottledPIDs.count)", tint: .orange)
             }
             Spacer(minLength: 12)
@@ -329,10 +329,10 @@ struct DashboardView: View {
     }
 
     private var governorChipLabel: String {
-        if store.isPauseActive                        { return "Paused" }
-        if store.governorConfig.isOff                 { return "Off" }
-        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return "Active" }
-        return "Armed"
+        if store.isPauseActive                        { return String(localized: "Paused") }
+        if store.governorConfig.isOff                 { return String(localized: "Off") }
+        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return String(localized: "Active") }
+        return String(localized: "Armed")
     }
     private var governorChipTint: Color {
         if store.isPauseActive                        { return .yellow }

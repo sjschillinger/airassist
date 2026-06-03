@@ -193,10 +193,10 @@ private struct GovernorSection: View {
         let isActive = store.governor.isTempThrottling || store.governor.isCPUThrottling
         let text: String
         let color: Color
-        if store.isPauseActive      { text = "Paused"; color = .yellow }
-        else if store.governorConfig.isOff { text = "Off"; color = .secondary }
-        else if isActive            { text = "Throttling"; color = .orange }
-        else                        { text = "Armed"; color = .green }
+        if store.isPauseActive      { text = String(localized: "Paused"); color = .yellow }
+        else if store.governorConfig.isOff { text = String(localized: "Off"); color = .secondary }
+        else if isActive            { text = String(localized: "Throttling"); color = .orange }
+        else                        { text = String(localized: "Armed"); color = .green }
         return Text(text)
             .font(.caption.weight(.semibold))
             .padding(.horizontal, 8).padding(.vertical, 3)

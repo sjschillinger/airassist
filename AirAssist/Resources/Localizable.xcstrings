@@ -780,7 +780,6 @@
       }
     },
     "About %@": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -811,7 +810,6 @@
       }
     },
     "Active": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1212,7 +1210,6 @@
       }
     },
     "Armed": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1425,6 +1422,26 @@
         }
       }
     },
+    "Cap the frontmost app at %1$lld%% %2$@. Adjust in Preferences → Throttling.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将最前台应用限制到 %1$lld%% %2$@。可在“偏好设置 → 限速”中调整。"
+          }
+        }
+      }
+    },
+    "Cap the frontmost app at %lld%% %@. Adjust in Preferences → Throttling.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Cap the frontmost app at %1$lld%% %2$@. Adjust in Preferences → Throttling."
+          }
+        }
+      }
+    },
     "Capped %lld%%": {
       "localizations": {
         "zh-Hans": {
@@ -1466,7 +1483,6 @@
       }
     },
     "Check for Updates…": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1507,7 +1523,6 @@
       }
     },
     "Close Window": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1558,7 +1573,6 @@
       }
     },
     "Copy": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1627,7 +1641,6 @@
       }
     },
     "Cut": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1728,6 +1741,16 @@
         }
       }
     },
+    "Display sleeps in %1$d:%2$02d": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示器将在 %1$d:%2$02d 后休眠"
+          }
+        }
+      }
+    },
     "Display sleeps in %@": {
       "extractionState": "stale",
       "localizations": {
@@ -1746,6 +1769,16 @@
           "stringUnit": {
             "state": "new",
             "value": "%@:%@ 后屏幕休眠"
+          }
+        }
+      }
+    },
+    "Display sleeps in %d:%02d": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Display sleeps in %1$d:%2$02d"
           }
         }
       }
@@ -1791,7 +1824,6 @@
       }
     },
     "Edit": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1863,7 +1895,6 @@
       }
     },
     "Export Diagnostics…": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1884,7 +1915,6 @@
       }
     },
     "File": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -1947,6 +1977,16 @@
           "stringUnit": {
             "state": "new",
             "value": "针对特定应用的固定上限。100% = 不受限制，50% = 只运行一半的实际时间。"
+          }
+        }
+      }
+    },
+    "Frontmost": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最前台应用"
           }
         }
       }
@@ -2043,7 +2083,6 @@
       }
     },
     "Governor active": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2054,7 +2093,6 @@
       }
     },
     "Governor armed": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2065,7 +2103,6 @@
       }
     },
     "Governor idle (on AC)": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2127,7 +2164,6 @@
       }
     },
     "Help": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2138,7 +2174,6 @@
       }
     },
     "Hide %@": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2149,7 +2184,6 @@
       }
     },
     "Hide Others": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2221,12 +2255,31 @@
       }
     },
     "Hottest": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "new",
             "value": "最高温度"
+          }
+        }
+      }
+    },
+    "Hottest sensor trend: now %1$@, was %2$@ one minute ago, peaked at %3$@.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最热传感器趋势：当前 %1$@，一分钟前为 %2$@，峰值为 %3$@。"
+          }
+        }
+      }
+    },
+    "Hottest sensor trend: now %@, was %@ one minute ago, peaked at %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Hottest sensor trend: now %1$@, was %2$@ one minute ago, peaked at %3$@."
           }
         }
       }
@@ -2873,7 +2926,6 @@
       }
     },
     "Only on battery": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2904,7 +2956,6 @@
       }
     },
     "Open Dashboard": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -2956,7 +3007,6 @@
       }
     },
     "Paste": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3058,7 +3108,6 @@
       }
     },
     "Paused · resumes %@": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3363,7 +3412,6 @@
       }
     },
     "Quit %@": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3436,7 +3484,6 @@
       }
     },
     "Redo": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3518,7 +3565,6 @@
       }
     },
     "Release the manual cap on this app.": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3720,7 +3766,6 @@
       }
     },
     "Rules active": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3813,7 +3858,6 @@
       }
     },
     "Select All": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3967,7 +4011,6 @@
       }
     },
     "Show All": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -3978,7 +4021,6 @@
       }
     },
     "Show Welcome…": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4322,7 +4364,6 @@
       }
     },
     "System": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4333,7 +4374,6 @@
       }
     },
     "System & display": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4609,7 +4649,6 @@
       }
     },
     "Throttle %@ at 30%%": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4640,7 +4679,6 @@
       }
     },
     "Throttle frontmost": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4740,7 +4778,6 @@
       }
     },
     "Throttling: Off": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4831,7 +4868,6 @@
       }
     },
     "Total CPU": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -4862,7 +4898,6 @@
       }
     },
     "Undo": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -5313,7 +5348,6 @@
     "–": {},
     "—": {},
     "↑ Version %@ available — Get it": {
-      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
