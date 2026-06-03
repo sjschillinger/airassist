@@ -984,7 +984,7 @@ struct MenuBarPopoverView: View {
         VStack(spacing: 0) {
             MenuBarButton(label: AppStrings.MenuBar.dashboard,
                           icon: "gauge.with.dots.needle.33percent") { onDashboard() }
-            MenuBarButton(label: "Activity",
+            MenuBarButton(label: String(localized: "Activity"),
                           icon: "cpu") { onActivity() }
             MenuBarButton(label: AppStrings.MenuBar.preferences,
                           icon: "gearshape") { onPreferences() }

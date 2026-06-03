@@ -13,6 +13,87 @@ import Foundation
 /// product name and reverse-DNS identifier are fixed regardless of
 /// locale.
 enum AppStrings {
+
+    // MARK: - Language
+
+    /// Supported app languages for in-app language switching.
+    /// Stored in UserDefaults under `appLanguage`; on change, sets
+    /// `AppleLanguages` and the user is prompted to restart.
+    enum AppLanguage: String, CaseIterable, Identifiable {
+        case english  = "en"
+        case chinese  = "zh-Hans"
+
+        var id: String { rawValue }
+
+        var label: String {
+            switch self {
+            case .english: return "English"
+            case .chinese: return "中文"
+            }
+        }
+
+        /// Set `AppleLanguages` so the next app launch picks up this
+        /// language. Does NOT take effect until the process restarts.
+        func activate() {
+            UserDefaults.standard.set(rawValue, forKey: "appLanguage")
+            UserDefaults.standard.set([rawValue], forKey: "AppleLanguages")
+        }
+
+        /// Read the persisted language preference. If the user has never
+        /// explicitly chosen a language (no stored `appLanguage`), respect
+        /// the system's preferred languages by scanning
+        /// `Locale.preferredLanguages` for the first supported language ID.
+        ///
+        /// Falls back to `.english` when the system languages list is empty
+        /// or contains only unsupported locales.
+        static var current: AppLanguage {
+            // 1. Explicit user choice takes priority
+            if let stored = UserDefaults.standard.string(forKey: "appLanguage"),
+               let lang = AppLanguage(rawValue: stored) {
+                return lang
+            }
+
+            // 2. Otherwise, pick the first system-preferred language that we support
+            let supportedIDs = Set(AppLanguage.allCases.map(\.rawValue))
+            for preferred in Locale.preferredLanguages {
+                // preferred is a full locale identifier like "zh-Hans-CN" or "en-US"
+                // We check progressively: full match, language-only match, then just the
+                // language code portion.
+                let lowered = preferred.lowercased()
+                if supportedIDs.contains(lowered) {
+                    return AppLanguage(rawValue: lowered)!
+                }
+                // Prefix match against the supported IDs so the real macOS
+                // locale ids resolve: "zh-hans-cn" -> "zh-hans", "en-us" ->
+                // "en". (The earlier language-code-only check failed for
+                // Chinese because the supported id is "zh-hans", not "zh".)
+                if let match = supportedIDs.first(where: { lowered.hasPrefix($0) }) {
+                    return AppLanguage(rawValue: match)!
+                }
+                // e.g., "fr-ca" -> "fr" (no match here; falls through).
+                let langPart = String(lowered.prefix(while: { $0 != "-" }))
+                if supportedIDs.contains(langPart) {
+                    return AppLanguage(rawValue: langPart)!
+                }
+            }
+
+            // 3. No match — safe fallback
+            return .english
+        }
+
+        /// Apply on launch so the correct .xcstrings translations load.
+        /// Only overrides `AppleLanguages` if the user hasn't set a custom
+        /// language via the in-app picker, because that preference must
+        /// survive across relaunches.
+        static func applyOnLaunch() {
+            let preferred = current
+            // Only write the system-detected language if no explicit choice exists.
+            // This way "activate()" (which writes both keys) continues to work.
+            if UserDefaults.standard.string(forKey: "appLanguage") == nil {
+                UserDefaults.standard.set([preferred.rawValue], forKey: "AppleLanguages")
+            }
+        }
+    }
     static let appName  = "Air Assist"
     static let bundleID = "com.sjschillinger.airassist"
 

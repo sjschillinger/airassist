@@ -151,10 +151,10 @@ enum AppMainMenu {
         //     a menu home for the standalone Activity tool. ---
         let windowMenuItem = NSMenuItem()
         mainMenu.addItem(windowMenuItem)
-        let windowMenu = NSMenu(title: "Window")
+        let windowMenu = NSMenu(title: String(localized: "Window"))
         windowMenuItem.submenu = windowMenu
         let activityItem = NSMenuItem(
-            title: "Activity",
+            title: String(localized: "Activity"),
             action: #selector(AppDelegate.openActivityFromMenu(_:)),
             keyEquivalent: "a"
         )

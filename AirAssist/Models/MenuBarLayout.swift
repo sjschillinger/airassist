@@ -9,9 +9,9 @@ enum MenuBarLayout: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .single:     return "Single"
-        case .sideBySide: return "Side by Side"
-        case .stacked:    return "Stacked"
+        case .single:     return String(localized: "Single")
+        case .sideBySide: return String(localized: "Side by Side")
+        case .stacked:    return String(localized: "Stacked")
         }
     }
 }

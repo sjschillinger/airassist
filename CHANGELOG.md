@@ -9,6 +9,15 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+### Added
+
+- **Simplified Chinese localization + in-app language switching.** A new
+  Language picker in Preferences › General switches between English and
+  中文 without changing the system language (applied on restart). Built on
+  a String Catalog so untranslated strings fall back to English. Based on
+  community contribution #7 by @ng-life, reconciled onto the v0.15.0 UI
+  (Activity window, redesigned dashboard) with the new strings translated.
+
 ## [0.15.0] — 2026-06-03
 
 The Activity release — and a CPU honesty pass. Process monitoring

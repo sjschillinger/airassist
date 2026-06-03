@@ -25,11 +25,11 @@ final class ActivityWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "Activity"
+        window.title = String(localized: "Activity")
         window.minSize = NSSize(width: 560, height: 400)
         window.setFrameAutosaveName("AirAssist.Activity")
         let hosting = NSHostingController(rootView: ActivityMonitorView(store: store))
-        hosting.view.setAccessibilityLabel("Activity")
+        hosting.view.setAccessibilityLabel(String(localized: "Activity"))
         window.contentViewController = hosting
         super.init(window: window)
     }

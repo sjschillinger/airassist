@@ -53,7 +53,7 @@ final class MenuBarQuickMenu: NSObject {
         dashItem.keyEquivalentModifierMask = [.command]
         menu.addItem(dashItem)
 
-        let activityItem = NSMenuItem(title: "Open Activity",
+        let activityItem = NSMenuItem(title: String(localized: "Open Activity"),
                                       action: #selector(qmActivity),
                                       keyEquivalent: "a")
         activityItem.target = self

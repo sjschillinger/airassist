@@ -68,7 +68,7 @@ struct WeeklySummaryView: View {
                 Text("\(s.totalEpisodes) episode\(s.totalEpisodes == 1 ? "" : "s")")
                     .font(.subheadline).bold().monospacedDigit()
             }
-            Text(formatDuration(s.totalThrottleSeconds) + " total throttled")
+            Text("\(formatDuration(s.totalThrottleSeconds)) total throttled")
                 .font(.caption).foregroundStyle(.secondary)
             HStack(spacing: 8) {
                 ForEach(sourceOrder, id: \.self) { src in
@@ -138,10 +138,10 @@ struct WeeklySummaryView: View {
 
     private func sourceLabel(_ s: ThrottleEvent.Source) -> String {
         switch s {
-        case .governor: return "Governor"
-        case .rule:     return "Rule"
-        case .manual:   return "Manual"
-        case .other:    return "Other"
+        case .governor: return String(localized: "Governor")
+        case .rule:     return String(localized: "Rule")
+        case .manual:   return String(localized: "Manual")
+        case .other:    return String(localized: "Other")
         }
     }
     private func sourceIcon(_ s: ThrottleEvent.Source) -> String {

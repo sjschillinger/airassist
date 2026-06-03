@@ -20,15 +20,10 @@ enum ScenarioPreset: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .presenting:  return "Presenting"
-        // "Lap / Cool" speaks to both audiences without lying to either:
-        // fanless-Air users care about chassis-on-skin temperature ("Lap"),
-        // fan-equipped Macs get less fan noise as the side effect of the
-        // same temperature cap ("Cool"). The earlier "Quiet" name only
-        // worked for the fan crowd.
-        case .quiet:       return "Lap / Cool"
-        case .performance: return "Performance"
-        case .auto:        return "Auto (default)"
+        case .presenting:  return String(localized: "Presenting")
+        case .quiet:       return String(localized: "Lap / Cool")
+        case .performance: return String(localized: "Performance")
+        case .auto:        return String(localized: "Auto (default)")
         }
     }
 
@@ -46,10 +41,10 @@ enum ScenarioPreset: String, CaseIterable, Identifiable {
 
     var tagline: String {
         switch self {
-        case .presenting:  return "Governor off, display awake. No surprise pauses during a demo."
-        case .quiet:       return "Holds the chassis cool to the touch by capping sustained heat. Brief bursts pass through. Quieter on Macs with fans."
-        case .performance: return "Gentle governor only — high heat ceiling, display awake. Get out of the workload's way."
-        case .auto:        return "Balanced caps, on-battery only. Sensible everyday default."
+        case .presenting:  return String(localized: "Governor off, display awake. No surprise pauses during a demo.")
+        case .quiet:       return String(localized: "Holds the chassis cool to the touch by capping sustained heat. Brief bursts pass through. Quieter on Macs with fans.")
+        case .performance: return String(localized: "Gentle governor only — high heat ceiling, display awake. Get out of the workload's way.")
+        case .auto:        return String(localized: "Balanced caps, on-battery only. Sensible everyday default.")
         }
     }
 }
