@@ -9,6 +9,7 @@ struct ThrottlingPrefsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 pauseBanner
+                activityBanner
                 GovernorSection(store: store)
                 Divider()
                 FrontmostThrottleSection()
@@ -21,6 +22,30 @@ struct ThrottlingPrefsView: View {
             }
             .padding(16)
         }
+    }
+
+    /// Points users at the standalone Activity window, where live
+    /// monitoring and direct per-app limit controls live. The settings on
+    /// this pane configure *automatic* throttling; the Activity window is
+    /// for *manually* watching apps and capping them on the spot.
+    private var activityBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "cpu")
+                .font(.title2).foregroundStyle(.blue)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Activity window").font(.subheadline).bold()
+                Text("Watch running apps live and set a per-app CPU limit on any process directly — your limits show up below under Rules. Open it any time from the menu-bar icon, the menu-bar right-click menu, or ⌘⇧A.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            Button("Open Activity") {
+                ActivityWindowController.shared(store: store).show()
+            }
+            .controlSize(.large)
+        }
+        .padding(12)
+        .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
     }
 
     @ViewBuilder
@@ -561,7 +586,17 @@ private struct TopCPUConsumersSection: View {
     @ViewBuilder
     private func consumerRow(_ p: RunningProcess) -> some View {
         let existingRule = store.throttleRules.rule(for: p)
-        let isProtected  = NeverThrottleList.names().contains(p.name)
+        // Two protection sources:
+        //   - User-managed (Never-Throttle list) — user explicitly
+        //     marked this app as off-limits.
+        //   - System-managed (`ProcessInspector.isProtected`) —
+        //     Xcode / terminals / the agent itself; SIGSTOPing them
+        //     would be catastrophic.
+        // We render both as "Protected" but the help text differs so
+        // users know whether they can lift the protection themselves.
+        let isUserProtected   = NeverThrottleList.names().contains(p.name)
+        let isSystemProtected = ProcessInspector.isProtected(p.name)
+        let isProtected       = isUserProtected || isSystemProtected
 
         HStack(spacing: 8) {
             // Identity column — display name big, raw process name
@@ -587,7 +622,10 @@ private struct TopCPUConsumersSection: View {
                 .frame(width: 50, alignment: .trailing)
 
             // Action column — three states.
-            actionView(for: p, existingRule: existingRule, isProtected: isProtected)
+            actionView(for: p,
+                       existingRule: existingRule,
+                       isUserProtected: isUserProtected,
+                       isSystemProtected: isSystemProtected)
                 .frame(width: 140, alignment: .trailing)
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
@@ -600,8 +638,15 @@ private struct TopCPUConsumersSection: View {
     @ViewBuilder
     private func actionView(for p: RunningProcess,
                             existingRule: ThrottleRule?,
-                            isProtected: Bool) -> some View {
-        if isProtected {
+                            isUserProtected: Bool,
+                            isSystemProtected: Bool) -> some View {
+        if isSystemProtected {
+            HStack(spacing: 4) {
+                Image(systemName: "shield.lefthalf.filled").foregroundStyle(.gray)
+                Text("Protected").font(.caption)
+            }
+            .help("\(p.displayName) is on Air Assist's built-in protection list. SIGSTOPing development tools, terminals, or the agent currently helping you can leave them in a broken state, so the app refuses to throttle them automatically.")
+        } else if isUserProtected {
             HStack(spacing: 4) {
                 Image(systemName: "shield.fill").foregroundStyle(.tint)
                 Text("Protected").font(.caption)
@@ -635,9 +680,13 @@ private struct TopCPUConsumersSection: View {
                                     existingRule: ThrottleRule?,
                                     isProtected: Bool) -> String {
         let cpu = "\(Int(p.cpuPercent.rounded())) percent CPU"
-        if isProtected {
-            return "\(p.displayName), \(cpu), protected by Never-Throttle list"
+        if ProcessInspector.isProtected(p.name) {
+            return "\(p.displayName), \(cpu), protected by Air Assist's built-in safety list"
         }
+        if NeverThrottleList.names().contains(p.name) {
+            return "\(p.displayName), \(cpu), protected by your Never-Throttle list"
+        }
+        _ = isProtected   // legacy parameter kept for call-site stability
         if let rule = existingRule {
             return "\(p.displayName), \(cpu), currently capped at \(Int((rule.duty * 100).rounded())) percent"
         }

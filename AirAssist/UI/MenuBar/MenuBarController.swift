@@ -20,7 +20,7 @@ import SwiftUI
 /// Likewise, never replace `NSStatusBarButton.cell` — the menu bar uses
 /// transparent styling configured invisibly by the system on that cell.
 @MainActor
-final class MenuBarController {
+final class MenuBarController: NSObject, NSPopoverDelegate {
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private let store: ThermalStore
@@ -41,9 +41,11 @@ final class MenuBarController {
 
     init(store: ThermalStore) {
         self.store = store
+        super.init()
         self.quickMenu = MenuBarQuickMenu(
             store: store,
             openDashboard:   { [weak self] in self?.openDashboard() },
+            openActivity:    { [weak self] in self?.openActivity() },
             openPreferences: { [weak self] in self?.openPreferences() }
         )
         setupStatusItem()
@@ -443,6 +445,22 @@ final class MenuBarController {
     private func setupPopover() {
         popover.behavior = .transient
         popover.animates = true
+        popover.delegate = self
+    }
+
+    /// Release the hosted SwiftUI view when the popover closes.
+    ///
+    /// `NSHostingController`'s view keeps re-laying-out at display-refresh
+    /// rate for as long as it's alive — even while the popover is hidden —
+    /// because of its live `Timer.publish` subscription and the
+    /// `.preferredContentSize` sizing path. Left retained (the old
+    /// behaviour), that burned ~30% CPU continuously after the first open.
+    /// Tearing it down on close stops the render loop; `ensurePopoverContent`
+    /// rebuilds it cheaply on the next open.
+    nonisolated func popoverDidClose(_ notification: Notification) {
+        MainActor.assumeIsolated {
+            popover.contentViewController = nil
+        }
     }
 
     private func ensurePopoverContent() {
@@ -450,6 +468,7 @@ final class MenuBarController {
         let vc = NSHostingController(rootView: MenuBarPopoverView(
             store: store,
             onDashboard:   { [weak self] in self?.openDashboard() },
+            onActivity:    { [weak self] in self?.openActivity() },
             onPreferences: { [weak self] in self?.openPreferences() },
             onQuit:        { NSApp.terminate(nil) }
         ))
@@ -502,6 +521,11 @@ final class MenuBarController {
     func openDashboard() {
         popover.performClose(nil)
         DashboardWindowController.shared(store: store).show()
+    }
+
+    func openActivity() {
+        popover.performClose(nil)
+        ActivityWindowController.shared(store: store).show()
     }
 
     func openPreferences() {

@@ -146,6 +146,21 @@ enum AppMainMenu {
             keyEquivalent: "a"
         ))
 
+        // --- Window menu: open the Activity monitor window. Gives a
+        //     discoverable ⌘⇧A everywhere one of our windows is key, and
+        //     a menu home for the standalone Activity tool. ---
+        let windowMenuItem = NSMenuItem()
+        mainMenu.addItem(windowMenuItem)
+        let windowMenu = NSMenu(title: "Window")
+        windowMenuItem.submenu = windowMenu
+        let activityItem = NSMenuItem(
+            title: "Activity",
+            action: #selector(AppDelegate.openActivityFromMenu(_:)),
+            keyEquivalent: "a"
+        )
+        activityItem.keyEquivalentModifierMask = [.command, .shift]
+        windowMenu.addItem(activityItem)
+
         // --- Help menu: Show Welcome… lets users re-open the onboarding
         //     sheet after first run. `OnboardingWindow.present(…,
         //     markSeen: false)` was designed exactly for this but had no

@@ -103,6 +103,9 @@ enum URLSchemeHandler {
             // need to flip activation policy. App stays .accessory.
             DashboardWindowController.shared(store: store).show()
 
+        case "open-activity":
+            ActivityWindowController.shared(store: store).show()
+
         case "open-preferences":
             PreferencesWindowController.shared(store: store).show()
 

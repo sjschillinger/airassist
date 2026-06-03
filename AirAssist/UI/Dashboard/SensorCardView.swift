@@ -67,7 +67,7 @@ struct SensorCardView: View {
                 .foregroundStyle(stateColor)
 
             // Real sparkline from the sensor's rolling history
-            Sparkline(samples: sensor.history, tint: stateColor)
+            Sparkline(samples: sensor.history, tint: stateColor, unit: unit)
                 .frame(height: 24)
         }
         .padding(10)
@@ -130,6 +130,11 @@ struct SensorCardView: View {
 private struct Sparkline: View {
     let samples: [Double]
     let tint: Color
+    /// Unit for the hover readout chip (samples are stored Celsius).
+    var unit: TempUnit = .celsius
+
+    /// Index of the sample under the cursor, or nil when not hovering.
+    @State private var hoverIndex: Int?
 
     var body: some View {
         GeometryReader { geo in
@@ -166,25 +171,57 @@ private struct Sparkline: View {
                     )
                 }
 
-                // Gradient fill under the line.
-                Path { path in
-                    path.move(to: CGPoint(x: 0, y: h))
-                    path.addLine(to: points[0])
-                    for p in points.dropFirst() { path.addLine(to: p) }
-                    path.addLine(to: CGPoint(x: w, y: h))
-                    path.closeSubpath()
-                }
-                .fill(LinearGradient(
-                    colors: [tint.opacity(0.25), tint.opacity(0.0)],
-                    startPoint: .top, endPoint: .bottom
-                ))
+                ZStack(alignment: .topTrailing) {
+                    // Gradient fill under the line.
+                    Path { path in
+                        path.move(to: CGPoint(x: 0, y: h))
+                        path.addLine(to: points[0])
+                        for p in points.dropFirst() { path.addLine(to: p) }
+                        path.addLine(to: CGPoint(x: w, y: h))
+                        path.closeSubpath()
+                    }
+                    .fill(LinearGradient(
+                        colors: [tint.opacity(0.25), tint.opacity(0.0)],
+                        startPoint: .top, endPoint: .bottom
+                    ))
 
-                // Line.
-                Path { path in
-                    path.move(to: points[0])
-                    for p in points.dropFirst() { path.addLine(to: p) }
+                    // Line.
+                    Path { path in
+                        path.move(to: points[0])
+                        for p in points.dropFirst() { path.addLine(to: p) }
+                    }
+                    .stroke(tint.opacity(0.9), lineWidth: 1.4)
+
+                    // Hover indicator: vertical rule + dot at the sample,
+                    // and a value chip pinned to the top-trailing corner so
+                    // it never overflows the tiny card.
+                    if let idx = hoverIndex, finite.indices.contains(idx) {
+                        let p = points[idx]
+                        Path { path in
+                            path.move(to: CGPoint(x: p.x, y: 0))
+                            path.addLine(to: CGPoint(x: p.x, y: h))
+                        }
+                        .stroke(tint.opacity(0.4), lineWidth: 1)
+                        Circle().fill(tint)
+                            .frame(width: 5, height: 5)
+                            .position(p)
+                        Text(unit.format(finite[idx]))
+                            .font(.system(size: 9, weight: .semibold).monospacedDigit())
+                            .padding(.horizontal, 3).padding(.vertical, 1)
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 3))
+                            .fixedSize()
+                    }
                 }
-                .stroke(tint.opacity(0.9), lineWidth: 1.4)
+                .contentShape(Rectangle())
+                .onContinuousHover { phase in
+                    switch phase {
+                    case .active(let location):
+                        let raw = Int((location.x / max(step, 0.001)).rounded())
+                        hoverIndex = min(max(raw, 0), finite.count - 1)
+                    case .ended:
+                        hoverIndex = nil
+                    }
+                }
             }
         }
     }

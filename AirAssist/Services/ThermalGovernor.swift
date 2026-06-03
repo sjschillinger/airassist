@@ -224,6 +224,14 @@ final class ThermalGovernor {
     private func applyThrottle(duty: Double, candidates: [RunningProcess]) {
         let targets = candidates
             .filter { $0.cpuPercent >= config.minCPUForTargeting }
+            // User-protected names (Xcode, terminals, the agent
+            // running this session, etc.) can appear in the snapshot
+            // because visibility surfaces want to show them, but the
+            // governor must never SIGSTOP them. Belt-and-braces with
+            // ProcessThrottler.setDuty's own protected-names refusal,
+            // since dropping the candidate here also avoids the
+            // log-spam from setDuty rejecting it every tick.
+            .filter { !ProcessInspector.isProtected($0.name) }
             // Skip PIDs already covered by a user's per-app rule — the rule
             // engine is the single authority there. Prevents a 1Hz duty
             // tug-of-war between the two systems.

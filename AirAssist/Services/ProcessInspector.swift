@@ -9,22 +9,93 @@ final class ProcessInspector {
     /// Processes that we never target, regardless of any rule. System-critical
     /// or interactive-UX processes where SIGSTOP would hurt more than help.
     /// Matched against executable name (case-sensitive).
-    static let excludedNames: Set<String> = [
+    /// Truly opaque system processes that should never appear in any
+    /// user-facing list. These are the OS, not the user's work — the
+    /// user has nothing actionable to do with `kernel_task`. Both the
+    /// governor's targeting list AND the visibility surfaces filter
+    /// against this set.
+    static let systemHiddenNames: Set<String> = [
         "kernel_task", "launchd", "WindowServer", "coreaudiod", "hidd",
         "ControlCenter", "SystemUIServer", "Dock", "Finder", "loginwindow",
         "backboardd", "runningboardd", "cfprefsd", "mds", "mds_stores",
         "mdworker", "mdworker_shared", "bluetoothd", "powerd", "logd",
         "Spotlight", "UserEventAgent", "distnoted", "sharingd", "securityd",
-        "trustd", "syspolicyd", "AirAssist", "Xcode", "Simulator",
+        "trustd", "syspolicyd",
+        "AirAssist", "airassist-rescue",  // ourselves
+    ]
+
+    /// Processes the user can SEE in visibility surfaces but that are
+    /// never auto-throttled and shouldn't be manually capped either.
+    /// SIGSTOPing one of these is catastrophic — Xcode mid-build, a
+    /// terminal running a long script, the agent currently running the
+    /// user's session. The visibility surfaces show these with a
+    /// "Protected" badge instead of a Cap button, so the user can see
+    /// the load they're contributing without having a footgun
+    /// available.
+    static let userProtectedNames: Set<String> = [
+        "Xcode", "Simulator",
         "Claude", "claude",  // Claude Code itself
+        "Codex",  // Codex CLI agent
         "Terminal", "iTerm2", "Warp", "Ghostty",
     ]
 
+    /// Combined list — kept as the original `excludedNames` API for
+    /// back-compat. The governor's snapshot publisher used to call
+    /// through this; the rule engine and ProcessThrottler still do.
+    /// New visibility-friendly callers should use the narrower
+    /// `systemHiddenNames` directly.
+    static let excludedNames: Set<String> = systemHiddenNames.union(userProtectedNames)
+
+    /// Whether this process is in the `userProtectedNames` set —
+    /// visible to the user but never throttle-able. Visibility
+    /// surfaces use this to render a "Protected" badge in place of
+    /// the Cap action.
+    static func isProtected(_ name: String) -> Bool {
+        userProtectedNames.contains(name)
+    }
+
     private var lastSnapshot: [pid_t: (cpuTimeNs: UInt64, wallTime: Date)] = [:]
-    /// Pre-resolved bundle IDs, keyed by executable path (stable across snapshots).
-    private var bundleIDCache: [String: String] = [:]
+    /// Resolved bundle IDs, keyed by executable path (stable across snapshots).
+    /// Stores the *optional* result so negative lookups (processes with no
+    /// `.app` container — daemons, CLI tools, helpers) are cached too;
+    /// otherwise every such process re-walked its path and built an
+    /// `NSBundle` on every 1 Hz tick, the dominant idle-CPU cost.
+    private var bundleIDCache: [String: String?] = [:]
+    /// Executable paths keyed by PID. A PID's path never changes for its
+    /// lifetime, so `proc_pidpath` (a syscall) only needs to run once per
+    /// PID instead of once per PID per tick. Pruned to live PIDs each
+    /// snapshot so a reused PID number can't return a stale path.
+    private var pathCache: [pid_t: String] = [:]
 
     private let currentUID: uid_t = getuid()
+
+    /// CPU times from `proc_taskinfo` (`pti_total_user`/`pti_total_system`)
+    /// are in **Mach absolute-time units, not nanoseconds**. On Apple
+    /// Silicon the timebase is 125/3 (~41.67), so treating the raw value as
+    /// nanoseconds under-reported every process's CPU% by that factor —
+    /// Activity Monitor's 10% showed here as ~0.2%. Intel's timebase is 1:1,
+    /// which is why the bug stayed latent. Read once; the timebase is fixed
+    /// for the life of the process.
+    private static let timebase: mach_timebase_info_data_t = {
+        var tb = mach_timebase_info_data_t()
+        mach_timebase_info(&tb)
+        // Guard against a degenerate 0/0 (never seen in practice) so the
+        // conversion is the identity rather than a divide-by-zero.
+        if tb.numer == 0 || tb.denom == 0 { tb.numer = 1; tb.denom = 1 }
+        return tb
+    }()
+
+    private static func machToNanos(_ ticks: UInt64) -> UInt64 {
+        machTicksToNanos(ticks, numer: timebase.numer, denom: timebase.denom)
+    }
+
+    /// Pure, testable Mach-ticks → nanoseconds conversion. Multiply before
+    /// divide to keep integer precision; `UInt64` headroom is ample (years
+    /// of CPU time × 125 stays well under overflow).
+    static func machTicksToNanos(_ ticks: UInt64, numer: UInt32, denom: UInt32) -> UInt64 {
+        guard denom != 0 else { return ticks }
+        return ticks &* UInt64(numer) / UInt64(denom)
+    }
 
     /// Take a fresh snapshot of all processes. CPU% is computed from the
     /// delta of cpuTimeNs between this call and the previous one. For newly
@@ -73,17 +144,44 @@ final class ProcessInspector {
         }
 
         lastSnapshot = newSnapshot
+        // Drop cached paths for PIDs that no longer exist so a recycled
+        // PID number can't resolve to a dead process's path.
+        pathCache = pathCache.filter { newSnapshot.keys.contains($0.key) }
         return out
     }
 
     /// Top-N processes by current CPU%, filtering excluded names and non-user procs.
     /// Returns an array sorted high→low.
+    /// Used by the governor and rule engine for THROTTLE-TARGETING —
+    /// excludes both system-hidden (kernel_task etc.) and
+    /// user-protected (Xcode etc.) names so neither subsystem ever
+    /// tries to SIGSTOP something dangerous.
     func topUserProcessesByCPU(limit: Int = 10,
                                minPercent: Double = 0.0) -> [RunningProcess] {
         let s = snapshot()
         return s
             .filter { $0.isCurrentUser }
             .filter { !ProcessInspector.excludedNames.contains($0.name) }
+            .filter { $0.cpuPercent >= minPercent }
+            .sorted  { $0.cpuPercent > $1.cpuPercent }
+            .prefix(limit)
+            .map { $0 }
+    }
+
+    /// Top-N processes by current CPU%, with the lighter exclusion
+    /// list — only `systemHiddenNames` (kernel_task, launchd,
+    /// WindowServer, etc.). User-protected names like Xcode and
+    /// Terminal stay in the result so the user can see their load.
+    /// Visibility surfaces (popover CPU Activity, dashboard Top CPU
+    /// consumers, Throttling-prefs Top CPU consumers, the persistent
+    /// `cpu-activity.ndjson` log) use this; throttle code paths use
+    /// `topUserProcessesByCPU` so the targeting set still excludes
+    /// everything dangerous.
+    func topVisibleProcessesByCPU(limit: Int = 10,
+                                  minPercent: Double = 0.0) -> [RunningProcess] {
+        snapshot()
+            .filter { $0.isCurrentUser }
+            .filter { !ProcessInspector.systemHiddenNames.contains($0.name) }
             .filter { $0.cpuPercent >= minPercent }
             .sorted  { $0.cpuPercent > $1.cpuPercent }
             .prefix(limit)
@@ -151,22 +249,29 @@ final class ProcessInspector {
             name: name,
             parentPID: pid_t(bsd.pbi_ppid),
             uid: bsd.pbi_uid,
-            userTime: taskInfo.pti_total_user,
-            sysTime: taskInfo.pti_total_system,
+            userTime: Self.machToNanos(taskInfo.pti_total_user),
+            sysTime: Self.machToNanos(taskInfo.pti_total_system),
             rssBytes: UInt64(taskInfo.pti_resident_size)
         )
     }
 
     private func pathFor(pid: pid_t) -> String? {
+        if let cached = pathCache[pid] { return cached }
         // PROC_PIDPATHINFO_MAXSIZE = 4 * MAXPATHLEN; MAXPATHLEN = 1024.
         let bufSize = 4 * 1024
         var buf = [CChar](repeating: 0, count: bufSize)
         let written = proc_pidpath(pid, &buf, UInt32(bufSize))
         guard written > 0 else { return nil }
-        return String(cString: buf)
+        let path = String(cString: buf)
+        pathCache[pid] = path
+        return path
     }
 
     private func resolveBundleID(path: String) -> String? {
+        // `bundleIDCache[path]` is `String??`: the outer optional is
+        // "have we looked this path up", the inner is the result. Caching
+        // the inner `nil` is the whole point — non-.app processes must not
+        // re-resolve every tick.
         if let cached = bundleIDCache[path] { return cached }
         // Walk up from executable path to find the .app container.
         // `/Applications/Foo.app/Contents/MacOS/Foo` → `/Applications/Foo.app`
@@ -174,12 +279,9 @@ final class ProcessInspector {
         while url.pathExtension != "app" && url.pathComponents.count > 1 {
             url.deleteLastPathComponent()
         }
-        guard url.pathExtension == "app",
-              let bundle = Bundle(url: url),
-              let id = bundle.bundleIdentifier
-        else {
-            return nil
-        }
+        let id: String? = url.pathExtension == "app"
+            ? Bundle(url: url)?.bundleIdentifier
+            : nil
         bundleIDCache[path] = id
         return id
     }
