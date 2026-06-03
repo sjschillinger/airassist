@@ -27,11 +27,11 @@ struct GeneralPrefsView: View {
     @State private var batteryAwareOnPowered: ThresholdPreset = .balanced
 
     private let intervalOptions: [(label: String, seconds: Double)] = [
-        ("1 second",  1),
-        ("2 seconds", 2),
-        ("5 seconds", 5),
-        ("10 seconds", 10),
-        ("30 seconds", 30),
+        (String(localized: "1 second"),   1),
+        (String(localized: "2 seconds"),  2),
+        (String(localized: "5 seconds"),  5),
+        (String(localized: "10 seconds"), 10),
+        (String(localized: "30 seconds"), 30),
     ]
 
     var body: some View {

@@ -41,12 +41,12 @@ struct SensorsPrefsView: View {
         DisclosureGroup(isExpanded: $thresholdsExpanded) {
             VStack(spacing: 6) {
                 thresholdsHeader
-                thresholdRow("CPU",     warm: \.cpu.warm,     hot: \.cpu.hot)
-                thresholdRow("GPU",     warm: \.gpu.warm,     hot: \.gpu.hot)
-                thresholdRow("SoC",     warm: \.soc.warm,     hot: \.soc.hot)
-                thresholdRow("Battery", warm: \.battery.warm, hot: \.battery.hot)
-                thresholdRow("Storage", warm: \.storage.warm, hot: \.storage.hot)
-                thresholdRow("Other",   warm: \.other.warm,   hot: \.other.hot)
+                thresholdRow(SensorCategory.cpu.displayName,     warm: \.cpu.warm,     hot: \.cpu.hot)
+                thresholdRow(SensorCategory.gpu.displayName,     warm: \.gpu.warm,     hot: \.gpu.hot)
+                thresholdRow(SensorCategory.soc.displayName,     warm: \.soc.warm,     hot: \.soc.hot)
+                thresholdRow(SensorCategory.battery.displayName, warm: \.battery.warm, hot: \.battery.hot)
+                thresholdRow(SensorCategory.storage.displayName, warm: \.storage.warm, hot: \.storage.hot)
+                thresholdRow(SensorCategory.other.displayName,   warm: \.other.warm,   hot: \.other.hot)
                 HStack {
                     Spacer()
                     Button("Reset to defaults") {
