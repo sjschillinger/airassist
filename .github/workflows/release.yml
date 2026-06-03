@@ -25,7 +25,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
   build:
@@ -153,52 +153,67 @@ jobs:
           # itself is corrupt.
           codesign --verify --deep --strict --verbose=2 "build/export/AirAssist.app"
 
+      - name: Assemble release notes
+        env:
+          # Pass build outputs through env (not inline ${{ }} in the script)
+          # so nothing is interpolated into the shell. These are our own
+          # trusted build outputs, but env is the safe-by-default pattern.
+          VERSION: ${{ steps.zip.outputs.version }}
+          DMG: ${{ steps.zip.outputs.dmg_name }}
+          SHA: ${{ steps.zip.outputs.sha256 }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Pull this version's section out of CHANGELOG.md — everything under
+          # the "## [VERSION]" heading up to the next "## [" heading — so the
+          # release self-documents instead of linking off-page.
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" {f=1; next}
+            f && /^## \[/ {exit}
+            f {print}
+          ' CHANGELOG.md > clsec.md
+          if [ ! -s clsec.md ]; then
+            echo "" > clsec.md
+            echo "_No changelog entry found for $VERSION — see the full changelog below._" >> clsec.md
+          fi
+          {
+            echo "## What's new in $VERSION"
+            cat clsec.md
+            echo "---"
+            echo ""
+            echo "Ad-hoc signed, unnotarized build. Full history: [CHANGELOG.md](https://github.com/$REPO/blob/main/CHANGELOG.md)"
+            echo ""
+            echo "### Install (recommended)"
+            echo ""
+            echo '```bash'
+            echo "brew install --cask sjschillinger/airassist/airassist   # first time"
+            echo "brew upgrade --cask airassist                            # already installed"
+            echo '```'
+            echo ""
+            echo "### Manual install"
+            echo ""
+            echo "1. Download \`$DMG\` below, mount it, drag \`AirAssist.app\` to Applications."
+            echo "2. First launch only (manual downloads carry macOS quarantine; Homebrew handles this for you):"
+            echo '   ```'
+            echo "   xattr -dr com.apple.quarantine /Applications/AirAssist.app"
+            echo '   ```'
+            echo ""
+            echo "### Verify"
+            echo ""
+            echo '```'
+            echo "shasum -a 256 $DMG   # should match:"
+            echo "$SHA"
+            echo '```'
+          } > release_notes.md
+          echo "----- release_notes.md -----"
+          cat release_notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           # `tag_name` defaults to the pushed tag; keep it implicit.
           name: Air Assist ${{ steps.zip.outputs.version }}
-          body: |
-            ## Air Assist ${{ steps.zip.outputs.version }}
-
-            Ad-hoc signed, unnotarized build. See [CHANGELOG.md](../blob/main/CHANGELOG.md)
-            for what's new.
-
-            ### Install (recommended)
-
-            First-time install:
-
-            ```bash
-            brew install --cask sjschillinger/airassist/airassist
-            ```
-
-            Already have Air Assist? Upgrade in place:
-
-            ```bash
-            brew upgrade --cask airassist
-            ```
-
-            ### Manual install
-
-            1. Download `${{ steps.zip.outputs.dmg_name }}` below.
-            2. Double-click to mount, drag `AirAssist.app` to the
-               Applications shortcut, then eject the volume.
-            3. First-launch only — run once in Terminal to clear the
-               quarantine attribute macOS adds to browser downloads:
-               ```
-               xattr -dr com.apple.quarantine /Applications/AirAssist.app
-               ```
-               (Homebrew does this for you; manual downloaders see the
-               "damaged" dialog without it.)
-
-            ### Verify
-
-            ```
-            shasum -a 256 ${{ steps.zip.outputs.dmg_name }}
-            # should match:
-            ${{ steps.zip.outputs.sha256 }}
-            ```
-          draft: true            # stays draft until you explicitly publish
+          body_path: release_notes.md
+          draft: true # stays draft until you explicitly publish
           prerelease: false
           files: |
             ${{ steps.zip.outputs.zip_path }}
