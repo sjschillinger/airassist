@@ -35,13 +35,7 @@ final class PreferencesWindowController: NSWindowController {
     required init?(coder: NSCoder) { fatalError("not used") }
 
     func show() {
-        // Only center on the very first appearance. After that, the
-        // autosaved frame (keyed by `AirAssist.Preferences`) restores
-        // the user's last size and position.
-        if window?.isVisible == false,
-           UserDefaults.standard.string(forKey: "NSWindow Frame AirAssist.Preferences") == nil {
-            window?.center()
-        }
+        if window?.isVisible == false { recenterIfFramePoor() }
         // Activate BEFORE showing — for LSUIElement apps, doing this
         // in the other order can leave the window behind whatever app
         // currently holds focus. Not a bug we've hit in the wild, but
