@@ -13,6 +13,12 @@ struct HistoryView: View {
         case all     = "All"
         var id: String { rawValue }
 
+        /// Picker label. The hour abbreviations are universal; only "All"
+        /// needs translating.
+        var displayName: String {
+            self == .all ? String(localized: "All") : rawValue
+        }
+
         var hours: Double? {
             switch self {
             case .last1h:  return 1
@@ -67,7 +73,7 @@ struct HistoryView: View {
     private var toolbar: some View {
         HStack {
             Picker("Range", selection: $range) {
-                ForEach(Range.allCases) { r in Text(r.rawValue).tag(r) }
+                ForEach(Range.allCases) { r in Text(r.displayName).tag(r) }
             }
             .pickerStyle(.segmented)
             .frame(width: 260)
@@ -121,12 +127,12 @@ struct HistoryView: View {
     private var points: [Point] {
         var out: [Point] = []
         for e in entries {
-            if let v = e.cpuMax     { out.append(Point(time: e.timestamp, category: "CPU",     value: convert(v))) }
-            if let v = e.gpuMax     { out.append(Point(time: e.timestamp, category: "GPU",     value: convert(v))) }
-            if let v = e.socMax     { out.append(Point(time: e.timestamp, category: "SoC",     value: convert(v))) }
-            if let v = e.batteryMax { out.append(Point(time: e.timestamp, category: "Battery", value: convert(v))) }
-            if let v = e.storageMax { out.append(Point(time: e.timestamp, category: "Storage", value: convert(v))) }
-            if let v = e.otherMax   { out.append(Point(time: e.timestamp, category: "Other",   value: convert(v))) }
+            if let v = e.cpuMax     { out.append(Point(time: e.timestamp, category: SensorCategory.cpu.displayName,     value: convert(v))) }
+            if let v = e.gpuMax     { out.append(Point(time: e.timestamp, category: SensorCategory.gpu.displayName,     value: convert(v))) }
+            if let v = e.socMax     { out.append(Point(time: e.timestamp, category: SensorCategory.soc.displayName,     value: convert(v))) }
+            if let v = e.batteryMax { out.append(Point(time: e.timestamp, category: SensorCategory.battery.displayName, value: convert(v))) }
+            if let v = e.storageMax { out.append(Point(time: e.timestamp, category: SensorCategory.storage.displayName, value: convert(v))) }
+            if let v = e.otherMax   { out.append(Point(time: e.timestamp, category: SensorCategory.other.displayName,   value: convert(v))) }
         }
         return out
     }
@@ -192,9 +198,12 @@ struct HistoryView: View {
     /// hovered sample.
     private func hoverReadout(_ entry: ThermalEntry) -> some View {
         let rows: [(String, Double?)] = [
-            ("CPU", entry.cpuMax), ("GPU", entry.gpuMax), ("SoC", entry.socMax),
-            ("Battery", entry.batteryMax), ("Storage", entry.storageMax),
-            ("Other", entry.otherMax)
+            (SensorCategory.cpu.displayName, entry.cpuMax),
+            (SensorCategory.gpu.displayName, entry.gpuMax),
+            (SensorCategory.soc.displayName, entry.socMax),
+            (SensorCategory.battery.displayName, entry.batteryMax),
+            (SensorCategory.storage.displayName, entry.storageMax),
+            (SensorCategory.other.displayName, entry.otherMax)
         ]
         return VStack(alignment: .leading, spacing: 2) {
             Text(entry.timestamp, format: .dateTime.month().day().hour().minute())

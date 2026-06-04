@@ -193,10 +193,10 @@ private struct GovernorSection: View {
         let isActive = store.governor.isTempThrottling || store.governor.isCPUThrottling
         let text: String
         let color: Color
-        if store.isPauseActive      { text = "Paused"; color = .yellow }
-        else if store.governorConfig.isOff { text = "Off"; color = .secondary }
-        else if isActive            { text = "Throttling"; color = .orange }
-        else                        { text = "Armed"; color = .green }
+        if store.isPauseActive      { text = String(localized: "Paused"); color = .yellow }
+        else if store.governorConfig.isOff { text = String(localized: "Off"); color = .secondary }
+        else if isActive            { text = String(localized: "Throttling"); color = .orange }
+        else                        { text = String(localized: "Armed"); color = .green }
         return Text(text)
             .font(.caption.weight(.semibold))
             .padding(.horizontal, 8).padding(.vertical, 3)
@@ -374,9 +374,7 @@ private struct GovernorSection: View {
                 Toggle(isOn: bindBool(\.onBatteryOnly)) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Throttle only when on battery")
-                        Text("When unchecked, caps apply on AC and battery alike. "
-                             + "When checked, the governor stays armed-but-silent "
-                             + "whenever a charger is connected.")
+                        Text("When unchecked, caps apply on AC and battery alike. When checked, the governor stays armed-but-silent whenever a charger is connected.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -386,9 +384,7 @@ private struct GovernorSection: View {
                 Toggle(isOn: bindBool(\.respectOSThermalState)) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Factor in the OS thermal state")
-                        Text("Lets macOS's own thermal pressure reading bias the "
-                             + "duty cycle tighter when the system is already "
-                             + "reporting heat stress. Recommended.")
+                        Text("Lets macOS's own thermal pressure reading bias the duty cycle tighter when the system is already reporting heat stress. Recommended.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -440,10 +436,10 @@ private struct FrontmostThrottleSection: View {
     /// Allowed durations. -1 sentinel = "until I clear it" (no
     /// auto-release). Same convention as the right-click pause submenu.
     private let durationOptions: [(label: String, minutes: Int)] = [
-        ("15 minutes",      15),
-        ("1 hour",          60),
-        ("4 hours",         4 * 60),
-        ("Until I clear it", -1),
+        (String(localized: "15 minutes"),       15),
+        (String(localized: "1 hour"),           60),
+        (String(localized: "4 hours"),          4 * 60),
+        (String(localized: "Until I clear it"), -1),
     ]
 
     var body: some View {

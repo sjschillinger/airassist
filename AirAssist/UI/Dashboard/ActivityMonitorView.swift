@@ -95,13 +95,13 @@ struct ActivityMonitorView: View {
         HStack(spacing: 6) {
             Text(row.name).lineLimit(1)
             if row.isProtected {
-                badge("Protected", .secondary)
+                badge(String(localized: "Protected"), .secondary)
             } else if let limit = ruleDuty(row) {
                 // Persistent per-app limit (shows even when the app is idle
                 // and not currently being throttled).
-                badge("limit \(Int(limit * 100))%", .purple)
+                badge(String(localized: "limit \(Int(limit * 100))%"), .purple)
             } else if let duty = row.cappedDuty {
-                badge("capped \(Int(duty * 100))%", .purple)
+                badge(String(localized: "capped \(Int(duty * 100))%"), .purple)
             }
         }
     }

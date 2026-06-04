@@ -9,17 +9,17 @@ enum GovernorPreset: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .gentle:     return "Gentle"
-        case .balanced:   return "Balanced"
-        case .aggressive: return "Aggressive"
+        case .gentle:     return String(localized: "Gentle")
+        case .balanced:   return String(localized: "Balanced")
+        case .aggressive: return String(localized: "Aggressive")
         }
     }
 
     var tagline: String {
         switch self {
-        case .gentle:     return "Only step in when things get really hot."
-        case .balanced:   return "Sensible defaults — recommended."
-        case .aggressive: return "Keep the Mac cool and quiet, even under load."
+        case .gentle:     return String(localized: "Only step in when things get really hot.")
+        case .balanced:   return String(localized: "Sensible defaults — recommended.")
+        case .aggressive: return String(localized: "Keep the Mac cool and quiet, even under load.")
         }
     }
 
@@ -62,10 +62,10 @@ enum GovernorMode: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .off:         return "Off"
-        case .temperature: return "Temperature cap"
-        case .cpu:         return "CPU-usage cap"
-        case .both:        return "Temperature & CPU caps"
+        case .off:         return String(localized: "Off")
+        case .temperature: return String(localized: "Temperature cap")
+        case .cpu:         return String(localized: "CPU-usage cap")
+        case .both:        return String(localized: "Temperature & CPU caps")
         }
     }
 }

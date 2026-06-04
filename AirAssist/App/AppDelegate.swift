@@ -36,6 +36,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Persist the resolved app language (explicit choice, else system
+        // locale) into `AppleLanguages` so the next launch renders in it.
+        // Switching takes effect on restart — the picker prompts for one.
+        AppStrings.AppLanguage.applyOnLaunch()
+
         // SAFETY: before we do *anything* else, recover from a previous
         // session that may have left processes SIGSTOPed. Then install
         // signal handlers so SIGTERM/SIGINT/SIGHUP/SIGQUIT always SIGCONT

@@ -38,7 +38,7 @@ final class MenuBarQuickMenu: NSObject {
         // Clicking opens the release page in their browser; users on
         // Homebrew simply run `brew upgrade --cask airassist`.
         if let newer = UpdateCheckService.shared.latestVersion {
-            let upd = NSMenuItem(title: "↑ Version \(newer) available — Get it",
+            let upd = NSMenuItem(title: String(localized: "↑ Version \(newer) available — Get it"),
                                  action: #selector(qmOpenReleasePage),
                                  keyEquivalent: "")
             upd.target = self
@@ -46,21 +46,21 @@ final class MenuBarQuickMenu: NSObject {
             menu.addItem(.separator())
         }
 
-        let dashItem = NSMenuItem(title: "Open Dashboard",
+        let dashItem = NSMenuItem(title: String(localized: "Open Dashboard"),
                                   action: #selector(qmDashboard),
                                   keyEquivalent: "d")
         dashItem.target = self
         dashItem.keyEquivalentModifierMask = [.command]
         menu.addItem(dashItem)
 
-        let activityItem = NSMenuItem(title: "Open Activity",
+        let activityItem = NSMenuItem(title: String(localized: "Open Activity"),
                                       action: #selector(qmActivity),
                                       keyEquivalent: "a")
         activityItem.target = self
         activityItem.keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(activityItem)
 
-        let prefItem = NSMenuItem(title: "Preferences…",
+        let prefItem = NSMenuItem(title: String(localized: "Preferences…"),
                                   action: #selector(qmPreferences),
                                   keyEquivalent: ",")
         prefItem.target = self
@@ -72,7 +72,8 @@ final class MenuBarQuickMenu: NSObject {
         // PID anyway, but the menu item would be misleading.
         if let frontmost = NSWorkspace.shared.frontmostApplication,
            frontmost.processIdentifier != getpid() {
-            let title = "Throttle \(frontmost.localizedName ?? "Frontmost") at 30%"
+            let appName = frontmost.localizedName ?? String(localized: "Frontmost")
+            let title = String(localized: "Throttle \(appName) at 30%")
             let throttleItem = NSMenuItem(title: title,
                                           action: #selector(qmThrottleFrontmost),
                                           keyEquivalent: "")
@@ -83,19 +84,19 @@ final class MenuBarQuickMenu: NSObject {
         menu.addItem(.separator())
 
         if store.isPauseActive {
-            let resume = NSMenuItem(title: "Resume throttling",
+            let resume = NSMenuItem(title: String(localized: "Resume throttling"),
                                     action: #selector(qmResume),
                                     keyEquivalent: "")
             resume.target = self
             menu.addItem(resume)
         } else {
-            let pauseParent = NSMenuItem(title: "Pause throttling",
+            let pauseParent = NSMenuItem(title: String(localized: "Pause throttling"),
                                          action: nil, keyEquivalent: "")
             let pauseSub = NSMenu()
-            pauseSub.addItem(makePauseItem("15 minutes",   seconds: 15 * 60))
-            pauseSub.addItem(makePauseItem("1 hour",       seconds: 60 * 60))
-            pauseSub.addItem(makePauseItem("4 hours",      seconds: 4 * 60 * 60))
-            pauseSub.addItem(makePauseItem("Until quit",   seconds: nil))
+            pauseSub.addItem(makePauseItem(String(localized: "15 minutes"), seconds: 15 * 60))
+            pauseSub.addItem(makePauseItem(String(localized: "1 hour"),     seconds: 60 * 60))
+            pauseSub.addItem(makePauseItem(String(localized: "4 hours"),    seconds: 4 * 60 * 60))
+            pauseSub.addItem(makePauseItem(String(localized: "Until quit"), seconds: nil))
             pauseParent.submenu = pauseSub
             menu.addItem(pauseParent)
         }
@@ -105,13 +106,13 @@ final class MenuBarQuickMenu: NSObject {
         // Stay Awake submenu — caffeinate-style controls. The current
         // mode gets a ✓, and the display-timeout variant picks its
         // minutes from the user's prefs default (falls back to 10).
-        let stayAwakeParent = NSMenuItem(title: "Stay Awake",
+        let stayAwakeParent = NSMenuItem(title: String(localized: "Stay Awake"),
                                          action: nil, keyEquivalent: "")
         stayAwakeParent.submenu = makeStayAwakeSubmenu(currentMode: store.stayAwake.currentMode)
         menu.addItem(stayAwakeParent)
 
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "Quit Air Assist",
+        let quit = NSMenuItem(title: String(localized: "Quit Air Assist"),
                               action: #selector(qmQuit),
                               keyEquivalent: "q")
         quit.target = self
@@ -139,10 +140,10 @@ final class MenuBarQuickMenu: NSObject {
         }()
 
         let options: [(title: String, mode: StayAwakeService.Mode)] = [
-            ("Off",                                                   .off),
-            ("Keep system awake (allow display sleep)",               .system),
-            ("Keep system & display awake",                           .display),
-            ("Display on \(timeoutMinutes) min, then system only",    .displayThenSystem(minutes: timeoutMinutes)),
+            (String(localized: "Off"),                                .off),
+            (String(localized: "Keep system awake (allow display sleep)"), .system),
+            (String(localized: "Keep system & display awake"),        .display),
+            (String(localized: "Display on \(timeoutMinutes) min, then system only"), .displayThenSystem(minutes: timeoutMinutes)),
         ]
 
         for (title, mode) in options {
@@ -160,7 +161,7 @@ final class MenuBarQuickMenu: NSObject {
             submenu.addItem(.separator())
             let mins = Int(remaining / 60)
             let secs = Int(remaining.truncatingRemainder(dividingBy: 60))
-            let label = String(format: "Display sleeps in %d:%02d", mins, secs)
+            let label = String(format: String(localized: "Display sleeps in %d:%02d"), mins, secs)
             let countdown = NSMenuItem(title: label, action: nil, keyEquivalent: "")
             countdown.isEnabled = false
             submenu.addItem(countdown)

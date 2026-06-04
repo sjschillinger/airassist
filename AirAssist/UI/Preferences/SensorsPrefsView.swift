@@ -41,12 +41,12 @@ struct SensorsPrefsView: View {
         DisclosureGroup(isExpanded: $thresholdsExpanded) {
             VStack(spacing: 6) {
                 thresholdsHeader
-                thresholdRow("CPU",     warm: \.cpu.warm,     hot: \.cpu.hot)
-                thresholdRow("GPU",     warm: \.gpu.warm,     hot: \.gpu.hot)
-                thresholdRow("SoC",     warm: \.soc.warm,     hot: \.soc.hot)
-                thresholdRow("Battery", warm: \.battery.warm, hot: \.battery.hot)
-                thresholdRow("Storage", warm: \.storage.warm, hot: \.storage.hot)
-                thresholdRow("Other",   warm: \.other.warm,   hot: \.other.hot)
+                thresholdRow(SensorCategory.cpu.displayName,     warm: \.cpu.warm,     hot: \.cpu.hot)
+                thresholdRow(SensorCategory.gpu.displayName,     warm: \.gpu.warm,     hot: \.gpu.hot)
+                thresholdRow(SensorCategory.soc.displayName,     warm: \.soc.warm,     hot: \.soc.hot)
+                thresholdRow(SensorCategory.battery.displayName, warm: \.battery.warm, hot: \.battery.hot)
+                thresholdRow(SensorCategory.storage.displayName, warm: \.storage.warm, hot: \.storage.hot)
+                thresholdRow(SensorCategory.other.displayName,   warm: \.other.warm,   hot: \.other.hot)
                 HStack {
                     Spacer()
                     Button("Reset to defaults") {
@@ -63,7 +63,7 @@ struct SensorsPrefsView: View {
             HStack {
                 Image(systemName: "thermometer.medium")
                 Text("Temperature thresholds").font(.headline)
-                InfoButton(text: "Set the warm/hot color bands per sensor category. These drive the menu bar tint, the popover color stripes, and the dashboard. They do NOT throttle anything — the governor uses its own ceiling in Throttling preferences. Different categories run at different normal temps (battery is much cooler than CPU), which is why each gets its own pair.")
+                InfoButton(text: String(localized: "Set the warm/hot color bands per sensor category. These drive the menu bar tint, the popover color stripes, and the dashboard. They do NOT throttle anything — the governor uses its own ceiling in Throttling preferences. Different categories run at different normal temps (battery is much cooler than CPU), which is why each gets its own pair."))
             }
         }
         .padding(.horizontal, 12)
@@ -87,8 +87,8 @@ struct SensorsPrefsView: View {
     ) -> some View {
         HStack {
             Text(label).frame(maxWidth: .infinity, alignment: .leading)
-            thresholdField(path: warmPath, tint: .orange, a11y: "\(label) warm threshold in degrees")
-            thresholdField(path: hotPath,  tint: .red,    a11y: "\(label) hot threshold in degrees")
+            thresholdField(path: warmPath, tint: .orange, a11y: String(localized: "\(label) warm threshold in degrees"))
+            thresholdField(path: hotPath,  tint: .red,    a11y: String(localized: "\(label) hot threshold in degrees"))
         }
     }
 
@@ -120,9 +120,9 @@ struct SensorsPrefsView: View {
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            TextField("Filter sensors", text: $searchText)
+            TextField(String(localized: "Filter sensors"), text: $searchText)
                 .textFieldStyle(.plain)
-            InfoButton(text: "Disable sensors you don't care about to declutter the dashboard and menu bar. Disabled sensors are excluded from \"Highest\" calculations too — useful if a particular sensor is consistently the hottest but isn't representative (e.g. a thermal pad reading you don't trust).")
+            InfoButton(text: String(localized: "Disable sensors you don't care about to declutter the dashboard and menu bar. Disabled sensors are excluded from \"Highest\" calculations too — useful if a particular sensor is consistently the hottest but isn't representative (e.g. a thermal pad reading you don't trust)."))
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -131,7 +131,7 @@ struct SensorsPrefsView: View {
     private var sensorList: some View {
         List {
             ForEach(groups, id: \.category) { group in
-                Section(group.category.rawValue) {
+                Section(group.category.displayName) {
                     ForEach(group.sensors) { sensor in
                         SensorToggleRow(sensor: sensor)
                     }

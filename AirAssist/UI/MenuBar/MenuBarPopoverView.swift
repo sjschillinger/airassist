@@ -13,7 +13,7 @@ struct MenuBarPopoverView: View {
     @AppStorage("tempUnit") private var tempUnitRaw: Int = TempUnit.celsius.rawValue
     private var unit: TempUnit { TempUnit(rawValue: tempUnitRaw) ?? .celsius }
 
-    @AppStorage("sensorDisplayMode") private var displayModeRaw: String = SensorDisplayMode.detailed.rawValue
+    @AppStorage("sensorDisplayMode") private var displayModeRaw: String = SensorDisplayMode.summary.rawValue
     private var displayMode: SensorDisplayMode {
         SensorDisplayMode(rawValue: displayModeRaw) ?? .detailed
     }
@@ -236,10 +236,12 @@ struct MenuBarPopoverView: View {
             }
         }
         .sorted()
-        if labels.isEmpty { return "unknown source" }
-        if labels.count == 1 { return "Throttled by \(labels[0])." }
-        return "Throttled by " + labels.prefix(labels.count - 1).joined(separator: ", ")
-            + " and " + labels.last! + "."
+        if labels.isEmpty { return String(localized: "unknown source") }
+        // Locale-aware list joining ("A, B, and C" in en; "A、B和C" in zh)
+        // plus a single format string, so the sentence reads naturally in
+        // every language instead of being glued from " and " fragments.
+        let joined = labels.formatted(.list(type: .and))
+        return String(localized: "Throttled by \(joined).")
     }
 
     private func sourceBadge(_ sources: Set<ThrottleSource>) -> (symbol: String, tint: Color) {
@@ -283,7 +285,7 @@ struct MenuBarPopoverView: View {
     private func sparklineA11yLabel(_ samples: [Double]) -> String {
         guard let first = samples.first, let last = samples.last,
               let peak = samples.max() else { return "" }
-        return "Hottest sensor trend: now \(unit.format(last)), was \(unit.format(first)) one minute ago, peaked at \(unit.format(peak))."
+        return String(localized: "Hottest sensor trend: now \(unit.format(last)), was \(unit.format(first)) one minute ago, peaked at \(unit.format(peak)).")
     }
 
     // MARK: - CPU Activity (v0.14 — visibility sprint phase 1)
@@ -646,27 +648,27 @@ struct MenuBarPopoverView: View {
     private var governorSummary: String {
         if store.isPauseActive {
             if let until = store.pausedUntil, until != .distantFuture {
-                return "Paused · resumes \(relative(to: until))"
+                return String(localized: "Paused · resumes \(relative(to: until))")
             }
-            return "Paused"
+            return String(localized: "Paused")
         }
         if store.governorConfig.isOff && !store.throttleRules.enabled {
-            return "Throttling: Off"
+            return String(localized: "Throttling: Off")
         }
         if store.governor.isTempThrottling || store.governor.isCPUThrottling {
-            return "Governor active"
+            return String(localized: "Governor active")
         }
         // On-battery-only gate firing on AC — governor is armed but
         // deliberately silent. Flag it in the summary so the toggle has a
         // visible effect.
         if store.governorConfig.onBatteryOnly
             && store.governor.reason.hasPrefix("Idle · on AC") {
-            return "Governor idle (on AC)"
+            return String(localized: "Governor idle (on AC)")
         }
         if !store.liveThrottledPIDs.isEmpty {
-            return "Rules active"
+            return String(localized: "Rules active")
         }
-        return "Governor armed"
+        return String(localized: "Governor armed")
     }
 
     /// Secondary line under the summary: the governor's own plain-language
@@ -707,7 +709,7 @@ struct MenuBarPopoverView: View {
         VStack(spacing: 0) {
             // Governor master toggle.
             controlRow(icon: "gauge.with.dots.needle.67percent",
-                       label: "Governor",
+                       label: String(localized: "Governor"),
                        help: "Enable or disable the system-wide thermal/CPU governor.") {
                 Toggle("", isOn: governorEnabledBinding)
                     .toggleStyle(.switch)
@@ -717,7 +719,7 @@ struct MenuBarPopoverView: View {
 
             // On-battery-only gate (sub-control of the governor).
             controlRow(icon: "battery.75percent",
-                       label: "Only on battery",
+                       label: String(localized: "Only on battery"),
                        indent: true,
                        help: "Only act while on battery; armed-but-silent on AC.") {
                 Toggle("", isOn: Binding(
@@ -756,7 +758,7 @@ struct MenuBarPopoverView: View {
             // Stay Awake quick picker.
             controlRow(icon: store.stayAwake.isActive ? "cup.and.saucer.fill" : "cup.and.saucer",
                        iconTint: store.stayAwake.isActive ? .yellow : nil,
-                       label: "Stay Awake",
+                       label: String(localized: "Stay Awake"),
                        help: "Keep the Mac awake — system, display, or with a timeout.") {
                 stayAwakeMenu
             }
@@ -764,7 +766,7 @@ struct MenuBarPopoverView: View {
             // Scenario preset — one-click profiles. Bundles governor
             // mode, caps, on-battery flag, and stay-awake mode.
             controlRow(icon: "wand.and.stars",
-                       label: "Scenario",
+                       label: String(localized: "Scenario"),
                        help: "Apply a one-click preset (Presenting / Lap / Cool / Performance / Auto).") {
                 scenarioMenu
             }
@@ -879,13 +881,13 @@ struct MenuBarPopoverView: View {
     }
 
     private var throttleFrontmostLabel: String {
-        guard let name = frontmost?.name else { return "Throttle frontmost" }
+        guard let name = frontmost?.name else { return String(localized: "Throttle frontmost") }
         return isFrontmostManuallyThrottled ? "Release \(name)" : "Throttle \(name)"
     }
 
     private var throttleFrontmostHelp: String {
         if isFrontmostManuallyThrottled {
-            return "Release the manual cap on this app."
+            return String(localized: "Release the manual cap on this app.")
         }
         let pct = Int((frontmostDuty * 100).rounded())
         let dur: String = {
@@ -896,7 +898,7 @@ struct MenuBarPopoverView: View {
             }
             return "for \(frontmostDurationMinutes) minutes"
         }()
-        return "Cap the frontmost app at \(pct)% \(dur). Adjust in Preferences → Throttling."
+        return String(localized: "Cap the frontmost app at \(pct)% \(dur). Adjust in Preferences → Throttling.")
     }
 
     /// Click handler. Throttles or releases depending on current state.
@@ -968,9 +970,9 @@ struct MenuBarPopoverView: View {
     /// `menuLabel` is too long for a 260px-wide popover row.
     private var stayAwakeShortLabel: String {
         switch store.stayAwake.currentMode {
-        case .off:                           return "Off"
-        case .system:                        return "System"
-        case .display:                       return "System & display"
+        case .off:                           return String(localized: "Off")
+        case .system:                        return String(localized: "System")
+        case .display:                       return String(localized: "System & display")
         case .displayThenSystem(let m):      return "\(m) min then system"
         }
     }
@@ -984,7 +986,7 @@ struct MenuBarPopoverView: View {
         VStack(spacing: 0) {
             MenuBarButton(label: AppStrings.MenuBar.dashboard,
                           icon: "gauge.with.dots.needle.33percent") { onDashboard() }
-            MenuBarButton(label: "Activity",
+            MenuBarButton(label: String(localized: "Activity"),
                           icon: "cpu") { onActivity() }
             MenuBarButton(label: AppStrings.MenuBar.preferences,
                           icon: "gearshape") { onPreferences() }

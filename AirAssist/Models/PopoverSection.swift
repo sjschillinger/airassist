@@ -41,11 +41,11 @@ enum PopoverSection: String, CaseIterable, Codable, Identifiable {
     /// User-facing label for the Preferences UI in Phase 5.
     var label: String {
         switch self {
-        case .sensors:           return "Sensors"
-        case .cpuActivity:       return "CPU Activity"
-        case .manualThrottles:   return "Manual throttles"
-        case .governorStatus:    return "Governor status"
-        case .controls:          return "Controls"
+        case .sensors:           return String(localized: "Sensors")
+        case .cpuActivity:       return String(localized: "CPU Activity")
+        case .manualThrottles:   return String(localized: "Manual throttles")
+        case .governorStatus:    return String(localized: "Governor status")
+        case .controls:          return String(localized: "Controls")
         }
     }
 
@@ -53,15 +53,15 @@ enum PopoverSection: String, CaseIterable, Codable, Identifiable {
     var helpDescription: String {
         switch self {
         case .sensors:
-            return "The grid of sensor cards plus the live trend sparkline. Hide if you only want the popover for controls and don't need the at-a-glance temperature view."
+            return String(localized: "The grid of sensor cards plus the live trend sparkline. Hide if you only want the popover for controls and don't need the at-a-glance temperature view.")
         case .cpuActivity:
-            return "Top 5 processes by CPU usage right now, with a right-click menu to throttle, rule, or protect. Hide if you'd rather rely on the dashboard for process visibility."
+            return String(localized: "Top 5 processes by CPU usage right now, with a right-click menu to throttle, rule, or protect. Hide if you'd rather rely on the dashboard for process visibility.")
         case .manualThrottles:
-            return "List of processes you've manually thrown a cap on, with their remaining time. Always hidden when nothing's manually throttled, so most of the time leaving this on is invisible."
+            return String(localized: "List of processes you've manually thrown a cap on, with their remaining time. Always hidden when nothing's manually throttled, so most of the time leaving this on is invisible.")
         case .governorStatus:
-            return "Status line for the automatic governor (armed / throttling / paused) and a list of any active rule- or governor-driven throttles. Hide if you don't use automatic throttling."
+            return String(localized: "Status line for the automatic governor (armed / throttling / paused) and a list of any active rule- or governor-driven throttles. Hide if you don't use automatic throttling.")
         case .controls:
-            return "The block at the bottom with the governor toggle, scenario picker, stay-awake mode, and the on-battery-only switch. Hide if you only configure these from Preferences."
+            return String(localized: "The block at the bottom with the governor toggle, scenario picker, stay-awake mode, and the on-battery-only switch. Hide if you only configure these from Preferences.")
         }
     }
 

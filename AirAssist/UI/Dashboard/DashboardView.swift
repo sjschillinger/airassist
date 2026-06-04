@@ -7,6 +7,18 @@ enum SensorSortOrder: String, CaseIterable, Identifiable {
     case tempDesc  = "Temp ↓"
     case tempAsc   = "Temp ↑"
     var id: String { rawValue }
+
+    /// Localized label for the picker. `rawValue` stays the stable
+    /// persisted key (`@AppStorage("dashSortOrder")`).
+    var displayName: String {
+        switch self {
+        case .category: return String(localized: "Category")
+        case .nameAsc:  return String(localized: "Name A→Z")
+        case .nameDesc: return String(localized: "Name Z→A")
+        case .tempDesc: return String(localized: "Temp ↓")
+        case .tempAsc:  return String(localized: "Temp ↑")
+        }
+    }
 }
 
 struct DashboardView: View {
@@ -93,14 +105,14 @@ struct DashboardView: View {
     /// summary-band + toolbar, which read as two disconnected strips.
     private var dashboardHeader: some View {
         HStack(spacing: 10) {
-            summaryChip(icon: "thermometer.medium", label: "Hottest",
+            summaryChip(icon: "thermometer.medium", label: String(localized: "Hottest"),
                         value: hottestSummaryValue, tint: hottestSummaryTint)
-            summaryChip(icon: "cpu", label: "Total CPU",
+            summaryChip(icon: "cpu", label: String(localized: "Total CPU"),
                         value: formattedTotalCPU, tint: .blue)
-            summaryChip(icon: governorChipIcon, label: "Governor",
+            summaryChip(icon: governorChipIcon, label: String(localized: "Governor"),
                         value: governorChipLabel, tint: governorChipTint)
             if !store.liveThrottledPIDs.isEmpty {
-                summaryChip(icon: "tortoise.fill", label: "Throttling",
+                summaryChip(icon: "tortoise.fill", label: String(localized: "Throttling"),
                             value: "\(store.liveThrottledPIDs.count)", tint: .orange)
             }
             Spacer(minLength: 12)
@@ -121,7 +133,7 @@ struct DashboardView: View {
                 set: { sortRaw = $0.rawValue }
             )) {
                 ForEach(SensorSortOrder.allCases) { order in
-                    Text(order.rawValue).tag(order)
+                    Text(order.displayName).tag(order)
                 }
             }
             .pickerStyle(.menu)
@@ -329,10 +341,10 @@ struct DashboardView: View {
     }
 
     private var governorChipLabel: String {
-        if store.isPauseActive                        { return "Paused" }
-        if store.governorConfig.isOff                 { return "Off" }
-        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return "Active" }
-        return "Armed"
+        if store.isPauseActive                        { return String(localized: "Paused") }
+        if store.governorConfig.isOff                 { return String(localized: "Off") }
+        if store.governor.isTempThrottling || store.governor.isCPUThrottling { return String(localized: "Active") }
+        return String(localized: "Armed")
     }
     private var governorChipTint: Color {
         if store.isPauseActive                        { return .yellow }
@@ -429,9 +441,10 @@ struct DashboardView: View {
                     Image(systemName: categoryIcon(category))
                         .font(.title2).foregroundStyle(tint).frame(width: 26)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(category.rawValue).font(.headline)
-                        Text("\(sensors.count) sensor\(sensors.count == 1 ? "" : "s")"
-                             + (avg.map { " · avg \(formatTemp($0))" } ?? ""))
+                        Text(category.displayName).font(.headline)
+                        Text(avg == nil
+                             ? String(localized: "\(sensors.count) sensors")
+                             : String(localized: "\(sensors.count) sensors · avg \(formatTemp(avg!))"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -449,7 +462,7 @@ struct DashboardView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(category.rawValue), \(sensors.count) sensors"
+            .accessibilityLabel("\(category.displayName), \(sensors.count) sensors"
                 + (high.map { ", hottest \(formatTemp($0))" } ?? "")
                 + (isExpanded ? ", expanded" : ", collapsed"))
 

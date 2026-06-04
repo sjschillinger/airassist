@@ -31,7 +31,7 @@ struct SensorCardView: View {
         VStack(alignment: .leading, spacing: 6) {
             // Header row
             HStack {
-                Text(sensor.category.rawValue.uppercased())
+                Text(sensor.category.displayName.uppercased())
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()

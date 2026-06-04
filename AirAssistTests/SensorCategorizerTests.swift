@@ -50,24 +50,27 @@ final class SensorCategorizerTests: XCTestCase {
 
     // MARK: - displayName(for:)
 
+    // Display names are localized; assert against the same string keys so the
+    // tests pass regardless of the test host's language. The mapping (which raw
+    // name → which slot/number) is what these verify.
     func testCPUDieDisplayName() {
-        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU tdie0"), "CPU Die 0")
-        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU tdie4"), "CPU Die 4")
+        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU tdie0"), String(localized: "CPU Die \(0)"))
+        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU tdie4"), String(localized: "CPU Die \(4)"))
     }
 
     func testGPUDieDisplayName() {
-        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU2 tdie0"), "GPU Die 0")
-        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU2 tdie2"), "GPU Die 2")
+        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU2 tdie0"), String(localized: "GPU Die \(0)"))
+        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU2 tdie2"), String(localized: "GPU Die \(2)"))
     }
 
     func testCalibrationSensorsKeepReadableNames() {
-        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU tcal"),  "PMU Calibration")
-        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU2 tcal"), "PMU2 Calibration")
+        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU tcal"),  String(localized: "PMU Calibration"))
+        XCTAssertEqual(SensorCategorizer.displayName(for: "PMU2 tcal"), String(localized: "PMU2 Calibration"))
     }
 
     func testBatteryAndNANDGetFriendlyNames() {
-        XCTAssertEqual(SensorCategorizer.displayName(for: "gas gauge battery"), "Battery")
-        XCTAssertEqual(SensorCategorizer.displayName(for: "NAND CH0"),          "NAND Storage")
+        XCTAssertEqual(SensorCategorizer.displayName(for: "gas gauge battery"), String(localized: "Battery"))
+        XCTAssertEqual(SensorCategorizer.displayName(for: "NAND CH0"),          String(localized: "NAND Storage"))
     }
 
     func testUnknownPassesThroughVerbatim() {

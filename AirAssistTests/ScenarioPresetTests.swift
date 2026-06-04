@@ -22,7 +22,10 @@ final class ScenarioPresetTests: XCTestCase {
     }
 
     func testQuietLabelIsLapCool() {
-        XCTAssertEqual(ScenarioPreset.quiet.label, "Lap / Cool")
+        // `label` is localized, so assert the case resolves to the
+        // "Lap / Cool" string key rather than a hardcoded English value —
+        // otherwise the test fails when the host runs in another language.
+        XCTAssertEqual(ScenarioPreset.quiet.label, String(localized: "Lap / Cool"))
     }
 
     func testQuietUsesThermometerSnowflakeSymbol() {

@@ -44,7 +44,7 @@ struct SensorSummaryView: View {
     private func row(for category: SensorCategory, sensors: [Sensor]) -> some View {
         let values = sensors.compactMap(\.currentValue)
         HStack(spacing: 0) {
-            Text(category.rawValue)
+            Text(category.displayName)
                 .font(.system(size: 12, weight: .medium))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -242,7 +242,7 @@ private struct CategoryHeaderView: View {
                 Spacer().frame(width: 10)
             }
 
-            Text(category.rawValue.uppercased())
+            Text(category.displayName.uppercased())
                 .font(.system(size: 9, weight: .semibold))
                 .foregroundStyle(.secondary)
 
@@ -270,8 +270,8 @@ private struct CategoryHeaderView: View {
             if isCollapsible { onToggle() }
         }
         .help(isCollapsible
-              ? (isCollapsed ? "Show all \(category.rawValue) sensors"
-                             : "Collapse \(category.rawValue) sensors")
+              ? (isCollapsed ? String(localized: "Show all \(category.displayName) sensors")
+                             : String(localized: "Collapse \(category.displayName) sensors"))
               : "")
     }
 }

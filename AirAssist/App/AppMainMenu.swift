@@ -35,7 +35,7 @@ enum AppMainMenu {
         let appName = ProcessInfo.processInfo.processName
 
         appMenu.addItem(NSMenuItem(
-            title: "About \(appName)",
+            title: String(localized: "About \(appName)"),
             action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
             keyEquivalent: ""
         ))
@@ -45,7 +45,7 @@ enum AppMainMenu {
         // page or shows an "up to date" alert. Safe on every build type:
         // no signing check, no installer, just a notifier.
         appMenu.addItem(NSMenuItem(
-            title: "Check for Updates…",
+            title: String(localized: "Check for Updates…"),
             action: #selector(AppDelegate.checkForUpdatesFromMenu(_:)),
             keyEquivalent: ""
         ))
@@ -56,7 +56,7 @@ enum AppMainMenu {
         // Action has no explicit target so it dispatches up the responder
         // chain and reaches NSApp.delegate.
         let prefsItem = NSMenuItem(
-            title: "Preferences…",
+            title: String(localized: "Preferences…"),
             action: #selector(AppDelegate.openPreferencesFromMenu(_:)),
             keyEquivalent: ","
         )
@@ -65,19 +65,19 @@ enum AppMainMenu {
         appMenu.addItem(.separator())
 
         appMenu.addItem(NSMenuItem(
-            title: "Hide \(appName)",
+            title: String(localized: "Hide \(appName)"),
             action: #selector(NSApplication.hide(_:)),
             keyEquivalent: "h"
         ))
         let hideOthers = NSMenuItem(
-            title: "Hide Others",
+            title: String(localized: "Hide Others"),
             action: #selector(NSApplication.hideOtherApplications(_:)),
             keyEquivalent: "h"
         )
         hideOthers.keyEquivalentModifierMask = [.command, .option]
         appMenu.addItem(hideOthers)
         appMenu.addItem(NSMenuItem(
-            title: "Show All",
+            title: String(localized: "Show All"),
             action: #selector(NSApplication.unhideAllApplications(_:)),
             keyEquivalent: ""
         ))
@@ -87,7 +87,7 @@ enum AppMainMenu {
         // runs — that's what powers the "rules are live, are you sure?"
         // confirmation (#47).
         appMenu.addItem(NSMenuItem(
-            title: "Quit \(appName)",
+            title: String(localized: "Quit \(appName)"),
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         ))
@@ -95,10 +95,10 @@ enum AppMainMenu {
         // --- File menu: just Close Window (⌘W) ---
         let fileMenuItem = NSMenuItem()
         mainMenu.addItem(fileMenuItem)
-        let fileMenu = NSMenu(title: "File")
+        let fileMenu = NSMenu(title: String(localized: "File"))
         fileMenuItem.submenu = fileMenu
         fileMenu.addItem(NSMenuItem(
-            title: "Close Window",
+            title: String(localized: "Close Window"),
             action: #selector(NSWindow.performClose(_:)),
             keyEquivalent: "w"
         ))
@@ -109,16 +109,16 @@ enum AppMainMenu {
         //     because nothing on the responder chain has bound them. ---
         let editMenuItem = NSMenuItem()
         mainMenu.addItem(editMenuItem)
-        let editMenu = NSMenu(title: "Edit")
+        let editMenu = NSMenu(title: String(localized: "Edit"))
         editMenuItem.submenu = editMenu
 
         editMenu.addItem(NSMenuItem(
-            title: "Undo",
+            title: String(localized: "Undo"),
             action: Selector(("undo:")),
             keyEquivalent: "z"
         ))
         let redo = NSMenuItem(
-            title: "Redo",
+            title: String(localized: "Redo"),
             action: Selector(("redo:")),
             keyEquivalent: "z"
         )
@@ -126,22 +126,22 @@ enum AppMainMenu {
         editMenu.addItem(redo)
         editMenu.addItem(.separator())
         editMenu.addItem(NSMenuItem(
-            title: "Cut",
+            title: String(localized: "Cut"),
             action: #selector(NSText.cut(_:)),
             keyEquivalent: "x"
         ))
         editMenu.addItem(NSMenuItem(
-            title: "Copy",
+            title: String(localized: "Copy"),
             action: #selector(NSText.copy(_:)),
             keyEquivalent: "c"
         ))
         editMenu.addItem(NSMenuItem(
-            title: "Paste",
+            title: String(localized: "Paste"),
             action: #selector(NSText.paste(_:)),
             keyEquivalent: "v"
         ))
         editMenu.addItem(NSMenuItem(
-            title: "Select All",
+            title: String(localized: "Select All"),
             action: #selector(NSResponder.selectAll(_:)),
             keyEquivalent: "a"
         ))
@@ -151,10 +151,10 @@ enum AppMainMenu {
         //     a menu home for the standalone Activity tool. ---
         let windowMenuItem = NSMenuItem()
         mainMenu.addItem(windowMenuItem)
-        let windowMenu = NSMenu(title: "Window")
+        let windowMenu = NSMenu(title: String(localized: "Window"))
         windowMenuItem.submenu = windowMenu
         let activityItem = NSMenuItem(
-            title: "Activity",
+            title: String(localized: "Activity"),
             action: #selector(AppDelegate.openActivityFromMenu(_:)),
             keyEquivalent: "a"
         )
@@ -168,16 +168,16 @@ enum AppMainMenu {
         //     chain to AppDelegate, which owns the store. ---
         let helpMenuItem = NSMenuItem()
         mainMenu.addItem(helpMenuItem)
-        let helpMenu = NSMenu(title: "Help")
+        let helpMenu = NSMenu(title: String(localized: "Help"))
         helpMenuItem.submenu = helpMenu
         helpMenu.addItem(NSMenuItem(
-            title: "Show Welcome…",
+            title: String(localized: "Show Welcome…"),
             action: #selector(AppDelegate.showWelcomeFromMenu(_:)),
             keyEquivalent: ""
         ))
         helpMenu.addItem(.separator())
         helpMenu.addItem(NSMenuItem(
-            title: "Export Diagnostics…",
+            title: String(localized: "Export Diagnostics…"),
             action: #selector(AppDelegate.exportDiagnosticsFromMenu(_:)),
             keyEquivalent: ""
         ))

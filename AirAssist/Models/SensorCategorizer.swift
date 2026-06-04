@@ -23,14 +23,14 @@ enum SensorCategorizer {
 
     static func displayName(for rawName: String) -> String {
         // PMU tdie1 → CPU Die 1,  PMU2 tdie1 → GPU Die 1
-        if let num = trailingInt(rawName, prefix: "PMU tdie")   { return "CPU Die \(num)" }
-        if let num = trailingInt(rawName, prefix: "PMU2 tdie")  { return "GPU Die \(num)" }
-        if let num = trailingInt(rawName, prefix: "PMU tdev")   { return "PMU Dev \(num)" }
-        if let num = trailingInt(rawName, prefix: "PMU2 tdev")  { return "PMU2 Dev \(num)" }
-        if rawName == "PMU tcal"                                { return "PMU Calibration" }
-        if rawName == "PMU2 tcal"                               { return "PMU2 Calibration" }
-        if rawName.lowercased().contains("gas gauge")           { return "Battery" }
-        if rawName.lowercased().contains("nand")                { return "NAND Storage" }
+        if let num = trailingInt(rawName, prefix: "PMU tdie")   { return String(localized: "CPU Die \(num)") }
+        if let num = trailingInt(rawName, prefix: "PMU2 tdie")  { return String(localized: "GPU Die \(num)") }
+        if let num = trailingInt(rawName, prefix: "PMU tdev")   { return String(localized: "PMU Dev \(num)") }
+        if let num = trailingInt(rawName, prefix: "PMU2 tdev")  { return String(localized: "PMU2 Dev \(num)") }
+        if rawName == "PMU tcal"                                { return String(localized: "PMU Calibration") }
+        if rawName == "PMU2 tcal"                               { return String(localized: "PMU2 Calibration") }
+        if rawName.lowercased().contains("gas gauge")           { return String(localized: "Battery") }
+        if rawName.lowercased().contains("nand")                { return String(localized: "NAND Storage") }
         return rawName
     }
 
