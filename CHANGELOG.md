@@ -18,8 +18,9 @@ Dates are in ISO 8601 (YYYY-MM-DD).
   without changing the system language (applied on restart). On a Mac whose
   system language is Chinese, the app starts in Chinese automatically. Built
   on a String Catalog, so any string not yet translated falls back to English.
-  Based on community contribution #7 by **@ng-life**, reconciled onto the
-  v0.15.0 UI (Activity window, redesigned dashboard) and audited end-to-end
+  Original Simplified Chinese localization contributed by **@ng-life** (#7);
+  reconciled onto the v0.15.0 UI (Activity window, redesigned dashboard),
+  completed, and shipped by **@sjschillinger**. Audited end-to-end
   via `xcodebuild -exportLocalizations` — every user-facing string is
   translated except universal symbols (°C, %, CPU) and the brand name.
 
