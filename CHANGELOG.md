@@ -9,25 +9,31 @@ Dates are in ISO 8601 (YYYY-MM-DD).
 
 ## [Unreleased]
 
+## [0.15.1] — 2026-06-03
+
 ### Added
 
-- **Simplified Chinese localization + in-app language switching.** A new
-  Language picker in Preferences › General switches between English and
-  中文 without changing the system language (applied on restart). Built on
-  a String Catalog so untranslated strings fall back to English. Based on
-  community contribution #7 by @ng-life, reconciled onto the v0.15.0 UI
-  (Activity window, redesigned dashboard) with the new strings translated.
-  Coverage audited via `xcodebuild -exportLocalizations`: every user-facing
-  string is translated except universal symbols (°C, %, CPU) and the brand
-  name. Concatenated sentences (e.g. "Throttled by A, B and C") were
-  switched to locale-aware list formatting so they read naturally in 中文.
+- **Simplified Chinese (简体中文) localization + in-app language switching.**
+  A Language picker in Preferences › General switches between English and 中文
+  without changing the system language (applied on restart). On a Mac whose
+  system language is Chinese, the app starts in Chinese automatically. Built
+  on a String Catalog, so any string not yet translated falls back to English.
+  Based on community contribution #7 by **@ng-life**, reconciled onto the
+  v0.15.0 UI (Activity window, redesigned dashboard) and audited end-to-end
+  via `xcodebuild -exportLocalizations` — every user-facing string is
+  translated except universal symbols (°C, %, CPU) and the brand name.
+
+### Changed
+
+- **The popover sensor list now defaults to Summary mode** (one row per
+  category — High / Avg / Low) instead of one row per sensor. Much tidier on
+  Macs with many thermal dies. Existing users keep whatever they've set.
 
 ### Fixed
 
-- **"Restart Now" after changing language stranded the app.** The language
-  picker's restart prompt called `NSApp.terminate` — quitting without
-  relaunching. It now spawns a helper that waits for the app to exit, then
-  reopens it.
+- **"Restart Now" after changing language stranded the app** — the prompt
+  called `NSApp.terminate` (quit, no relaunch). It now waits for the app to
+  exit, then reopens it.
 
 ## [0.15.0] — 2026-06-03
 
